@@ -8,6 +8,8 @@
 *.so
 *.dylib
 
+bzCommerce
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -23,3 +25,26 @@ go.work.sum
 
 # env file
 .env
+# macOS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+# macOS 11.0 Time Machine
+.com.apple.timemachine.donotpresent
+
+# macOS 12.0 Time Machine
+.com.apple.TimeMachine.localsnapshots
+
+# macOS 13.0 Time Machine
+.com.apple.TimeMachine.Snapshot
