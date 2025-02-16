@@ -59,9 +59,10 @@ func main() {
 	}
 
 	cfg := apiConfig{
-		db:        dbQueries,
-		jwtSecret: jwtSecret,
-		platform:  platform,
+		db:           dbQueries,
+		jwtSecret:    jwtSecret,
+		platform:     platform,
+		filepathRoot: filepathRoot,
 	}
 
 	mux := http.NewServeMux()
