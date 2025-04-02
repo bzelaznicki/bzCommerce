@@ -1,0 +1,27 @@
+{{ define "title" }}{{ .Product.Name }} - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+  <h2>{{ .Product.Name }}</h2>
+
+  {{ if .Product.ImagePath }}
+    <img src="/static/images/{{ .Product.ImagePath }}" alt="{{ .Product.Name }}" width="400">
+  {{ end }}
+
+  <p>{{ .Product.Description }}</p>
+
+  {{ if .Product.Variants }}
+    <h3>Variants</h3>
+    <ul>
+      {{ range .Product.Variants }}
+        <li>{{ .Name }}</li>
+      {{ end }}
+    </ul>
+  {{ else }}
+    <p>No variants available.</p>
+  {{ end }}
+
+  <form action="/cart/add" method="POST">
+    <input type="hidden" name="product_id" value="{{ .Product.ID }}">
+    <button type="submit">Add to Cart</button>
+  </form>
+{{ end }}

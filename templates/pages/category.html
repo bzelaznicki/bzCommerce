@@ -1,0 +1,22 @@
+{{ define "title" }}{{ .Category.Name }} - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+  <h2>Products in {{ .Category.Name }}</h2>
+
+  {{ if .Products }}
+    <ul class="product-list">
+      {{ range .Products }}
+        <li>
+          <a href="/product/{{ .Slug }}">
+            {{ if .ImagePath }}
+              <img src="/static/images/{{ .ImagePath }}" alt="{{ .Name }}" width="150">
+            {{ end }}
+            <strong>{{ .Name }}</strong>
+          </a>
+        </li>
+      {{ end }}
+    </ul>
+  {{ else }}
+    <p>No products found in this category.</p>
+  {{ end }}
+{{ end }}

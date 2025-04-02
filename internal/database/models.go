@@ -5,16 +5,50 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type Category struct {
+	ID          uuid.UUID      `json:"id"`
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	ParentID    uuid.NullUUID  `json:"parent_id"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+}
+
+type Product struct {
+	ID          uuid.UUID      `json:"id"`
+	CategoryID  uuid.UUID      `json:"category_id"`
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	ImageUrl    sql.NullString `json:"image_url"`
+	Description sql.NullString `json:"description"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+}
+
+type ProductVariant struct {
+	ID            uuid.UUID      `json:"id"`
+	ProductID     uuid.UUID      `json:"product_id"`
+	Sku           string         `json:"sku"`
+	Price         string         `json:"price"`
+	StockQuantity int32          `json:"stock_quantity"`
+	ImageUrl      sql.NullString `json:"image_url"`
+	VariantName   sql.NullString `json:"variant_name"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	FullName     string
-	PasswordHash string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	FullName     string    `json:"full_name"`
+	PasswordHash string    `json:"password_hash"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

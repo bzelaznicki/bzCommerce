@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,8 @@ type apiConfig struct {
 	jwtSecret    string
 	filepathRoot string
 	platform     string
+	templates    *template.Template
+	storeName    string
 }
 
 func main() {
@@ -57,22 +60,40 @@ func main() {
 	if port == "" {
 		log.Fatal("PORT cannot be empty")
 	}
+	storeName := os.Getenv("STORE_NAME")
+	if storeName == "" {
+		storeName = "bzCommerce" // fallback default
+	}
+	templates := template.Must(template.ParseFiles(
+		"templates/base.html",
+		"templates/pages/home.html",
+		"templates/pages/product.html",
+		"templates/pages/category.html",
+	))
 
+	for _, tmpl := range templates.Templates() {
+		log.Println("Loaded template:", tmpl.Name())
+	}
 	cfg := apiConfig{
 		db:        dbQueries,
 		jwtSecret: jwtSecret,
 		platform:  platform,
+		templates: templates,
+		storeName: storeName,
 	}
 
 	mux := http.NewServeMux()
+
 	srv := &http.Server{
 		Handler: mux,
 		Addr:    ":" + port,
 	}
+	mux.HandleFunc("GET /", cfg.handleHomePage)
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	appHandler := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
+	mux.HandleFunc("GET /product/{slug}", cfg.handleProductPage)
+	mux.HandleFunc("GET /category/{slug}", cfg.handleCategoryPage)
 
-	mux.Handle("/app/", appHandler)
 	mux.HandleFunc("POST /api/users", cfg.handleUserCreate)
 
 	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)

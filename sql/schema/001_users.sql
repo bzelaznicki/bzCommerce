@@ -1,7 +1,9 @@
 -- +goose Up
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE users (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(100) NOT NULL UNIQUE,
     full_name VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -12,3 +14,4 @@ CREATE TABLE users (
 -- +goose Down
 
 DROP TABLE IF EXISTS users;
+DROP EXTENSION IF EXISTS "uuid-ossp";

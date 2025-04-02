@@ -1,0 +1,22 @@
+{{ define "title" }}Home - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+  <h2>Featured Products</h2>
+  {{ if .Products }}
+    <ul class="product-list">
+      {{ range .Products }}
+        <li>
+          <a href="/product/{{ .Slug }}">
+            {{ if .ImagePath }}
+              <img src="/static/images/{{ .ImagePath }}" alt="{{ .Name }}" width="150">
+            {{ end }}
+            <strong>{{ .Name }}</strong>
+          </a>
+          <p>{{ .Description }}</p>
+        </li>
+      {{ end }}
+    </ul>
+  {{ else }}
+    <p>No products available.</p>
+  {{ end }}
+{{ end }}
