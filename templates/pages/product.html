@@ -4,7 +4,7 @@
   <h2>{{ .Product.Name }}</h2>
 
   {{ if .Product.ImagePath }}
-    <img src="/static/images/{{ .Product.ImagePath }}" alt="{{ .Product.Name }}" width="400">
+    <img src="{{ .Product.ImagePath }}" alt="{{ .Product.Name }}" width="400">
   {{ end }}
 
   <p>{{ .Product.Description }}</p>
