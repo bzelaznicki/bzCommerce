@@ -13,6 +13,7 @@ import (
 type BasePageData struct {
 	StoreName  string
 	Categories []database.Category
+	IsLoggedIn bool
 	Data       any
 }
 
@@ -21,10 +22,11 @@ func (cfg *apiConfig) NewPageData(ctx context.Context, data any) (BasePageData, 
 	if err != nil {
 		return BasePageData{}, fmt.Errorf("error getting base page data: %v", err)
 	}
-
+	_, isLoggedIn := ctx.Value(userIDContextKey).(string)
 	return BasePageData{
 		StoreName:  cfg.storeName,
 		Categories: categories,
+		IsLoggedIn: isLoggedIn,
 		Data:       data,
 	}, nil
 }

@@ -88,14 +88,21 @@ func main() {
 		Handler: mux,
 		Addr:    ":" + port,
 	}
-	mux.HandleFunc("GET /", cfg.handleHomePage)
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	mux.HandleFunc("GET /product/{slug}", cfg.handleProductPage)
-	mux.HandleFunc("GET /category/{slug}", cfg.handleCategoryPage)
+	mux.Handle("GET /", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleHomePage)))
+	mux.Handle("GET /product/{slug}", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleProductPage)))
+	mux.Handle("GET /category/{slug}", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleCategoryPage)))
+
 	mux.HandleFunc("POST /api/users", cfg.handleUserCreate)
-	mux.HandleFunc("GET /register", cfg.handleRegisterGet)
-	mux.HandleFunc("POST /register", cfg.handleRegisterPost)
+	mux.Handle("GET /login", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleLoginGet)))
+	mux.Handle("GET /register", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleRegisterGet)))
+	mux.Handle("POST /login", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleLoginPost)))
+	mux.Handle("POST /register", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleRegisterPost)))
+
+	mux.Handle("GET /account", cfg.withAuth(http.HandlerFunc(cfg.handleAccountPage)))
+
+	mux.HandleFunc("GET /logout", cfg.handleLogout)
 
 	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)
 
