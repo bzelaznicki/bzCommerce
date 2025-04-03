@@ -19,7 +19,7 @@
             name="variant_id"
             value="{{ .ID }}"
             {{ if eq .StockQuantity 0 }}disabled{{ end }}>
-          
+  
           {{ if .ImageUrl }}
             <img src="{{ .ImageUrl }}" alt="{{ .Name }}">
           {{ end }}
@@ -35,8 +35,21 @@
       {{ end }}
     </div>
   
+    <div class="quantity-field">
+      <label for="quantity">Quantity:</label>
+      <input
+        type="number"
+        name="quantity"
+        id="quantity"
+        value="1"
+        min="1"
+        step="1"
+        required>
+    </div>
+  
     <button type="submit" style="margin-top: 1rem;">Add to Cart</button>
   </form>
+  
   
   {{ else }}
     <p>This product has no available variants.</p>

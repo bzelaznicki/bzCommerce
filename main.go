@@ -93,8 +93,9 @@ func main() {
 
 	mux.HandleFunc("GET /product/{slug}", cfg.handleProductPage)
 	mux.HandleFunc("GET /category/{slug}", cfg.handleCategoryPage)
-
 	mux.HandleFunc("POST /api/users", cfg.handleUserCreate)
+	mux.HandleFunc("GET /register", cfg.handleRegisterGet)
+	mux.HandleFunc("POST /register", cfg.handleRegisterPost)
 
 	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)
 
