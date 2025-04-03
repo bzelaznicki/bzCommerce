@@ -1,0 +1,43 @@
+{{ define "title" }}Admin - Products - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <h2>Manage Products</h2>
+  <p><a href="/admin/products/new">+ Add New Product</a></p>
+
+  {{ if .Data }}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Category</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data }}
+        <tr>
+          <td>{{ .Name }}</td>
+          <td>{{ .Slug }}</td>
+          <td>
+            <a href="/category/{{ .CategorySlug }}">{{ .CategoryName }}</a>
+          </td>
+          
+          <td>
+            <a href="/admin/products/{{ .ID }}/edit">Edit</a> |
+            <a href="/admin/products/{{ .ID }}/variants">Variants</a> |
+            <form action="/admin/products/{{ .ID }}/delete" method="POST" style="display:inline;">
+              <button type="submit" onclick="return confirm('Delete this product?')">Delete</button>
+            </form>
+          </td>
+          
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  {{ else }}
+    <p>No products found.</p>
+  {{ end }}
+</div>
+{{ end }}

@@ -1,0 +1,45 @@
+{{ define "title" }}Add Product - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <h2>Add New Product</h2>
+
+  <form action="/admin/products" method="POST" class="admin-form">
+    <label>Name</label><br>
+    <input type="text" name="name" required><br><br>
+
+    <label>Slug</label><br>
+    <input type="text" name="slug" required><br><br>
+
+    <label>Description</label><br>
+    <textarea name="description"></textarea><br><br>
+
+    <label>Image URL</label><br>
+    <input type="text" name="image_url"><br><br>
+
+    <label>Category</label><br>
+    <select name="category_id" required>
+    <option value="">-- Choose Category --</option>
+    {{ range .Categories }}
+      <option value="{{ .ID }}">{{ .Name }}</option>
+  {{ end }}
+</select><br><br>
+<h3>Initial Variant</h3>
+
+<label>Variant Name</label><br>
+<input type="text" name="variant_name" required><br><br>
+
+<label>Price</label><br>
+<input type="text" name="variant_price" required><br><br>
+
+<label>Stock Quantity</label><br>
+<input type="number" name="variant_stock" min="0" required><br><br>
+
+<label>Variant Image URL</label><br>
+<input type="text" name="variant_image"><br><br>
+
+
+    <button type="submit">Create Product</button>
+  </form>
+</div>
+{{ end }}

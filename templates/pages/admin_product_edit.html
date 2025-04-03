@@ -1,0 +1,34 @@
+{{ define "title" }}Edit Product - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <h2>Edit Product</h2>
+
+  <form action="/admin/products/{{ .Data.ID }}" method="POST" class="admin-form">
+    <label>Name</label><br>
+    <input type="text" name="name" value="{{ .Data.Name }}" required><br><br>
+
+    <label>Slug</label><br>
+    <input type="text" name="slug" value="{{ .Data.Slug }}" required><br><br>
+
+    <label>Description</label><br>
+    <textarea name="description">{{ .Data.Description }}</textarea><br><br>
+
+    <label>Image URL</label><br>
+    <input type="text" name="image_url" value="{{ .Data.ImagePath }}"><br><br>
+
+    <label>Category</label><br>
+    <select name="category_id" required>
+      <option value="">-- Choose Category --</option>
+      {{ range .Categories }}
+      <option value="{{ .ID }}" {{ if eq .ID $.Data.CategoryID }}selected{{ end }}>
+        {{ .Name }}
+      </option>
+      {{ end }}
+    </select><br><br>
+
+
+    <button type="submit">Update Product</button>
+  </form>
+  </div>
+{{ end }}

@@ -51,4 +51,5 @@ type User struct {
 	PasswordHash string    `json:"password_hash"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+	IsAdmin      bool      `json:"is_admin"`
 }

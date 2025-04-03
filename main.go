@@ -99,10 +99,32 @@ func main() {
 	mux.Handle("GET /register", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleRegisterGet)))
 	mux.Handle("POST /login", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleLoginPost)))
 	mux.Handle("POST /register", cfg.redirectIfAuthenticated(http.HandlerFunc(cfg.handleRegisterPost)))
-
 	mux.Handle("GET /account", cfg.withAuth(http.HandlerFunc(cfg.handleAccountPage)))
-
 	mux.HandleFunc("GET /logout", cfg.handleLogout)
+
+	//ADMIN
+	mux.Handle("GET /admin", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminDashboard)))
+	// View all products
+	mux.Handle("GET /admin/products", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductList)))
+
+	// New product form
+	mux.Handle("GET /admin/products/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductNewForm)))
+	mux.Handle("POST /admin/products", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductCreate)))
+
+	// Edit product
+	mux.Handle("GET /admin/products/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductEditForm)))
+	mux.Handle("POST /admin/products/{id}", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductUpdate)))
+
+	// Delete product
+	mux.Handle("POST /admin/products/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductDelete)))
+
+	mux.Handle("GET /admin/products/{id}/variants", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantList)))
+	mux.Handle("GET /admin/products/{id}/variants/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantNewForm)))
+	mux.Handle("POST /admin/products/{id}/variants", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantCreate)))
+
+	mux.Handle("GET /admin/variants/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantEditForm)))
+	mux.Handle("POST /admin/variants/{id}", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantUpdate)))
+	mux.Handle("POST /admin/variants/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantDelete)))
 
 	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)
 

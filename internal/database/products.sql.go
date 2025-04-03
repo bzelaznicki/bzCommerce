@@ -12,6 +12,171 @@ import (
 	"github.com/google/uuid"
 )
 
+const createProduct = `-- name: CreateProduct :one
+INSERT INTO products (name, slug, description, image_url, category_id)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5
+)
+RETURNING id, category_id, name, slug, image_url, description, created_at, updated_at
+`
+
+type CreateProductParams struct {
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	ImageUrl    sql.NullString `json:"image_url"`
+	CategoryID  uuid.UUID      `json:"category_id"`
+}
+
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
+	row := q.db.QueryRowContext(ctx, createProduct,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.ImageUrl,
+		arg.CategoryID,
+	)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.Name,
+		&i.Slug,
+		&i.ImageUrl,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createProductVariant = `-- name: CreateProductVariant :one
+INSERT INTO product_variants (product_id, variant_name, sku, price, image_url, stock_quantity)
+VALUES (
+  $1,
+    $2,
+  $3,
+  $4,
+    $5,
+  $6
+)
+RETURNING id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at
+`
+
+type CreateProductVariantParams struct {
+	ProductID     uuid.UUID      `json:"product_id"`
+	Name          sql.NullString `json:"name"`
+	Sku           string         `json:"sku"`
+	Price         string         `json:"price"`
+	ImageUrl      sql.NullString `json:"image_url"`
+	StockQuantity int32          `json:"stock_quantity"`
+}
+
+func (q *Queries) CreateProductVariant(ctx context.Context, arg CreateProductVariantParams) (ProductVariant, error) {
+	row := q.db.QueryRowContext(ctx, createProductVariant,
+		arg.ProductID,
+		arg.Name,
+		arg.Sku,
+		arg.Price,
+		arg.ImageUrl,
+		arg.StockQuantity,
+	)
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.Sku,
+		&i.Price,
+		&i.StockQuantity,
+		&i.ImageUrl,
+		&i.VariantName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createVariant = `-- name: CreateVariant :one
+INSERT INTO product_variants (
+  product_id, sku, price, stock_quantity, image_url, variant_name
+)
+VALUES (
+  $1,
+  $2,
+  $3,
+  $4,
+  $5,
+  $6
+)
+RETURNING id
+`
+
+type CreateVariantParams struct {
+	ProductID     uuid.UUID      `json:"product_id"`
+	Sku           string         `json:"sku"`
+	Price         string         `json:"price"`
+	StockQuantity int32          `json:"stock_quantity"`
+	ImageUrl      sql.NullString `json:"image_url"`
+	VariantName   sql.NullString `json:"variant_name"`
+}
+
+func (q *Queries) CreateVariant(ctx context.Context, arg CreateVariantParams) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, createVariant,
+		arg.ProductID,
+		arg.Sku,
+		arg.Price,
+		arg.StockQuantity,
+		arg.ImageUrl,
+		arg.VariantName,
+	)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const deleteProduct = `-- name: DeleteProduct :exec
+DELETE FROM products WHERE id = $1
+`
+
+func (q *Queries) DeleteProduct(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteProduct, id)
+	return err
+}
+
+const deleteVariant = `-- name: DeleteVariant :exec
+DELETE FROM product_variants
+WHERE id = $1
+`
+
+func (q *Queries) DeleteVariant(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteVariant, id)
+	return err
+}
+
+const getProductById = `-- name: GetProductById :one
+SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products WHERE id = $1
+`
+
+func (q *Queries) GetProductById(ctx context.Context, id uuid.UUID) (Product, error) {
+	row := q.db.QueryRowContext(ctx, getProductById, id)
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.Name,
+		&i.Slug,
+		&i.ImageUrl,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getProductBySlug = `-- name: GetProductBySlug :one
 SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products WHERE slug = $1
 `
@@ -106,6 +271,67 @@ func (q *Queries) GetProductVariantsByProductSlug(ctx context.Context, productID
 	return items, nil
 }
 
+const getVariantByID = `-- name: GetVariantByID :one
+SELECT id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at FROM product_variants
+WHERE id = $1
+`
+
+func (q *Queries) GetVariantByID(ctx context.Context, id uuid.UUID) (ProductVariant, error) {
+	row := q.db.QueryRowContext(ctx, getVariantByID, id)
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.Sku,
+		&i.Price,
+		&i.StockQuantity,
+		&i.ImageUrl,
+		&i.VariantName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getVariantsByProductID = `-- name: GetVariantsByProductID :many
+SELECT id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at FROM product_variants
+WHERE product_id = $1
+ORDER BY created_at
+`
+
+func (q *Queries) GetVariantsByProductID(ctx context.Context, productID uuid.UUID) ([]ProductVariant, error) {
+	rows, err := q.db.QueryContext(ctx, getVariantsByProductID, productID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductVariant
+	for rows.Next() {
+		var i ProductVariant
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.Sku,
+			&i.Price,
+			&i.StockQuantity,
+			&i.ImageUrl,
+			&i.VariantName,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProducts = `-- name: ListProducts :many
 SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products ORDER BY name ASC
 `
@@ -143,11 +369,13 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 }
 
 const listProductsByCategory = `-- name: ListProductsByCategory :many
-SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products WHERE category_id = (SELECT id FROM categories WHERE slug = $1) ORDER BY name ASC
+SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products
+WHERE category_id = (SELECT id FROM categories WHERE slug = $1)
+ORDER BY name ASC
 `
 
-func (q *Queries) ListProductsByCategory(ctx context.Context, dollar_1 sql.NullString) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listProductsByCategory, dollar_1)
+func (q *Queries) ListProductsByCategory(ctx context.Context, categorySlug sql.NullString) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, listProductsByCategory, categorySlug)
 	if err != nil {
 		return nil, err
 	}
@@ -176,4 +404,127 @@ func (q *Queries) ListProductsByCategory(ctx context.Context, dollar_1 sql.NullS
 		return nil, err
 	}
 	return items, nil
+}
+
+const listProductsWithCategory = `-- name: ListProductsWithCategory :many
+SELECT
+  p.id,
+  p.name,
+  p.slug,
+  p.description,
+  p.image_url,
+  p.category_id,
+  c.name AS category_name,
+  c.slug AS category_slug
+FROM products p
+JOIN categories c ON p.category_id = c.id
+ORDER BY p.name
+`
+
+type ListProductsWithCategoryRow struct {
+	ID           uuid.UUID      `json:"id"`
+	Name         string         `json:"name"`
+	Slug         string         `json:"slug"`
+	Description  sql.NullString `json:"description"`
+	ImageUrl     sql.NullString `json:"image_url"`
+	CategoryID   uuid.UUID      `json:"category_id"`
+	CategoryName string         `json:"category_name"`
+	CategorySlug string         `json:"category_slug"`
+}
+
+func (q *Queries) ListProductsWithCategory(ctx context.Context) ([]ListProductsWithCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProductsWithCategory)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProductsWithCategoryRow
+	for rows.Next() {
+		var i ListProductsWithCategoryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Description,
+			&i.ImageUrl,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.CategorySlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateProduct = `-- name: UpdateProduct :exec
+UPDATE products
+SET
+  name = $1,
+  slug = $2,
+  description = $3,
+  category_id = $4,
+    image_url = $5
+WHERE id = $6
+`
+
+type UpdateProductParams struct {
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	CategoryID  uuid.UUID      `json:"category_id"`
+	ImageUrl    sql.NullString `json:"image_url"`
+	ID          uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
+	_, err := q.db.ExecContext(ctx, updateProduct,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.CategoryID,
+		arg.ImageUrl,
+		arg.ID,
+	)
+	return err
+}
+
+const updateVariant = `-- name: UpdateVariant :exec
+UPDATE product_variants
+SET
+  sku = $1,
+  price = $2,
+  stock_quantity = $3,
+  image_url = $4,
+  variant_name = $5,
+  updated_at = NOW()
+WHERE id = $6
+`
+
+type UpdateVariantParams struct {
+	Sku           string         `json:"sku"`
+	Price         string         `json:"price"`
+	StockQuantity int32          `json:"stock_quantity"`
+	ImageUrl      sql.NullString `json:"image_url"`
+	VariantName   sql.NullString `json:"variant_name"`
+	ID            uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateVariant(ctx context.Context, arg UpdateVariantParams) error {
+	_, err := q.db.ExecContext(ctx, updateVariant,
+		arg.Sku,
+		arg.Price,
+		arg.StockQuantity,
+		arg.ImageUrl,
+		arg.VariantName,
+		arg.ID,
+	)
+	return err
 }

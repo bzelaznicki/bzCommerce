@@ -35,9 +35,10 @@ func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID.String(),
-		"email":   user.Email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"user_id":  user.ID.String(),
+		"email":    user.Email,
+		"is_admin": user.IsAdmin,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	})
 
 	signedToken, err := token.SignedString([]byte(cfg.jwtSecret))
