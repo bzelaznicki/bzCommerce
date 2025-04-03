@@ -1,21 +1,21 @@
-{{ define "title" }}{{ .Category.Name }} - {{ .StoreName }}{{ end }}
+{{ define "title" }}Category: {{ .Data.CategoryName }} - {{ .StoreName }}{{ end }}
+
+{{ template "base.html" . }}
 
 {{ define "content" }}
-  <h2>Products in {{ .Category.Name }}</h2>
+  <h2>Category: {{ .Data.CategoryName }}</h2>
 
-  {{ if .Products }}
-    <ul class="product-list">
-      {{ range .Products }}
-        <li>
-          <a href="/product/{{ .Slug }}">
-            {{ if .ImagePath }}
-              <img src="/static/images/{{ .ImagePath }}" alt="{{ .Name }}" width="150">
-            {{ end }}
-            <strong>{{ .Name }}</strong>
-          </a>
-        </li>
+  {{ if .Data.Products }}
+    <div class="product-grid">
+      {{ range .Data.Products }}
+        <a href="/product/{{ .Slug }}" class="product-card">
+          {{ if .ImagePath }}
+            <img src="{{ .ImagePath }}" alt="{{ .Name }}">
+          {{ end }}
+          <div class="product-name">{{ .Name }}</div>
+        </a>
       {{ end }}
-    </ul>
+    </div>
   {{ else }}
     <p>No products found in this category.</p>
   {{ end }}

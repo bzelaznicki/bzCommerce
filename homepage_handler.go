@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 )
 
@@ -25,21 +24,5 @@ func (cfg *apiConfig) handleHomePage(w http.ResponseWriter, r *http.Request) {
 		}
 		products = append(products, product)
 	}
-	data := struct {
-		StoreName string
-		Products  []Product
-	}{
-		StoreName: cfg.storeName,
-		Products:  products,
-	}
-
-	tmpl := parsePageTemplate("templates/pages/home.html")
-
-	err = tmpl.ExecuteTemplate(w, "base.html", data)
-	if err != nil {
-		log.Printf("template error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
+	cfg.Render(w, r, "templates/pages/home.html", products)
 }

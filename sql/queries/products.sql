@@ -9,3 +9,6 @@ SELECT * FROM products WHERE category_id = (SELECT id FROM categories WHERE slug
 
 -- name: ListProducts :many
 SELECT * FROM products ORDER BY name ASC;
+
+-- name: GetProductVariantsByProductId :many
+SELECT * FROM product_variants WHERE product_id = $1;

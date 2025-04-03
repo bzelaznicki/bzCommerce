@@ -11,8 +11,13 @@
     <h1><a href="/">{{ .StoreName }}</a></h1>
     <nav>
       <a href="/">Home</a>
-      <a href="/category/gadgets">Gadgets</a>
-      <a href="/category/widgets">Widgets</a>
+      {{ range .Categories }}
+      <a href="/category/{{ .Slug }}">{{ .Name }}</a>
+    {{ end }}
+      <a href="/cart">Cart</a>
+      <a href="/checkout">Checkout</a>
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
     </nav>
   </header>
 

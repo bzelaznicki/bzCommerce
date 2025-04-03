@@ -1,15 +1,51 @@
 package main
 
-import "net/http"
+import (
+	"database/sql"
+	"log"
+	"net/http"
+)
 
 type CategoryPageData struct {
 	CategoryName string
 	Products     []Product
-	CurrentPage  int
-	PrevPage     int
-	NextPage     int
 }
 
 func (cfg *apiConfig) handleCategoryPage(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+
+	if slug == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	nsSlug := sql.NullString{
+		String: slug,
+		Valid:  true,
+	}
+	category, err := cfg.db.ListProductsByCategory(r.Context(), nsSlug)
+
+	if err != nil {
+		log.Printf("error fetching category: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	products := make([]Product, 0, len(category))
+	for _, dbProduct := range category {
+		product := Product{
+			ID:          dbProduct.ID,
+			Name:        dbProduct.Name,
+			Slug:        dbProduct.Slug,
+			ImagePath:   dbProduct.ImageUrl.String,
+			CategoryID:  dbProduct.CategoryID,
+			Description: dbProduct.Description.String,
+		}
+		products = append(products, product)
+	}
+	categoryData := CategoryPageData{
+		CategoryName: slug,
+		Products:     products,
+	}
+	cfg.Render(w, r, "templates/pages/category.html", categoryData)
 
 }

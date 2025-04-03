@@ -1,6 +1,10 @@
 package main
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Product struct {
 	ID          uuid.UUID
@@ -13,6 +17,13 @@ type Product struct {
 }
 
 type Variant struct {
-	ID   uuid.UUID
-	Name string
+	ID            uuid.UUID
+	Name          string
+	ProductID     uuid.UUID
+	Price         string
+	StockQuantity int32
+	ImageUrl      string
+	VariantName   string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }

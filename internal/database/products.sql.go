@@ -32,6 +32,43 @@ func (q *Queries) GetProductBySlug(ctx context.Context, slug string) (Product, e
 	return i, err
 }
 
+const getProductVariantsByProductId = `-- name: GetProductVariantsByProductId :many
+SELECT id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at FROM product_variants WHERE product_id = $1
+`
+
+func (q *Queries) GetProductVariantsByProductId(ctx context.Context, productID uuid.UUID) ([]ProductVariant, error) {
+	rows, err := q.db.QueryContext(ctx, getProductVariantsByProductId, productID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductVariant
+	for rows.Next() {
+		var i ProductVariant
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProductID,
+			&i.Sku,
+			&i.Price,
+			&i.StockQuantity,
+			&i.ImageUrl,
+			&i.VariantName,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getProductVariantsByProductSlug = `-- name: GetProductVariantsByProductSlug :many
 SELECT id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at FROM product_variants WHERE product_id = $1
 `
