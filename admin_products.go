@@ -81,6 +81,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 
 	variantName := r.FormValue("variant_name")
 	variantPrice := r.FormValue("variant_price")
+	variantSku := r.FormValue("variant_sku")
 	variantStock, err := strconv.Atoi(r.FormValue("variant_stock"))
 	if err != nil {
 		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
@@ -92,6 +93,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 	_, err = cfg.db.CreateProductVariant(r.Context(), database.CreateProductVariantParams{
 		ProductID:     product.ID,
 		Name:          sql.NullString{String: variantName, Valid: variantName != ""},
+		Sku:           variantSku,
 		Price:         variantPrice,
 		StockQuantity: int32(variantStock),
 		ImageUrl:      sql.NullString{String: variantImage, Valid: variantImage != ""},
@@ -396,7 +398,6 @@ func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Fetch the variant so we know its product_id for redirect
 	variant, err := cfg.db.GetVariantByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Variant not found", http.StatusNotFound)
@@ -411,6 +412,5 @@ func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Redirect back to product's variant list
 	http.Redirect(w, r, fmt.Sprintf("/admin/products/%s/variants", variant.ProductID), http.StatusSeeOther)
 }
