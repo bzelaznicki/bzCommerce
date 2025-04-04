@@ -7,7 +7,58 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"time"
+
+	"github.com/google/uuid"
 )
+
+const createCategory = `-- name: CreateCategory :one
+INSERT INTO categories (name, slug, description, parent_id)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4
+)
+RETURNING id, name, slug, description, parent_id, created_at, updated_at
+`
+
+type CreateCategoryParams struct {
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	ParentID    uuid.NullUUID  `json:"parent_id"`
+}
+
+func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, createCategory,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.ParentID,
+	)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const deleteCategoryById = `-- name: DeleteCategoryById :exec
+DELETE FROM categories WHERE id = $1
+`
+
+func (q *Queries) DeleteCategoryById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCategoryById, id)
+	return err
+}
 
 const getCategories = `-- name: GetCategories :many
 SELECT id, name, slug, description, parent_id, created_at, updated_at FROM categories ORDER BY name ASC
@@ -42,4 +93,112 @@ func (q *Queries) GetCategories(ctx context.Context) ([]Category, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getCategoryById = `-- name: GetCategoryById :one
+
+SELECT id, name, slug, description, parent_id, created_at, updated_at FROM categories WHERE id = $1
+`
+
+func (q *Queries) GetCategoryById(ctx context.Context, id uuid.UUID) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryById, id)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listCategoriesWithParent = `-- name: ListCategoriesWithParent :many
+SELECT
+  c.id,
+  c.name,
+  c.slug,
+  c.description,
+  c.parent_id,
+  p.name AS parent_name,
+  c.created_at,
+  c.updated_at
+FROM categories c
+LEFT JOIN categories p ON c.parent_id = p.id
+ORDER BY c.name
+`
+
+type ListCategoriesWithParentRow struct {
+	ID          uuid.UUID      `json:"id"`
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	ParentID    uuid.NullUUID  `json:"parent_id"`
+	ParentName  sql.NullString `json:"parent_name"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+}
+
+func (q *Queries) ListCategoriesWithParent(ctx context.Context) ([]ListCategoriesWithParentRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCategoriesWithParent)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCategoriesWithParentRow
+	for rows.Next() {
+		var i ListCategoriesWithParentRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Description,
+			&i.ParentID,
+			&i.ParentName,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCategoryById = `-- name: UpdateCategoryById :exec
+UPDATE categories
+SET 
+    name = $1,
+    slug = $2,
+    description = $3,
+    parent_id = $4,
+    updated_at = NOW()
+    WHERE id = $5
+`
+
+type UpdateCategoryByIdParams struct {
+	Name        string         `json:"name"`
+	Slug        string         `json:"slug"`
+	Description sql.NullString `json:"description"`
+	ParentID    uuid.NullUUID  `json:"parent_id"`
+	ID          uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) error {
+	_, err := q.db.ExecContext(ctx, updateCategoryById,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.ParentID,
+		arg.ID,
+	)
+	return err
 }

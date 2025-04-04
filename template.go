@@ -8,12 +8,14 @@ import (
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
 )
 
 type BasePageData struct {
 	StoreName  string
 	Categories []database.Category
 	IsLoggedIn bool
+	IsAdmin    bool
 	Data       any
 }
 
@@ -22,11 +24,28 @@ func (cfg *apiConfig) NewPageData(ctx context.Context, data any) (BasePageData, 
 	if err != nil {
 		return BasePageData{}, fmt.Errorf("error getting base page data: %v", err)
 	}
-	_, isLoggedIn := ctx.Value(userIDContextKey).(string)
+
+	var isLoggedIn bool
+	var isAdmin bool
+
+	userIDStr, ok := ctx.Value(userIDContextKey).(string)
+	if ok {
+		isLoggedIn = true
+
+		userID, err := uuid.Parse(userIDStr)
+		if err == nil {
+			user, err := cfg.db.GetUserById(ctx, userID)
+			if err == nil {
+				isAdmin = user.IsAdmin
+			}
+		}
+	}
+
 	return BasePageData{
 		StoreName:  cfg.storeName,
 		Categories: categories,
 		IsLoggedIn: isLoggedIn,
+		IsAdmin:    isAdmin,
 		Data:       data,
 	}, nil
 }

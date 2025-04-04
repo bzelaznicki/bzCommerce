@@ -118,13 +118,34 @@ func main() {
 	// Delete product
 	mux.Handle("POST /admin/products/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminProductDelete)))
 
+	//List product variants
 	mux.Handle("GET /admin/products/{id}/variants", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantList)))
+
+	//New product form
 	mux.Handle("GET /admin/products/{id}/variants/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantNewForm)))
 	mux.Handle("POST /admin/products/{id}/variants", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantCreate)))
 
+	//Edit Variants
 	mux.Handle("GET /admin/variants/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantEditForm)))
 	mux.Handle("POST /admin/variants/{id}", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantUpdate)))
+
+	//Delete variant
 	mux.Handle("POST /admin/variants/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminVariantDelete)))
+
+	// View all categories
+	mux.Handle("GET /admin/categories", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryList)))
+
+	// New category form + create
+	mux.Handle("GET /admin/categories/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryNewForm)))
+
+	mux.Handle("POST /admin/categories", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryCreate)))
+
+	// Edit category form + update
+	mux.Handle("GET /admin/categories/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryEditForm)))
+	mux.Handle("POST /admin/categories/{id}", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryUpdate)))
+
+	// Delete category
+	mux.Handle("POST /admin/categories/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryDelete)))
 
 	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)
 

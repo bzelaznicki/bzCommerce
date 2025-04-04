@@ -57,7 +57,8 @@ SET
   slug = sqlc.arg(slug),
   description = sqlc.arg(description),
   category_id = sqlc.arg(category_id),
-    image_url = sqlc.arg(image_url)
+    image_url = sqlc.arg(image_url),
+    updated_at = NOW()
 WHERE id = sqlc.arg(id);
 
 

@@ -471,7 +471,8 @@ SET
   slug = $2,
   description = $3,
   category_id = $4,
-    image_url = $5
+    image_url = $5,
+    updated_at = NOW()
 WHERE id = $6
 `
 

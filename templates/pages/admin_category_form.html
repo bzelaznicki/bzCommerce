@@ -1,0 +1,32 @@
+{{ define "title" }}{{ if .Data.IsEdit }}Edit Category{{ else }}Add Category{{ end }} - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <h2>{{ if .Data.IsEdit }}Edit Category{{ else }}Add New Category{{ end }}</h2>
+
+  <form method="POST" class="admin-form" action="{{ .Data.FormAction }}">
+    <label>Name</label>
+    <input type="text" name="name" value="{{ .Data.Category.Name }}" required>
+
+    <label>Slug</label>
+    <input type="text" name="slug" value="{{ .Data.Category.Slug }}" required>
+
+    <label>Description</label>
+    <textarea name="description">{{ .Data.Category.Description }}</textarea>
+
+    <label>Parent Category</label>
+    <select name="parent_id">
+      <option value="">— None —</option>
+      {{ range .Categories }}
+        {{ if ne .ID $.Data.Category.ID }} <!-- prevent self as parent -->
+          <option value="{{ .ID }}" {{ if and $.Data.Category.ParentID.Valid (eq .ID $.Data.Category.ParentID.UUID) }}selected{{ end }}>
+            {{ .Name }}
+          </option>
+        {{ end }}
+      {{ end }}
+    </select>
+
+    <button type="submit">{{ if .Data.IsEdit }}Update Category{{ else }}Create Category{{ end }}</button>
+  </form>
+</div>
+{{ end }}

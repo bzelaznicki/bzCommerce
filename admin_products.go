@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -14,6 +15,7 @@ func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Requ
 	rows, err := cfg.db.ListProductsWithCategory(r.Context())
 	if err != nil {
 		http.Error(w, "Could not load products", http.StatusInternalServerError)
+		log.Printf("could not load products: %v", err)
 		return
 	}
 
@@ -49,6 +51,7 @@ func (cfg *apiConfig) handleAdminProductNewForm(w http.ResponseWriter, r *http.R
 func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
+		log.Printf("error parsing form: %v", err)
 		return
 	}
 
@@ -59,6 +62,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 	categoryID := r.FormValue("category_id")
 	if categoryID == "" {
 		http.Error(w, "Category is required", http.StatusBadRequest)
+		log.Println("category_id is empty")
 		return
 	}
 
@@ -71,6 +75,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		http.Error(w, "Failed to create product", http.StatusInternalServerError)
+		log.Printf("failed to create product: %v", err)
 		return
 	}
 
@@ -79,6 +84,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 	variantStock, err := strconv.Atoi(r.FormValue("variant_stock"))
 	if err != nil {
 		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
+		log.Printf("invalid stock quantity: %v", err)
 		return
 	}
 	variantImage := r.FormValue("variant_image")
@@ -86,12 +92,13 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 	_, err = cfg.db.CreateProductVariant(r.Context(), database.CreateProductVariantParams{
 		ProductID:     product.ID,
 		Name:          sql.NullString{String: variantName, Valid: variantName != ""},
-		Price:         variantPrice, // stored as string or numeric depending on your schema
+		Price:         variantPrice,
 		StockQuantity: int32(variantStock),
 		ImageUrl:      sql.NullString{String: variantImage, Valid: variantImage != ""},
 	})
 	if err != nil {
 		http.Error(w, "Failed to create initial variant", http.StatusInternalServerError)
+		log.Printf("failed to create product variant: %v", err)
 		return
 	}
 
@@ -103,12 +110,14 @@ func (cfg *apiConfig) handleAdminProductEditForm(w http.ResponseWriter, r *http.
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id: %v", err)
 		return
 	}
 
 	p, err := cfg.db.GetProductById(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
+		log.Printf("product not found (id %s): %v", id, err)
 		return
 	}
 
@@ -129,11 +138,13 @@ func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Re
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id: %v", err)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
+		log.Printf("error parsing form: %v", err)
 		return
 	}
 
@@ -153,6 +164,7 @@ func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		http.Error(w, "Failed to update product", http.StatusInternalServerError)
+		log.Printf("failed to update product (id %s): %v", id, err)
 		return
 	}
 
@@ -164,12 +176,14 @@ func (cfg *apiConfig) handleAdminProductDelete(w http.ResponseWriter, r *http.Re
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id: %v", err)
 		return
 	}
 
 	err = cfg.db.DeleteProduct(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Failed to delete product", http.StatusInternalServerError)
+		log.Printf("failed to delete product (id %s): %v", id, err)
 		return
 	}
 
@@ -180,18 +194,21 @@ func (cfg *apiConfig) handleAdminVariantList(w http.ResponseWriter, r *http.Requ
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id for variant list: %v", err)
 		return
 	}
 
 	product, err := cfg.db.GetProductById(r.Context(), productID)
 	if err != nil {
 		http.Error(w, "Product not found", http.StatusNotFound)
+		log.Printf("product not found (id %s): %v", productID, err)
 		return
 	}
 
 	variants, err := cfg.db.GetVariantsByProductID(r.Context(), productID)
 	if err != nil {
 		http.Error(w, "Failed to load variants", http.StatusInternalServerError)
+		log.Printf("failed to load variants for product (id %s): %v", productID, err)
 		return
 	}
 
@@ -206,17 +223,21 @@ func (cfg *apiConfig) handleAdminVariantList(w http.ResponseWriter, r *http.Requ
 	pageData, err := cfg.NewPageData(r.Context(), data)
 	if err != nil {
 		http.Error(w, "Error rendering", http.StatusInternalServerError)
+		log.Printf("failed to create page data: %v", err)
 		return
 	}
 
 	tmpl := parsePageTemplate("templates/pages/admin_variant_list.html")
-	tmpl.ExecuteTemplate(w, "base.html", pageData)
+	if err := tmpl.ExecuteTemplate(w, "base.html", pageData); err != nil {
+		log.Printf("failed to execute variant list template: %v", err)
+	}
 }
 
 func (cfg *apiConfig) handleAdminVariantNewForm(w http.ResponseWriter, r *http.Request) {
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id for new variant: %v", err)
 		return
 	}
 
@@ -242,16 +263,23 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid product id for creating variant: %v", err)
 		return
 	}
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
+		log.Printf("error parsing variant creation form: %v", err)
 		return
 	}
 
 	sku := r.FormValue("sku")
 	price := r.FormValue("price")
-	stockQty, _ := strconv.Atoi(r.FormValue("stock_quantity"))
+	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
+	if err != nil {
+		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
+		log.Printf("invalid stock quantity in variant create: %v", err)
+		return
+	}
 	imageURL := r.FormValue("image_url")
 	variantName := r.FormValue("variant_name")
 
@@ -265,6 +293,7 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		http.Error(w, "Failed to create variant", http.StatusInternalServerError)
+		log.Printf("failed to create variant for product (id %s): %v", productID, err)
 		return
 	}
 
@@ -275,12 +304,14 @@ func (cfg *apiConfig) handleAdminVariantEditForm(w http.ResponseWriter, r *http.
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid variant id: %v", err)
 		return
 	}
 
 	v, err := cfg.db.GetVariantByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Variant not found", http.StatusNotFound)
+		log.Printf("variant not found (id %s): %v", id, err)
 		return
 	}
 
@@ -319,16 +350,23 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid variant id: %v", err)
 		return
 	}
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
+		log.Printf("error parsing variant update form: %v", err)
 		return
 	}
 
 	sku := r.FormValue("sku")
 	price := r.FormValue("price")
-	stockQty, _ := strconv.Atoi(r.FormValue("stock_quantity"))
+	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
+	if err != nil {
+		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
+		log.Printf("invalid stock quantity in variant update: %v", err)
+		return
+	}
 	imageURL := r.FormValue("image_url")
 	variantName := r.FormValue("variant_name")
 
@@ -342,16 +380,19 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		http.Error(w, "Failed to update variant", http.StatusInternalServerError)
+		log.Printf("failed to update variant (id %s): %v", id, err)
 		return
 	}
 
 	http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
 }
+
 func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		http.NotFound(w, r)
+		log.Printf("invalid variant id: %v", err)
 		return
 	}
 
@@ -359,12 +400,14 @@ func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Re
 	variant, err := cfg.db.GetVariantByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Variant not found", http.StatusNotFound)
+		log.Printf("variant not found (id %s): %v", id, err)
 		return
 	}
 
 	err = cfg.db.DeleteVariant(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Failed to delete variant", http.StatusInternalServerError)
+		log.Printf("failed to delete variant (id %s): %v", id, err)
 		return
 	}
 
