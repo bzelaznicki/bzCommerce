@@ -11,3 +11,5 @@ WHERE email = $1;
 SELECT * FROM users
 WHERE id = $1;
 
+-- name: ListUsers :many
+SELECT id, full_name, email, created_at, updated_at, is_admin FROM users;
