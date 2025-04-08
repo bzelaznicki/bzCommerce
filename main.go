@@ -15,12 +15,11 @@ import (
 )
 
 type apiConfig struct {
-	db           *database.Queries
-	jwtSecret    string
-	filepathRoot string
-	platform     string
-	templates    *template.Template
-	storeName    string
+	db        *database.Queries
+	jwtSecret string
+	platform  string
+	templates *template.Template
+	storeName string
 }
 
 func main() {
@@ -50,10 +49,6 @@ func main() {
 	}
 
 	filepathRoot := os.Getenv("FILEPATH_ROOT")
-
-	if filepathRoot == "" {
-		log.Fatal("FILEPATH_ROOT cannot be empty")
-	}
 
 	port := os.Getenv("PORT")
 
