@@ -1,11 +1,11 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/bzelaznicki/bzCommerce/internal/auth"
 )
 
 func (cfg *apiConfig) handleLoginGet(w http.ResponseWriter, r *http.Request) {
@@ -27,24 +27,19 @@ func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	user, err := cfg.db.GetUserByEmail(r.Context(), email)
 	if err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		log.Printf("error getting user %s: %v", email, err)
 		return
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	if err := auth.CheckPassword(user.PasswordHash, password); err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		log.Printf("error authenticating user %s: %v", email, err)
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID.String(),
-		"email":    user.Email,
-		"is_admin": user.IsAdmin,
-		"exp":      time.Now().Add(24 * time.Hour).Unix(),
-	})
-
-	signedToken, err := token.SignedString([]byte(cfg.jwtSecret))
-
+	signedToken, err := auth.GenerateJWT(user.ID.String(), user.Email, cfg.jwtSecret, user.IsAdmin, CookieExpirationTime)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("error signing token for %s: %v", email, err)
 		return
 	}
 

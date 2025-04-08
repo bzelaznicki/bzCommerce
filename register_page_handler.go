@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (cfg *apiConfig) handleRegisterGet(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -45,7 +45,7 @@ func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request)
 	user := database.CreateUserParams{
 		FullName:     fullName,
 		Email:        email,
-		PasswordHash: string(hashedPassword),
+		PasswordHash: hashedPassword,
 	}
 
 	_, err = cfg.db.CreateUser(r.Context(), user)
