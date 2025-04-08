@@ -12,14 +12,10 @@ func (cfg *apiConfig) handleRegisterGet(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Bad Request")
 		return
 	}
 
@@ -28,16 +24,17 @@ func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request)
 	password := r.FormValue("password")
 	confirm := r.FormValue("confirm")
 	if password != confirm {
-		http.Error(w, "Passwords do not match", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Passwords do not match")
 		return
 	}
 	if fullName == "" || email == "" || password == "" {
-		http.Error(w, "All fields are required", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "All fields are required")
 		return
 	}
 
 	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -50,7 +47,7 @@ func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request)
 
 	_, err = cfg.db.CreateUser(r.Context(), user)
 	if err != nil {
-		http.Error(w, "User already exists or cannot be created", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "User already exists or cannot be created")
 		return
 	}
 

@@ -7,7 +7,8 @@ import (
 func (cfg *apiConfig) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	dbProducts, err := cfg.db.ListProducts(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
+
 		return
 	}
 

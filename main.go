@@ -23,6 +23,7 @@ type apiConfig struct {
 }
 
 func main() {
+	logger()
 	godotenv.Load(".env")
 
 	pathToDB := os.Getenv("DB_URL")
@@ -47,8 +48,6 @@ func main() {
 	if platform == "" {
 		log.Fatal("PLATFORM cannot be empty")
 	}
-
-	filepathRoot := os.Getenv("FILEPATH_ROOT")
 
 	port := os.Getenv("PORT")
 
@@ -80,7 +79,7 @@ func main() {
 
 	cfg.registerRoutes(mux)
 
-	fmt.Printf("serving files from %s on port %s\n", filepathRoot, port)
+	fmt.Printf("serving on port %s\n", port)
 
 	log.Fatal(srv.ListenAndServe())
 }

@@ -72,3 +72,17 @@ func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+func (cfg *apiConfig) RenderError(w http.ResponseWriter, r *http.Request, code int, message string) {
+	w.WriteHeader(code)
+
+	data := struct {
+		Code    int
+		Message string
+	}{
+		Code:    code,
+		Message: message,
+	}
+
+	cfg.Render(w, r, "templates/pages/error.html", data)
+}

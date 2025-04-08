@@ -8,20 +8,20 @@ import (
 func (cfg *apiConfig) handleProductPage(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Page not found")
 		return
 	}
 
 	product, err := cfg.db.GetProductBySlug(r.Context(), slug)
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Page not found")
 		return
 	}
 
 	dbVariants, err := cfg.db.GetProductVariantsByProductId(r.Context(), product.ID)
 	if err != nil {
 		log.Printf("error fetching product variants: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 

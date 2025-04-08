@@ -48,3 +48,6 @@ Icon
 
 # macOS 13.0 Time Machine
 .com.apple.TimeMachine.Snapshot
+
+# Logs folder
+logs/

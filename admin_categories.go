@@ -15,7 +15,7 @@ func (cfg *apiConfig) handleAdminCategoryList(w http.ResponseWriter, r *http.Req
 	rows, err := cfg.db.ListCategoriesWithParent(r.Context())
 
 	if err != nil {
-		http.Error(w, "Could not load categories", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not load categories")
 		log.Printf("could not load categories: %v", err)
 		return
 	}
@@ -52,7 +52,7 @@ func (cfg *apiConfig) handleAdminCategoryList(w http.ResponseWriter, r *http.Req
 func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.Request) {
 	categories, err := cfg.db.GetCategories(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to load categories", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load categories")
 		log.Printf("failed to load categories: %v", err)
 		return
 	}
@@ -86,7 +86,7 @@ func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.
 
 func (cfg *apiConfig) handleAdminCategoryCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid form", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form")
 		log.Printf("invalid form: %v", err)
 		return
 	}
@@ -107,7 +107,7 @@ func (cfg *apiConfig) handleAdminCategoryCreate(w http.ResponseWriter, r *http.R
 		ParentID:    parsedParent,
 	})
 	if err != nil {
-		http.Error(w, "Failed to create category", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to create category")
 		log.Printf("failed to create category: %v", err)
 		return
 	}
@@ -118,22 +118,22 @@ func (cfg *apiConfig) handleAdminCategoryEditForm(w http.ResponseWriter, r *http
 
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
-		log.Printf("failed to parse UUID: %v", err)
+		cfg.RenderError(w, r, http.StatusNotFound, "Category not found")
+		log.Printf("failed to parse category UUID: %v", err)
 		return
 	}
 
 	cat, err := cfg.db.GetCategoryById(r.Context(), id)
 
 	if err != nil {
-		http.Error(w, "Category not found", http.StatusNotFound)
-		log.Printf("failed to find category: %v", err)
+		cfg.RenderError(w, r, http.StatusNotFound, fmt.Sprintf("Category %s not found", id))
+		log.Printf("failed to find category %s: %v", id, err)
 		return
 	}
 
 	categories, err := cfg.db.GetCategories(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to load categories", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load categories")
 		log.Printf("failed to load categories: %v", err)
 		return
 	}
@@ -175,13 +175,13 @@ func (cfg *apiConfig) handleAdminCategoryUpdate(w http.ResponseWriter, r *http.R
 
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Category not found")
 		log.Printf("invalid product id: %v", err)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "invalid form", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form")
 		log.Printf("error parsing form: %v", err)
 		return
 	}
@@ -203,7 +203,7 @@ func (cfg *apiConfig) handleAdminCategoryUpdate(w http.ResponseWriter, r *http.R
 	})
 
 	if err != nil {
-		http.Error(w, "failed to update category", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to update category %s", id))
 		log.Printf("failed to update category: %v", err)
 		return
 	}
@@ -224,7 +224,7 @@ func (cfg *apiConfig) handleAdminCategoryDelete(w http.ResponseWriter, r *http.R
 	_, err = cfg.db.GetCategoryById(r.Context(), id)
 
 	if err != nil {
-		http.Error(w, "Category not found", http.StatusNotFound)
+		cfg.RenderError(w, r, http.StatusNotFound, fmt.Sprintf("Category %s not found", id))
 		log.Printf("category not found (id %s): %v", id, err)
 		return
 	}
@@ -232,7 +232,7 @@ func (cfg *apiConfig) handleAdminCategoryDelete(w http.ResponseWriter, r *http.R
 	err = cfg.db.DeleteCategoryById(r.Context(), id)
 
 	if err != nil {
-		http.Error(w, "Failed to delete category", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to delete category %s", id))
 		log.Printf("failed to delete category (id %s): %v", id, err)
 		return
 	}

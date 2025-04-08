@@ -102,7 +102,7 @@ func (cfg *apiConfig) requireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("auth_token")
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Access denied")
 			return
 		}
 
@@ -113,13 +113,13 @@ func (cfg *apiConfig) requireAdmin(next http.Handler) http.Handler {
 			return []byte(cfg.jwtSecret), nil
 		})
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Access denied")
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || claims["is_admin"] != true {
-			http.Error(w, "Forbidden: Admins only", http.StatusForbidden)
+			cfg.RenderError(w, r, http.StatusForbidden, "Access denied")
 			return
 		}
 
