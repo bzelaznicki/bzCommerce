@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
@@ -35,7 +36,7 @@ func (cfg *apiConfig) handleRegisterPost(w http.ResponseWriter, r *http.Request)
 	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("error during registration: %v", err)
 		return
 	}
 

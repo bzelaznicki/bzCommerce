@@ -14,31 +14,33 @@ func (cfg *apiConfig) handleLoginGet(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Bad Request")
+		log.Printf("bad request: %v", err)
 		return
 	}
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	if email == "" || password == "" {
-		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Email and password are required")
+		log.Println("email or password is empty")
 		return
 	}
 
 	user, err := cfg.db.GetUserByEmail(r.Context(), email)
 	if err != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid email or password")
 		log.Printf("error getting user %s: %v", email, err)
 		return
 	}
 	if err := auth.CheckPassword(user.PasswordHash, password); err != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid email or password")
 		log.Printf("error authenticating user %s: %v", email, err)
 		return
 	}
 
 	signedToken, err := auth.GenerateJWT(user.ID.String(), user.Email, cfg.jwtSecret, user.IsAdmin, CookieExpirationTime)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
 		log.Printf("error signing token for %s: %v", email, err)
 		return
 	}

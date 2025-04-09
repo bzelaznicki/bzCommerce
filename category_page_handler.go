@@ -26,8 +26,8 @@ func (cfg *apiConfig) handleCategoryPage(w http.ResponseWriter, r *http.Request)
 	category, err := cfg.db.ListProductsByCategory(r.Context(), nsSlug)
 
 	if err != nil {
-		log.Printf("error fetching category: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("error loading category page: %v", err)
 		return
 	}
 	products := make([]Product, 0, len(category))

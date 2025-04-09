@@ -29,19 +29,22 @@ func (cfg *apiConfig) withAuth(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid token")
+			log.Printf("invalid token: %v", err)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid token claims")
+			log.Printf("invalid token claims: %v", err)
 			return
 		}
 
 		userID, ok := claims["user_id"].(string)
 		if !ok {
-			http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid user ID")
+			log.Printf("invalid user ID: %v", err)
 			return
 		}
 

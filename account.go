@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -14,7 +15,8 @@ func (cfg *apiConfig) handleAccountPage(w http.ResponseWriter, r *http.Request) 
 	}
 	user, err := cfg.db.GetUserById(r.Context(), uuid.MustParse(userID))
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		cfg.RenderError(w, r, http.StatusNotFound, "User not found")
+		log.Printf("user not found: %v", err)
 		return
 	}
 

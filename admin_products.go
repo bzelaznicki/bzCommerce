@@ -14,7 +14,7 @@ import (
 func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Request) {
 	rows, err := cfg.db.ListProductsWithCategory(r.Context())
 	if err != nil {
-		http.Error(w, "Could not load products", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not load products")
 		log.Printf("could not load products: %v", err)
 		return
 	}
@@ -145,7 +145,7 @@ func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Re
 	}
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid form", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form")
 		log.Printf("error parsing form: %v", err)
 		return
 	}
@@ -165,7 +165,7 @@ func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Re
 		CategoryID:  uuid.MustParse(categoryID),
 	})
 	if err != nil {
-		http.Error(w, "Failed to update product", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to update product")
 		log.Printf("failed to update product (id %s): %v", id, err)
 		return
 	}
@@ -177,14 +177,14 @@ func (cfg *apiConfig) handleAdminProductDelete(w http.ResponseWriter, r *http.Re
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid product ID")
 		log.Printf("invalid product id: %v", err)
 		return
 	}
 
 	err = cfg.db.DeleteProduct(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Failed to delete product", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete product")
 		log.Printf("failed to delete product (id %s): %v", id, err)
 		return
 	}
@@ -195,21 +195,21 @@ func (cfg *apiConfig) handleAdminProductDelete(w http.ResponseWriter, r *http.Re
 func (cfg *apiConfig) handleAdminVariantList(w http.ResponseWriter, r *http.Request) {
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid product ID")
 		log.Printf("invalid product id for variant list: %v", err)
 		return
 	}
 
 	product, err := cfg.db.GetProductById(r.Context(), productID)
 	if err != nil {
-		http.Error(w, "Product not found", http.StatusNotFound)
+		cfg.RenderError(w, r, http.StatusNotFound, "Product not found")
 		log.Printf("product not found (id %s): %v", productID, err)
 		return
 	}
 
 	variants, err := cfg.db.GetVariantsByProductID(r.Context(), productID)
 	if err != nil {
-		http.Error(w, "Failed to load variants", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load variants")
 		log.Printf("failed to load variants for product (id %s): %v", productID, err)
 		return
 	}
@@ -224,7 +224,7 @@ func (cfg *apiConfig) handleAdminVariantList(w http.ResponseWriter, r *http.Requ
 
 	pageData, err := cfg.NewPageData(r.Context(), data)
 	if err != nil {
-		http.Error(w, "Error rendering", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Error rendering")
 		log.Printf("failed to create page data: %v", err)
 		return
 	}
@@ -238,7 +238,7 @@ func (cfg *apiConfig) handleAdminVariantList(w http.ResponseWriter, r *http.Requ
 func (cfg *apiConfig) handleAdminVariantNewForm(w http.ResponseWriter, r *http.Request) {
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid product ID")
 		log.Printf("invalid product id for new variant: %v", err)
 		return
 	}
@@ -264,12 +264,12 @@ func (cfg *apiConfig) handleAdminVariantNewForm(w http.ResponseWriter, r *http.R
 func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Request) {
 	productID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid product ID")
 		log.Printf("invalid product id for creating variant: %v", err)
 		return
 	}
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid form", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form")
 		log.Printf("error parsing variant creation form: %v", err)
 		return
 	}
@@ -278,7 +278,7 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 	price := r.FormValue("price")
 	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
 	if err != nil {
-		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid stock quantity")
 		log.Printf("invalid stock quantity in variant create: %v", err)
 		return
 	}
@@ -294,7 +294,7 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 		VariantName:   sql.NullString{String: variantName, Valid: variantName != ""},
 	})
 	if err != nil {
-		http.Error(w, "Failed to create variant", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to create variant")
 		log.Printf("failed to create variant for product (id %s): %v", productID, err)
 		return
 	}
@@ -305,14 +305,14 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 func (cfg *apiConfig) handleAdminVariantEditForm(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid variant ID")
 		log.Printf("invalid variant id: %v", err)
 		return
 	}
 
 	v, err := cfg.db.GetVariantByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Variant not found", http.StatusNotFound)
+		cfg.RenderError(w, r, http.StatusNotFound, "Variant not found")
 		log.Printf("variant not found (id %s): %v", id, err)
 		return
 	}
@@ -351,12 +351,12 @@ func (cfg *apiConfig) handleAdminVariantEditForm(w http.ResponseWriter, r *http.
 func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid variant ID")
 		log.Printf("invalid variant id: %v", err)
 		return
 	}
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Invalid form", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form")
 		log.Printf("error parsing variant update form: %v", err)
 		return
 	}
@@ -365,7 +365,7 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 	price := r.FormValue("price")
 	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
 	if err != nil {
-		http.Error(w, "Invalid stock quantity", http.StatusBadRequest)
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid stock quantity")
 		log.Printf("invalid stock quantity in variant update: %v", err)
 		return
 	}
@@ -381,7 +381,7 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 		VariantName:   sql.NullString{String: variantName, Valid: variantName != ""},
 	})
 	if err != nil {
-		http.Error(w, "Failed to update variant", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to update variant")
 		log.Printf("failed to update variant (id %s): %v", id, err)
 		return
 	}
@@ -393,21 +393,21 @@ func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Re
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		http.NotFound(w, r)
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid variant ID")
 		log.Printf("invalid variant id: %v", err)
 		return
 	}
 
 	variant, err := cfg.db.GetVariantByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Variant not found", http.StatusNotFound)
+		cfg.RenderError(w, r, http.StatusNotFound, "Variant not found")
 		log.Printf("variant not found (id %s): %v", id, err)
 		return
 	}
 
 	err = cfg.db.DeleteVariant(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Failed to delete variant", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete variant")
 		log.Printf("failed to delete variant (id %s): %v", id, err)
 		return
 	}
