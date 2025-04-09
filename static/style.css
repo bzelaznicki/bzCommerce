@@ -364,3 +364,34 @@
 .admin-form button[type="submit"] {
   margin-top: 1.5rem;
 }
+
+/* Error Page Styles */
+.error-page {
+  text-align: center;
+  margin-top: 50px;
+  font-family: Arial, sans-serif;
+}
+
+.error-page h2 {
+  font-size: 2.5em;
+  color: #ff4d4d;
+}
+
+.error-page p {
+  font-size: 1.2em;
+  color: #333;
+}
+
+.error-page a {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.error-page a:hover {
+  background-color: #0056b3;
+}
