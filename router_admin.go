@@ -52,7 +52,13 @@ func (cfg *apiConfig) registerAdminRoutes(mux *http.ServeMux) {
 	// Delete category
 	mux.Handle("POST /admin/categories/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminCategoryDelete)))
 
+	// View users
 	mux.Handle("GET /admin/users", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminUsersList)))
+	// Edit users page
+	mux.Handle("GET /admin/users/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminUserEditForm)))
+	mux.Handle("POST /admin/users/{id}", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminUserUpdate)))
 
+	// Delete user
+	mux.Handle("POST /admin/users/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminUserDelete)))
 	log.Printf("Admin routes registered")
 }

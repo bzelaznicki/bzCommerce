@@ -39,6 +39,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteUserById = `-- name: DeleteUserById :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUserById(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUserById, id)
+	return err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin FROM users
 WHERE email = $1
@@ -120,4 +130,46 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUserById = `-- name: UpdateUserById :exec
+UPDATE users
+SET full_name = $1,
+    email = $2,
+    is_admin = $3,
+    updated_at = NOW()
+WHERE id = $4
+`
+
+type UpdateUserByIdParams struct {
+	FullName string    `json:"full_name"`
+	Email    string    `json:"email"`
+	IsAdmin  bool      `json:"is_admin"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserById,
+		arg.FullName,
+		arg.Email,
+		arg.IsAdmin,
+		arg.ID,
+	)
+	return err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users
+SET password_hash = $1
+WHERE id = $2
+`
+
+type UpdateUserPasswordParams struct {
+	Password string    `json:"password"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.Password, arg.ID)
+	return err
 }
