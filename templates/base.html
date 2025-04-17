@@ -12,8 +12,18 @@
     <nav>
       <a href="/">Home</a>
       {{ range .Categories }}
-        <a href="/category/{{ .Slug }}">{{ .Name }}</a>
-      {{ end }}
+        <div class="nav-item dropdown">
+          <a href="/category/{{ .Parent.Slug }}">{{ .Parent.Name }}</a>
+          {{ if .Children }}
+            <div class="dropdown-content">
+              {{ range .Children }}
+                <a href="/category/{{ .Slug }}">{{ .Name }}</a>
+        {{ end }}
+      </div>
+    {{ end }}
+  </div>
+{{ end }}
+
       <a href="/cart">Cart</a>
       <a href="/checkout">Checkout</a>
     

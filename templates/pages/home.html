@@ -6,7 +6,7 @@
   {{ if .Categories }}
     <ul class="category-list">
       {{ range .Categories }}
-        <li><a href="/category/{{ .Slug }}">{{ .Name }}</a></li>
+        <li><a href="/category/{{ .Parent.Slug }}">{{ .Parent.Name }}</a></li>
       {{ end }}
     </ul>
   {{ else }}

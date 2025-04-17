@@ -13,9 +13,9 @@ import (
 
 type BasePageData struct {
 	StoreName  string
-	Categories []database.Category
 	IsLoggedIn bool
 	IsAdmin    bool
+	Categories []CategoryGroup
 	Data       any
 }
 
@@ -41,9 +41,11 @@ func (cfg *apiConfig) NewPageData(ctx context.Context, data any) (BasePageData, 
 		}
 	}
 
+	cats := groupCategories(categories)
+
 	return BasePageData{
 		StoreName:  cfg.storeName,
-		Categories: categories,
+		Categories: cats,
 		IsLoggedIn: isLoggedIn,
 		IsAdmin:    isAdmin,
 		Data:       data,
@@ -56,6 +58,32 @@ func parsePageTemplate(filename string) *template.Template {
 		filename,
 	))
 	return tmpl
+}
+
+type CategoryGroup struct {
+	Parent   database.Category
+	Children []database.Category
+}
+
+func groupCategories(cats []database.Category) []CategoryGroup {
+	parentMap := make(map[uuid.UUID][]database.Category)
+	var topLevel []database.Category
+
+	for _, cat := range cats {
+		if cat.ParentID.Valid {
+			parentMap[cat.ParentID.UUID] = append(parentMap[cat.ParentID.UUID], cat)
+		} else {
+			topLevel = append(topLevel, cat)
+		}
+	}
+
+	var groups []CategoryGroup
+	for _, parent := range topLevel {
+		children := parentMap[parent.ID]
+		groups = append(groups, CategoryGroup{Parent: parent, Children: children})
+	}
+
+	return groups
 }
 
 func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string, data any) {
