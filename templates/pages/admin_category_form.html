@@ -17,14 +17,17 @@
     <label>Parent Category</label>
     <select name="parent_id">
       <option value="">— None —</option>
-      {{ range .Categories }}
-        {{ if ne .ID $.Data.Category.ID }} <!-- prevent self as parent -->
-          <option value="{{ .ID }}" {{ if and $.Data.Category.ParentID.Valid (eq .ID $.Data.Category.ParentID.UUID) }}selected{{ end }}>
-            {{ .Name }}
+      {{ range .Data.CategoryOptions }}
+        {{ $cat := . }}
+        {{ if ne $cat.ID $.Data.Category.ID }} <!-- prevent self as parent -->
+          <option value="{{ $cat.ID }}"
+            {{ if and $.Data.Category.ParentID.Valid (eq $cat.ID $.Data.Category.ParentID.UUID) }}selected{{ end }}>
+            {{ $cat.Name }}
           </option>
         {{ end }}
       {{ end }}
     </select>
+    
 
     <button type="submit">{{ if .Data.IsEdit }}Update Category{{ else }}Create Category{{ end }}</button>
   </form>

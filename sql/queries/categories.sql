@@ -5,6 +5,25 @@ SELECT * FROM categories ORDER BY name ASC;
 
 SELECT * FROM categories WHERE id = sqlc.arg(id);
 
+-- name: GetCategoryBySlug :one
+SELECT * FROM categories WHERE slug = sqlc.arg(slug);
+
+-- name: GetChildCategories :many
+SELECT * FROM categories WHERE parent_id = sqlc.arg(parent_id);
+
+-- name: GetCategoryPathByID :many
+WITH RECURSIVE path AS (
+  SELECT id, name, slug, parent_id
+  FROM categories
+  WHERE id = sqlc.arg(id)
+  UNION ALL
+  SELECT c.id, c.name, c.slug, c.parent_id
+  FROM categories c
+  INNER JOIN path p ON c.id = p.parent_id
+)
+SELECT * FROM path;
+
+
 -- name: ListCategoriesWithParent :many
 SELECT
   c.id,
@@ -42,3 +61,4 @@ SET
 
 -- name: DeleteCategoryById :exec
 DELETE FROM categories WHERE id = sqlc.arg(id);
+

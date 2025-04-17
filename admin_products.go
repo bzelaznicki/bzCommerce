@@ -45,7 +45,28 @@ func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Requ
 }
 
 func (cfg *apiConfig) handleAdminProductNewForm(w http.ResponseWriter, r *http.Request) {
-	cfg.Render(w, r, "templates/pages/admin_product_new.html", nil)
+
+	categories, err := cfg.db.GetCategories(r.Context())
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load categories")
+		log.Printf("failed to load categories: %v", err)
+		return
+	}
+
+	groups := groupCategories(categories)
+	options := flattenCategoryOptions(groups)
+
+	data := struct {
+		IsEdit          bool
+		FormAction      string
+		CategoryOptions []CategoryOption
+	}{
+		IsEdit:          false,
+		FormAction:      "/admin/products",
+		CategoryOptions: options,
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_product_new.html", data)
 }
 
 func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +132,7 @@ func (cfg *apiConfig) handleAdminProductEditForm(w http.ResponseWriter, r *http.
 	idStr := r.PathValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		cfg.RenderError(w, r, http.StatusNotFound, "Invalid category ID")
+		cfg.RenderError(w, r, http.StatusNotFound, "Invalid product ID")
 		log.Printf("invalid product id: %v", err)
 		return
 	}
@@ -123,16 +144,36 @@ func (cfg *apiConfig) handleAdminProductEditForm(w http.ResponseWriter, r *http.
 		return
 	}
 
-	product := Product{
-		ID:          p.ID,
-		Name:        p.Name,
-		Slug:        p.Slug,
-		Description: p.Description.String,
-		ImagePath:   p.ImageUrl.String,
-		CategoryID:  p.CategoryID,
+	categories, err := cfg.db.GetCategories(r.Context())
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load categories")
+		log.Printf("failed to load categories for product edit: %v", err)
+		return
 	}
 
-	cfg.Render(w, r, "templates/pages/admin_product_edit.html", product)
+	groups := groupCategories(categories)
+	options := flattenCategoryOptions(groups)
+
+	data := struct {
+		IsEdit          bool
+		FormAction      string
+		Product         Product
+		CategoryOptions []CategoryOption
+	}{
+		IsEdit:     true,
+		FormAction: fmt.Sprintf("/admin/products/%s", id),
+		Product: Product{
+			ID:          p.ID,
+			Name:        p.Name,
+			Slug:        p.Slug,
+			Description: p.Description.String,
+			ImagePath:   p.ImageUrl.String,
+			CategoryID:  p.CategoryID,
+		},
+		CategoryOptions: options,
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_product_edit.html", data)
 }
 
 func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Request) {

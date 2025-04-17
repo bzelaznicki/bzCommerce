@@ -3,7 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
 )
+
+type ProductPageData struct {
+	Product     Product
+	Breadcrumbs []database.GetCategoryPathByIDRow
+}
 
 func (cfg *apiConfig) handleProductPage(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
@@ -16,6 +24,17 @@ func (cfg *apiConfig) handleProductPage(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusNotFound, "Page not found")
 		return
+	}
+
+	breadcrumbs, err := cfg.db.GetCategoryPathByID(r.Context(), uuid.NullUUID{UUID: product.CategoryID, Valid: true})
+
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("failed to get breadcrumbs: %v", err)
+	}
+
+	for i, j := 0, len(breadcrumbs)-1; i < j; i, j = i+1, j-1 {
+		breadcrumbs[i], breadcrumbs[j] = breadcrumbs[j], breadcrumbs[i]
 	}
 
 	dbVariants, err := cfg.db.GetProductVariantsByProductId(r.Context(), product.ID)
@@ -53,5 +72,9 @@ func (cfg *apiConfig) handleProductPage(w http.ResponseWriter, r *http.Request) 
 		Variants:    variants,
 	}
 
-	cfg.Render(w, r, "templates/pages/product.html", productData)
+	cfg.Render(w, r, "templates/pages/product.html", ProductPageData{
+		Product:     productData,
+		Breadcrumbs: breadcrumbs,
+	})
+
 }

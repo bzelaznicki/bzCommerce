@@ -115,6 +115,108 @@ func (q *Queries) GetCategoryById(ctx context.Context, id uuid.UUID) (Category, 
 	return i, err
 }
 
+const getCategoryBySlug = `-- name: GetCategoryBySlug :one
+SELECT id, name, slug, description, parent_id, created_at, updated_at FROM categories WHERE slug = $1
+`
+
+func (q *Queries) GetCategoryBySlug(ctx context.Context, slug string) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryBySlug, slug)
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCategoryPathByID = `-- name: GetCategoryPathByID :many
+WITH RECURSIVE path AS (
+  SELECT id, name, slug, parent_id
+  FROM categories
+  WHERE id = $1
+  UNION ALL
+  SELECT c.id, c.name, c.slug, c.parent_id
+  FROM categories c
+  INNER JOIN path p ON c.id = p.parent_id
+)
+SELECT id, name, slug, parent_id FROM path
+`
+
+type GetCategoryPathByIDRow struct {
+	ID       uuid.UUID     `json:"id"`
+	Name     string        `json:"name"`
+	Slug     string        `json:"slug"`
+	ParentID uuid.NullUUID `json:"parent_id"`
+}
+
+func (q *Queries) GetCategoryPathByID(ctx context.Context, id uuid.NullUUID) ([]GetCategoryPathByIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCategoryPathByID, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCategoryPathByIDRow
+	for rows.Next() {
+		var i GetCategoryPathByIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.ParentID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChildCategories = `-- name: GetChildCategories :many
+SELECT id, name, slug, description, parent_id, created_at, updated_at FROM categories WHERE parent_id = $1
+`
+
+func (q *Queries) GetChildCategories(ctx context.Context, parentID uuid.NullUUID) ([]Category, error) {
+	rows, err := q.db.QueryContext(ctx, getChildCategories, parentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Category
+	for rows.Next() {
+		var i Category
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Description,
+			&i.ParentID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCategoriesWithParent = `-- name: ListCategoriesWithParent :many
 SELECT
   c.id,

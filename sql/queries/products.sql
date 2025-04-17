@@ -27,6 +27,18 @@ SELECT * FROM products
 WHERE category_id = (SELECT id FROM categories WHERE slug = sqlc.arg(category_slug))
 ORDER BY name ASC;
 
+-- name: ListProductsByCategoryRecursive :many
+WITH RECURSIVE subcategories AS (
+  SELECT id FROM categories WHERE slug = sqlc.arg(slug)
+  UNION ALL
+  SELECT c.id
+  FROM categories c
+  INNER JOIN subcategories s ON c.parent_id = s.id
+)
+SELECT * FROM products
+WHERE category_id IN (SELECT id FROM subcategories);
+
+
 
 -- name: ListProducts :many
 SELECT * FROM products ORDER BY name ASC;

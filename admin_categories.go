@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -67,7 +68,7 @@ func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.
 			Description string
 			ParentID    uuid.NullUUID
 		}
-		Categories []database.Category
+		CategoryOptions []CategoryOption
 	}{
 		IsEdit:     false,
 		FormAction: "/admin/categories",
@@ -78,7 +79,7 @@ func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.
 			Description string
 			ParentID    uuid.NullUUID
 		}{},
-		Categories: categories,
+		CategoryOptions: flattenCategoryOptions(groupCategories(categories)),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_category_form.html", data)
@@ -148,7 +149,7 @@ func (cfg *apiConfig) handleAdminCategoryEditForm(w http.ResponseWriter, r *http
 			Description string
 			ParentID    uuid.NullUUID
 		}
-		Categories []database.Category
+		CategoryOptions []CategoryOption
 	}{
 		IsEdit:     true,
 		FormAction: fmt.Sprintf("/admin/categories/%s", id),
@@ -165,7 +166,7 @@ func (cfg *apiConfig) handleAdminCategoryEditForm(w http.ResponseWriter, r *http
 			Description: cat.Description.String,
 			ParentID:    cat.ParentID,
 		},
-		Categories: categories,
+		CategoryOptions: flattenCategoryOptions(groupCategories(categories)),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_category_form.html", data)
@@ -238,4 +239,32 @@ func (cfg *apiConfig) handleAdminCategoryDelete(w http.ResponseWriter, r *http.R
 	}
 
 	http.Redirect(w, r, "/admin/products", http.StatusSeeOther)
+}
+
+type CategoryOption struct {
+	ID    uuid.UUID
+	Name  string
+	Depth int
+}
+
+func flattenCategoryOptions(groups []CategoryGroup) []CategoryOption {
+	var options []CategoryOption
+
+	walk := func(cat database.Category, depth int) {
+		prefix := strings.Repeat("--", depth)
+		options = append(options, CategoryOption{
+			ID:    cat.ID,
+			Name:  prefix + " " + cat.Name,
+			Depth: depth,
+		})
+	}
+
+	for _, group := range groups {
+		walk(group.Parent, 0)
+		for _, child := range group.Children {
+			walk(child, 1)
+		}
+	}
+
+	return options
 }

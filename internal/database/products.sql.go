@@ -406,6 +406,50 @@ func (q *Queries) ListProductsByCategory(ctx context.Context, categorySlug sql.N
 	return items, nil
 }
 
+const listProductsByCategoryRecursive = `-- name: ListProductsByCategoryRecursive :many
+WITH RECURSIVE subcategories AS (
+  SELECT id FROM categories WHERE slug = $1
+  UNION ALL
+  SELECT c.id
+  FROM categories c
+  INNER JOIN subcategories s ON c.parent_id = s.id
+)
+SELECT id, category_id, name, slug, image_url, description, created_at, updated_at FROM products
+WHERE category_id IN (SELECT id FROM subcategories)
+`
+
+func (q *Queries) ListProductsByCategoryRecursive(ctx context.Context, slug sql.NullString) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, listProductsByCategoryRecursive, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Product
+	for rows.Next() {
+		var i Product
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.Name,
+			&i.Slug,
+			&i.ImageUrl,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProductsWithCategory = `-- name: ListProductsWithCategory :many
 SELECT
   p.id,

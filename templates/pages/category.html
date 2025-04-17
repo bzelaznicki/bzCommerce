@@ -5,6 +5,33 @@
 {{ define "content" }}
   <h2>Category: {{ .Data.CategoryName }}</h2>
 
+  {{ if .Data.Breadcrumbs }}
+  <nav class="breadcrumb">
+    <a href="/">Home</a>
+    {{ $last := sub (len .Data.Breadcrumbs) 1 }}
+    {{ range $i, $bc := .Data.Breadcrumbs }}
+      {{ if eq $i $last }}
+        › <span>{{ $bc.Name }}</span>
+      {{ else }}
+        › <a href="/category/{{ $bc.Slug }}">{{ $bc.Name }}</a>
+      {{ end }}
+    {{ end }}
+  </nav>
+  
+  
+{{ end }}
+
+  {{ if .Data.Children }}
+  <h3>Subcategories</h3>
+  <div class="subcategory-grid">
+    {{ range .Data.Children }}
+      <a href="/category/{{ .Slug }}" class="subcategory-card">
+        <div class="subcategory-name">{{ .Name }}</div>
+      </a>
+    {{ end }}
+  </div>
+{{ end }}
+
   {{ if .Data.Products }}
     <div class="product-grid">
       {{ range .Data.Products }}

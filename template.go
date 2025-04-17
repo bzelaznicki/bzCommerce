@@ -53,11 +53,9 @@ func (cfg *apiConfig) NewPageData(ctx context.Context, data any) (BasePageData, 
 }
 
 func parsePageTemplate(filename string) *template.Template {
-	tmpl := template.Must(template.ParseFiles(
-		"templates/base.html",
-		filename,
-	))
-	return tmpl
+	return template.Must(template.New("").Funcs(template.FuncMap{
+		"sub": func(a, b int) int { return a - b },
+	}).ParseFiles("templates/base.html", filename))
 }
 
 type CategoryGroup struct {
@@ -89,7 +87,8 @@ func groupCategories(cats []database.Category) []CategoryGroup {
 func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string, data any) {
 	pageData, err := cfg.NewPageData(r.Context(), data)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("page data error: %v", err)
 		return
 	}
 
@@ -97,7 +96,7 @@ func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string
 	err = tmpl.ExecuteTemplate(w, "base.html", pageData)
 	if err != nil {
 		log.Printf("template error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
 	}
 }
 
@@ -113,4 +112,10 @@ func (cfg *apiConfig) RenderError(w http.ResponseWriter, r *http.Request, code i
 	}
 
 	cfg.Render(w, r, "templates/pages/error.html", data)
+}
+
+func loadTemplates() *template.Template {
+	return template.Must(template.New("").Funcs(template.FuncMap{
+		"sub": func(a, b int) int { return a - b },
+	}).ParseGlob("templates/**/*.html"))
 }

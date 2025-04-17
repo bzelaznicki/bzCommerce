@@ -1,29 +1,41 @@
-{{ define "title" }}{{ .Data.Name }} - {{ .StoreName }}{{ end }}
+{{ define "title" }}{{ .Data.Product.Name }} - {{ .StoreName }}{{ end }}
 
 {{ define "content" }}
-  <h2>{{ .Data.Name }}</h2>
+  {{ if .Data.Breadcrumbs }}
+  <nav class="breadcrumbs">
+    <a href="/">Home</a>
+    {{ range .Data.Breadcrumbs }}
+      › <a href="/category/{{ .Slug }}">{{ .Name }}</a>
+    {{ end }}
+  </nav>
+  
 
-  {{ if .Data.ImagePath }}
-    <img src="{{ .Data.ImagePath }}" alt="{{ .Data.Name }}" width="400">
+  
   {{ end }}
 
-  <p>{{ .Data.Description }}</p>
+  <h2>{{ .Data.Product.Name }}</h2>
 
-  {{ if .Data.Variants }}
+  {{ if .Data.Product.ImagePath }}
+    <img src="{{ .Data.Product.ImagePath }}" alt="{{ .Data.Product.Name }}" width="400">
+  {{ end }}
+
+  <p>{{ .Data.Product.Description }}</p>
+
+  {{ if .Data.Product.Variants }}
   <form action="/cart/add" method="POST">
     <div class="variant-grid">
-      {{ range .Data.Variants }}
+      {{ range .Data.Product.Variants }}
         <label class="variant-card {{ if eq .StockQuantity 0 }}disabled{{ end }}">
           <input
             type="radio"
             name="variant_id"
             value="{{ .ID }}"
             {{ if eq .StockQuantity 0 }}disabled{{ end }}>
-  
+
           {{ if .ImageUrl }}
             <img src="{{ .ImageUrl }}" alt="{{ .Name }}">
           {{ end }}
-  
+
           <div class="variant-info">
             <strong>{{ .Name }}</strong>
             <span class="variant-price">${{ .Price }}</span>
@@ -34,7 +46,7 @@
         </label>
       {{ end }}
     </div>
-  
+
     <div class="quantity-field">
       <label for="quantity">Quantity:</label>
       <input
@@ -46,11 +58,9 @@
         step="1"
         required>
     </div>
-  
+
     <button type="submit" style="margin-top: 1rem;">Add to Cart</button>
   </form>
-  
-  
   {{ else }}
     <p>This product has no available variants.</p>
   {{ end }}

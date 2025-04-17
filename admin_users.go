@@ -14,7 +14,7 @@ func (cfg *apiConfig) handleAdminUsersList(w http.ResponseWriter, r *http.Reques
 	rows, err := cfg.db.ListUsers(r.Context())
 
 	if err != nil {
-		http.Error(w, "Could not load users", http.StatusInternalServerError)
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not load users")
 		log.Printf("could not load users: %v", err)
 		return
 	}

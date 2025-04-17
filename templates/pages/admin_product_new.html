@@ -18,12 +18,14 @@
     <input type="text" name="image_url"><br><br>
 
     <label>Category</label><br>
-    <select name="category_id" required>
-    <option value="">-- Choose Category --</option>
-    {{ range .Categories }}
-      <option value="{{ .ID }}">{{ .Name }}</option>
-  {{ end }}
+<select name="category_id" required>
+  <option value="">-- Choose Category --</option>
+  {{ range .Data.CategoryOptions }}
+  <option value="{{ .ID }}">{{ .Name }}</option>
+{{ end }}
+
 </select><br><br>
+
 <h3>Initial Variant</h3>
 
 <label>Variant Name</label><br>
