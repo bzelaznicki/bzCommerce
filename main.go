@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/joho/godotenv"
@@ -15,11 +16,12 @@ import (
 )
 
 type apiConfig struct {
-	db        *database.Queries
-	jwtSecret string
-	platform  string
-	templates *template.Template
-	storeName string
+	db                 *database.Queries
+	jwtSecret          string
+	platform           string
+	templates          *template.Template
+	storeName          string
+	cartTimeoutMinutes int
 }
 
 func main() {
@@ -58,16 +60,25 @@ func main() {
 	if storeName == "" {
 		storeName = "bzCommerce" // fallback default
 	}
+	timeoutStr := os.Getenv("CART_TIMEOUT_MINUTES")
+	timeoutMinutes := 60
+	if timeoutStr != "" {
+		if parsed, err := strconv.Atoi(timeoutStr); err == nil {
+			timeoutMinutes = parsed
+		}
+	}
+
 	templates := template.Must(template.ParseFiles(
 		"templates/base.html",
 	))
 
 	cfg := apiConfig{
-		db:        dbQueries,
-		jwtSecret: jwtSecret,
-		platform:  platform,
-		templates: templates,
-		storeName: storeName,
+		db:                 dbQueries,
+		jwtSecret:          jwtSecret,
+		platform:           platform,
+		templates:          templates,
+		storeName:          storeName,
+		cartTimeoutMinutes: timeoutMinutes,
 	}
 
 	mux := http.NewServeMux()
@@ -78,7 +89,7 @@ func main() {
 	}
 
 	cfg.registerRoutes(mux)
-
+	cfg.startCartExpirationWorker()
 	fmt.Printf("serving on port %s\n", port)
 
 	log.Fatal(srv.ListenAndServe())

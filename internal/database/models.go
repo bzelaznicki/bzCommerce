@@ -6,10 +6,72 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type CartStatus string
+
+const (
+	CartStatusNew       CartStatus = "new"
+	CartStatusAbandoned CartStatus = "abandoned"
+	CartStatusCompleted CartStatus = "completed"
+)
+
+func (e *CartStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CartStatus(s)
+	case string:
+		*e = CartStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CartStatus: %T", src)
+	}
+	return nil
+}
+
+type NullCartStatus struct {
+	CartStatus CartStatus `json:"cart_status"`
+	Valid      bool       `json:"valid"` // Valid is true if CartStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCartStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.CartStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CartStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCartStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CartStatus), nil
+}
+
+type Cart struct {
+	ID        uuid.UUID     `json:"id"`
+	UserID    uuid.NullUUID `json:"user_id"`
+	Status    CartStatus    `json:"status"`
+	CreatedAt sql.NullTime  `json:"created_at"`
+	UpdatedAt sql.NullTime  `json:"updated_at"`
+}
+
+type CartsVariant struct {
+	CartID           uuid.UUID    `json:"cart_id"`
+	ProductVariantID uuid.UUID    `json:"product_variant_id"`
+	Quantity         int32        `json:"quantity"`
+	PricePerItem     int32        `json:"price_per_item"`
+	CreatedAt        sql.NullTime `json:"created_at"`
+	UpdatedAt        sql.NullTime `json:"updated_at"`
+}
 
 type Category struct {
 	ID          uuid.UUID      `json:"id"`

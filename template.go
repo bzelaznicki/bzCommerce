@@ -113,9 +113,3 @@ func (cfg *apiConfig) RenderError(w http.ResponseWriter, r *http.Request, code i
 
 	cfg.Render(w, r, "templates/pages/error.html", data)
 }
-
-func loadTemplates() *template.Template {
-	return template.Must(template.New("").Funcs(template.FuncMap{
-		"sub": func(a, b int) int { return a - b },
-	}).ParseGlob("templates/**/*.html"))
-}
