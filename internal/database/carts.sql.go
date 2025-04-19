@@ -22,7 +22,7 @@ type AddVariantToCartParams struct {
 	CartID           uuid.UUID `json:"cart_id"`
 	ProductVariantID uuid.UUID `json:"product_variant_id"`
 	Quantity         int32     `json:"quantity"`
-	PricePerItem     int32     `json:"price_per_item"`
+	PricePerItem     float64   `json:"price_per_item"`
 }
 
 func (q *Queries) AddVariantToCart(ctx context.Context, arg AddVariantToCartParams) (CartsVariant, error) {
@@ -138,9 +138,9 @@ type GetCartDetailsByCartIdRow struct {
 	CartID           uuid.UUID      `json:"cart_id"`
 	ProductVariantID uuid.UUID      `json:"product_variant_id"`
 	Quantity         int32          `json:"quantity"`
-	PricePerItem     int32          `json:"price_per_item"`
+	PricePerItem     float64        `json:"price_per_item"`
 	Sku              string         `json:"sku"`
-	VariantPrice     string         `json:"variant_price"`
+	VariantPrice     float64        `json:"variant_price"`
 	StockQuantity    int32          `json:"stock_quantity"`
 	VariantImage     sql.NullString `json:"variant_image"`
 	VariantName      sql.NullString `json:"variant_name"`
@@ -211,7 +211,7 @@ type GetCartDetailsWithLivePriceRow struct {
 	CartID           uuid.UUID      `json:"cart_id"`
 	ProductVariantID uuid.UUID      `json:"product_variant_id"`
 	Quantity         int32          `json:"quantity"`
-	CurrentPrice     string         `json:"current_price"`
+	CurrentPrice     float64        `json:"current_price"`
 	Sku              string         `json:"sku"`
 	StockQuantity    int32          `json:"stock_quantity"`
 	VariantImage     sql.NullString `json:"variant_image"`
@@ -283,9 +283,9 @@ type GetCartDetailsWithSnapshotPriceRow struct {
 	CartID           uuid.UUID      `json:"cart_id"`
 	ProductVariantID uuid.UUID      `json:"product_variant_id"`
 	Quantity         int32          `json:"quantity"`
-	PricePerItem     int32          `json:"price_per_item"`
+	PricePerItem     float64        `json:"price_per_item"`
 	Sku              string         `json:"sku"`
-	VariantPrice     string         `json:"variant_price"`
+	VariantPrice     float64        `json:"variant_price"`
 	StockQuantity    int32          `json:"stock_quantity"`
 	VariantImage     sql.NullString `json:"variant_image"`
 	VariantName      sql.NullString `json:"variant_name"`
@@ -421,9 +421,9 @@ FROM carts_variants
 WHERE cart_id = $1
 `
 
-func (q *Queries) GetTotalCartPrice(ctx context.Context, cartID uuid.UUID) (int64, error) {
+func (q *Queries) GetTotalCartPrice(ctx context.Context, cartID uuid.UUID) (string, error) {
 	row := q.db.QueryRowContext(ctx, getTotalCartPrice, cartID)
-	var total int64
+	var total string
 	err := row.Scan(&total)
 	return total, err
 }
@@ -512,7 +512,7 @@ type UpsertVariantToCartParams struct {
 	CartID           uuid.UUID `json:"cart_id"`
 	ProductVariantID uuid.UUID `json:"product_variant_id"`
 	Quantity         int32     `json:"quantity"`
-	PricePerItem     int32     `json:"price_per_item"`
+	PricePerItem     float64   `json:"price_per_item"`
 }
 
 func (q *Queries) UpsertVariantToCart(ctx context.Context, arg UpsertVariantToCartParams) (CartsVariant, error) {

@@ -20,7 +20,7 @@ type Variant struct {
 	ID            uuid.UUID
 	Name          string
 	ProductID     uuid.UUID
-	Price         string
+	Price         float64
 	StockQuantity int32
 	ImageUrl      string
 	VariantName   string

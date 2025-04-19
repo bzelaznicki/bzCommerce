@@ -52,9 +52,26 @@ func (cfg *apiConfig) NewPageData(ctx context.Context, data any) (BasePageData, 
 	}, nil
 }
 
+func getUserIDFromContext(ctx context.Context) uuid.UUID {
+	userIDStr, ok := ctx.Value(userIDContextKey).(string)
+	if !ok {
+		return uuid.Nil
+	}
+
+	id, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return uuid.Nil
+	}
+
+	return id
+}
+
 func parsePageTemplate(filename string) *template.Template {
 	return template.Must(template.New("").Funcs(template.FuncMap{
 		"sub": func(a, b int) int { return a - b },
+		"mulf": func(a int32, b float64) float64 {
+			return float64(a) * b
+		},
 	}).ParseFiles("templates/base.html", filename))
 }
 

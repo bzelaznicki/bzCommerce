@@ -68,7 +68,7 @@ type CartsVariant struct {
 	CartID           uuid.UUID    `json:"cart_id"`
 	ProductVariantID uuid.UUID    `json:"product_variant_id"`
 	Quantity         int32        `json:"quantity"`
-	PricePerItem     int32        `json:"price_per_item"`
+	PricePerItem     float64      `json:"price_per_item"`
 	CreatedAt        sql.NullTime `json:"created_at"`
 	UpdatedAt        sql.NullTime `json:"updated_at"`
 }
@@ -98,7 +98,7 @@ type ProductVariant struct {
 	ID            uuid.UUID      `json:"id"`
 	ProductID     uuid.UUID      `json:"product_id"`
 	Sku           string         `json:"sku"`
-	Price         string         `json:"price"`
+	Price         float64        `json:"price"`
 	StockQuantity int32          `json:"stock_quantity"`
 	ImageUrl      sql.NullString `json:"image_url"`
 	VariantName   sql.NullString `json:"variant_name"`

@@ -619,3 +619,84 @@ nav {
 .breadcrumb a:hover {
   text-decoration: underline;
 }
+
+.cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.cart-table th,
+.cart-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: middle;
+}
+
+.cart-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.cart-table td img {
+  margin-top: 0.5rem;
+  max-width: 60px;
+  height: auto;
+  border-radius: 4px;
+}
+
+.cart-table input[type="number"] {
+  width: 60px;
+  padding: 0.3rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.cart-summary {
+  text-align: right;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+.cart-summary strong {
+  margin-right: 0.5rem;
+}
+
+button[type="submit"] {
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+button[type="submit"]:hover {
+  background-color: #444;
+}
+
+.variant-name {
+  font-weight: 500;
+}
+
+.variant-name.muted {
+  color: #999;
+  font-style: italic;
+}
+
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

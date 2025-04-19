@@ -16,7 +16,7 @@ CREATE TABLE carts_variants (
     cart_id UUID NOT NULL,
     product_variant_id UUID NOT NULL,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price_per_item INTEGER NOT NULL,
+    price_per_item NUMERIC NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (cart_id, product_variant_id),

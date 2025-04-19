@@ -71,7 +71,7 @@ type CreateProductVariantParams struct {
 	ProductID     uuid.UUID      `json:"product_id"`
 	Name          sql.NullString `json:"name"`
 	Sku           string         `json:"sku"`
-	Price         string         `json:"price"`
+	Price         float64        `json:"price"`
 	ImageUrl      sql.NullString `json:"image_url"`
 	StockQuantity int32          `json:"stock_quantity"`
 }
@@ -118,7 +118,7 @@ RETURNING id
 type CreateVariantParams struct {
 	ProductID     uuid.UUID      `json:"product_id"`
 	Sku           string         `json:"sku"`
-	Price         string         `json:"price"`
+	Price         float64        `json:"price"`
 	StockQuantity int32          `json:"stock_quantity"`
 	ImageUrl      sql.NullString `json:"image_url"`
 	VariantName   sql.NullString `json:"variant_name"`
@@ -555,7 +555,7 @@ WHERE id = $6
 
 type UpdateVariantParams struct {
 	Sku           string         `json:"sku"`
-	Price         string         `json:"price"`
+	Price         float64        `json:"price"`
 	StockQuantity int32          `json:"stock_quantity"`
 	ImageUrl      sql.NullString `json:"image_url"`
 	VariantName   sql.NullString `json:"variant_name"`
