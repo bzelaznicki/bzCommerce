@@ -22,6 +22,7 @@ type apiConfig struct {
 	templates          *template.Template
 	storeName          string
 	cartTimeoutMinutes int
+	cartCookieKey      []byte
 }
 
 func main() {
@@ -44,6 +45,11 @@ func main() {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		log.Fatal("JWT_SECRET cannot be empty")
+	}
+
+	cartCookieKey := os.Getenv("CART_COOKIE_SECRET")
+	if cartCookieKey == "" {
+		log.Fatal("CART_COOKIE_SECRET cannot be empty")
 	}
 
 	platform := os.Getenv("PLATFORM")
@@ -79,6 +85,7 @@ func main() {
 		templates:          templates,
 		storeName:          storeName,
 		cartTimeoutMinutes: timeoutMinutes,
+		cartCookieKey:      []byte(cartCookieKey),
 	}
 
 	mux := http.NewServeMux()

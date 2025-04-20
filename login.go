@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handleLoginGet(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +54,18 @@ func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		Secure:   false,
 	})
+	cartID, ok := getCartIDFromCookie(r, cfg.cartCookieKey)
+	if ok && cartID != uuid.Nil {
+		err := cfg.mergeAnonymousCart(r.Context(), cartID, user.ID)
+		if err != nil {
+			log.Printf("error merging carts: %v", err)
+		}
+	}
+
+	userCartID, err := cfg.getOrCreateCartIDForUser(r.Context(), user.ID)
+	if err == nil {
+		setCartIDCookie(w, userCartID, cfg.cartCookieKey)
+	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -66,5 +79,7 @@ func (cfg *apiConfig) handleLogout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		Secure:   false,
 	})
+
+	clearCartIDCookie(w)
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

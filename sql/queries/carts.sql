@@ -18,6 +18,10 @@ SELECT * FROM carts
 WHERE user_id = sqlc.arg(user_id)
 ORDER BY created_at DESC;
 
+-- name: DeleteCart :exec
+DELETE FROM carts
+WHERE id = sqlc.arg(id);
+
 -- name: AddVariantToCart :one
 INSERT INTO carts_variants (cart_id, product_variant_id, quantity, price_per_item)
 VALUES (sqlc.arg(cart_id), sqlc.arg(product_variant_id), sqlc.arg(quantity), sqlc.arg(price_per_item))

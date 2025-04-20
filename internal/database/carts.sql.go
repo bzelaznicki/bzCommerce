@@ -79,6 +79,16 @@ func (q *Queries) CreateCart(ctx context.Context, userID uuid.NullUUID) (CreateC
 	return i, err
 }
 
+const deleteCart = `-- name: DeleteCart :exec
+DELETE FROM carts
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCart(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCart, id)
+	return err
+}
+
 const deleteCartVariant = `-- name: DeleteCartVariant :exec
 DELETE FROM carts_variants
 WHERE cart_id = $1

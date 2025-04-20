@@ -24,13 +24,15 @@
   {{ if .Data.Product.Variants }}
   <form action="/cart/add" method="POST">
     <div class="variant-grid">
+      {{ $firstRequired := true }}
       {{ range .Data.Product.Variants }}
         <label class="variant-card {{ if eq .StockQuantity 0 }}disabled{{ end }}">
           <input
             type="radio"
             name="variant_id"
             value="{{ .ID }}"
-            {{ if eq .StockQuantity 0 }}disabled{{ end }}>
+            {{ if eq .StockQuantity 0 }}disabled{{ else if $firstRequired }}required{{ $firstRequired = false }}{{ end }}>
+      
 
           {{ if .ImageUrl }}
             <img src="{{ .ImageUrl }}" alt="{{ .Name }}">
@@ -64,4 +66,14 @@
   {{ else }}
     <p>This product has no available variants.</p>
   {{ end }}
+  <script>
+    document.querySelector("form").addEventListener("submit", function (e) {
+      const selected = document.querySelector('input[name="variant_id"]:checked');
+      if (!selected) {
+        e.preventDefault();
+        alert("Please select a product variant before adding to cart.");
+      }
+    });
+  </script>
+  
 {{ end }}
