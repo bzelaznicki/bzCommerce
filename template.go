@@ -104,8 +104,8 @@ func groupCategories(cats []database.Category) []CategoryGroup {
 func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string, data any) {
 	pageData, err := cfg.NewPageData(r.Context(), data)
 	if err != nil {
-		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
 		log.Printf("page data error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -113,12 +113,11 @@ func (cfg *apiConfig) Render(w http.ResponseWriter, r *http.Request, page string
 	err = tmpl.ExecuteTemplate(w, "base.html", pageData)
 	if err != nil {
 		log.Printf("template error: %v", err)
-		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal Server Error")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
 func (cfg *apiConfig) RenderError(w http.ResponseWriter, r *http.Request, code int, message string) {
-	w.WriteHeader(code)
 
 	data := struct {
 		Code    int

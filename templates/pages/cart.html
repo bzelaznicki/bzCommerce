@@ -38,7 +38,7 @@
           </td>
           <td>${{ printf "%.2f" (mulf .Quantity .PricePerItem) }}</td>
           <td>
-            <a href="/cart/remove?variant_id={{ .ProductVariantID }}">Remove</a>
+            <a href="/cart/remove/{{ .ProductVariantID }}">Remove</a>
           </td>
         </tr>
         {{ end }}

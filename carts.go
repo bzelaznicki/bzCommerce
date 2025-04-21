@@ -97,9 +97,9 @@ func setCartIDCookie(w http.ResponseWriter, cartID uuid.UUID, secret []byte) {
 		Name:     "cart_id",
 		Value:    fmt.Sprintf("%s|%s", cartIDStr, sig),
 		Path:     "/",
-		MaxAge:   60 * 60 * 24 * 30, // 30 days
+		MaxAge:   60 * 60 * 24 * 30,
 		HttpOnly: true,
-		Secure:   false, // change to true in prod
+		Secure:   false,
 	})
 }
 
@@ -269,4 +269,89 @@ func (cfg *apiConfig) handleViewCart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.Render(w, r, "templates/pages/cart.html", data)
+}
+
+func (cfg *apiConfig) handleDeleteCartItem(w http.ResponseWriter, r *http.Request) {
+	cartID, err := cfg.getOrCreateCartID(w, r)
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal server error")
+		log.Printf("error getting cart for user: %v", err)
+		return
+	}
+
+	variantIdString := r.PathValue("id")
+
+	variantId, err := uuid.Parse(variantIdString)
+
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusNotFound, "invalid variant ID")
+		log.Printf("error parsing ID %s on delete: %v", variantIdString, err)
+		return
+	}
+
+	err = cfg.db.DeleteCartVariant(r.Context(), database.DeleteCartVariantParams{
+		CartID:           cartID,
+		ProductVariantID: variantId,
+	})
+
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal server error")
+		log.Printf("error deleting variant ID %v from cart ID %v: %v", variantId, cartID, err)
+		return
+	}
+
+	http.Redirect(w, r, "/cart", http.StatusSeeOther)
+}
+
+func (cfg *apiConfig) handleCartUpdate(w http.ResponseWriter, r *http.Request) {
+	cartID, err := cfg.getOrCreateCartID(w, r)
+	if err != nil {
+		cfg.RenderError(w, r, http.StatusInternalServerError, "Internal server error")
+		log.Printf("error getting cart for user: %v", err)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid form data")
+		return
+	}
+
+	for key, values := range r.PostForm {
+		if strings.HasPrefix(key, "quantities[") {
+			variantIDStr := strings.TrimSuffix(strings.TrimPrefix(key, "quantities["), "]")
+			variantID, err := uuid.Parse(variantIDStr)
+			if err != nil {
+				log.Printf("invalid variant ID %s: %v", variantIDStr, err)
+				continue
+			}
+
+			quantity, err := strconv.Atoi(values[0])
+			if err != nil {
+				log.Printf("invalid quantity for %s: %v", variantIDStr, err)
+				continue
+			}
+
+			if quantity <= 0 {
+
+				if err := cfg.db.DeleteCartVariant(r.Context(), database.DeleteCartVariantParams{
+					CartID:           cartID,
+					ProductVariantID: variantID,
+				}); err != nil {
+					log.Printf("error deleting variant ID %v from cart: %v", variantID, err)
+				}
+			} else {
+
+				_, err := cfg.db.UpdateCartVariantQuantity(r.Context(), database.UpdateCartVariantQuantityParams{
+					CartID:           cartID,
+					ProductVariantID: variantID,
+					Quantity:         int32(quantity),
+				})
+				if err != nil {
+					log.Printf("error updating variant ID %v in cart: %v", variantID, err)
+				}
+			}
+		}
+	}
+
+	http.Redirect(w, r, "/cart", http.StatusSeeOther)
 }
