@@ -1,0 +1,64 @@
+{{ define "title" }}Checkout - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<h2>Checkout</h2>
+
+<div class="checkout-grid">
+
+  <!-- Checkout Form -->
+  <form class="checkout-form" action="/checkout" method="POST">
+    <h3>Shipping Information</h3>
+    <label>Name: <input type="text" name="shipping_name" required></label>
+    <label>Address: <input type="text" name="shipping_address" required></label>
+    <label>City: <input type="text" name="shipping_city" required></label>
+    <label>Postal Code: <input type="text" name="shipping_postal_code" required></label>
+    <label>Country: <input type="text" name="shipping_country" required></label>
+    <label>Phone: <input type="text" name="shipping_phone" required></label>
+    <label>Email: <input type="email" name="customer_email" required></label>
+
+    <h3>Billing Information</h3>
+    <label><input type="checkbox" name="same_as_shipping" value="true"> Same as shipping</label>
+    <label>Name: <input type="text" name="billing_name"></label>
+    <label>Address: <input type="text" name="billing_address"></label>
+    <label>City: <input type="text" name="billing_city"></label>
+    <label>Postal Code: <input type="text" name="billing_postal_code"></label>
+    <label>Country: <input type="text" name="billing_country"></label>
+
+    <button type="submit" class="primary-button">Place Order</button>
+  </form>
+
+  <!-- Cart Summary -->
+  <aside class="checkout-cart-summary">
+    <h3>Order Summary</h3>
+    <form action="/cart/update" method="POST">
+      <ul class="summary-list">
+        {{ range .Data.CartItems }}
+        <li class="summary-item">
+          <div class="item-image">
+            {{ if .VariantImage.Valid }}
+              <img src="{{ .VariantImage.String }}" alt="{{ .ProductName }}">
+            {{ else if .ProductImage.Valid }}
+              <img src="{{ .ProductImage.String }}" alt="{{ .ProductName }}">
+            {{ end }}
+          </div>
+          <div class="item-details">
+            <div><strong>{{ .ProductName }}</strong></div>
+            {{ if .VariantName.Valid }}<div>{{ .VariantName.String }}</div>{{ end }}
+            <div>${{ printf "%.2f" .PricePerItem }} × 
+              <input type="number" name="quantities[{{ .ProductVariantID }}]" value="{{ .Quantity }}" min="1" class="qty-input">
+            </div>
+            <div class="remove-link">
+              <a href="/cart/remove/{{ .ProductVariantID }}">Remove</a>
+            </div>
+          </div>
+        </li>
+        {{ end }}
+      </ul>
+      <div class="summary-total">
+        <strong>Total: ${{ printf "%.2f" .Data.Total }}</strong>
+      </div>
+      <button type="submit">Update Cart</button>
+    </form>
+  </aside>
+</div>
+{{ end }}
