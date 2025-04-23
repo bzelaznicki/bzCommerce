@@ -1,74 +1,21 @@
+/* Product image */
+img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
 /* Buttons */
 button {
-    background-color: #007bff;
-    color: white;
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3;
-}
-
-/* Lists */
-ul {
-    list-style: none;
-    padding-left: 0;
-}
-
-li {
-    margin-bottom: 0.5rem;
-}
-
-/* Form styles */
-.auth-form {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #fff;
-}
-
-.auth-form input {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Error Page Styles */
-.error-page {
-  text-align: center;
-  margin-top: 50px;
-  font-family: Arial, sans-serif;
-}
-
-.error-page h2 {
-  font-size: 2.5em;
-  color: #ff4d4d;
-}
-
-.error-page p {
-  font-size: 1.2em;
-  color: #333;
-}
-
-.error-page a {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 5px;
-}
-
-.error-page a:hover {
   background-color: #0056b3;
 }
