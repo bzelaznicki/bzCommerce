@@ -1,0 +1,35 @@
+{{ define "title" }}Shipping Options - Admin - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<h2>Shipping Options</h2>
+
+<a href="/admin/shipping/new" class="primary-button" style="margin-bottom: 1rem; display: inline-block;">Add New Shipping Option</a>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Estimated Days</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range .Data.ShippingOptions }}
+    <tr>
+      <td>{{ .Name }}</td>
+      <td>${{ printf "%.2f" .Price }}</td>
+      <td>{{ .EstimatedDays.String }}</td>
+      <td>{{ if .IsActive }}Active{{ else }}Inactive{{ end }}</td>
+      <td>
+        <a href="/admin/shipping/edit/{{ .ID }}">Edit</a> |
+        <form action="/admin/shipping/delete/{{ .ID }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this shipping option?');">
+          <button type="submit" class="link-button">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}

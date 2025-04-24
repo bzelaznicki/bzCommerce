@@ -56,6 +56,52 @@ func (ns NullCartStatus) Value() (driver.Value, error) {
 	return string(ns.CartStatus), nil
 }
 
+type OrderStatus string
+
+const (
+	OrderStatusPending    OrderStatus = "pending"
+	OrderStatusPaid       OrderStatus = "paid"
+	OrderStatusProcessing OrderStatus = "processing"
+	OrderStatusShipped    OrderStatus = "shipped"
+	OrderStatusCancelled  OrderStatus = "cancelled"
+	OrderStatusRefunded   OrderStatus = "refunded"
+)
+
+func (e *OrderStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = OrderStatus(s)
+	case string:
+		*e = OrderStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for OrderStatus: %T", src)
+	}
+	return nil
+}
+
+type NullOrderStatus struct {
+	OrderStatus OrderStatus `json:"order_status"`
+	Valid       bool        `json:"valid"` // Valid is true if OrderStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullOrderStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.OrderStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.OrderStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullOrderStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.OrderStatus), nil
+}
+
 type Cart struct {
 	ID        uuid.UUID     `json:"id"`
 	UserID    uuid.NullUUID `json:"user_id"`
@@ -83,6 +129,39 @@ type Category struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
+type Order struct {
+	ID                 uuid.UUID      `json:"id"`
+	UserID             uuid.NullUUID  `json:"user_id"`
+	Status             OrderStatus    `json:"status"`
+	TotalPrice         float64        `json:"total_price"`
+	CreatedAt          sql.NullTime   `json:"created_at"`
+	UpdatedAt          sql.NullTime   `json:"updated_at"`
+	CustomerEmail      string         `json:"customer_email"`
+	ShippingName       sql.NullString `json:"shipping_name"`
+	ShippingAddress    sql.NullString `json:"shipping_address"`
+	ShippingCity       sql.NullString `json:"shipping_city"`
+	ShippingPostalCode sql.NullString `json:"shipping_postal_code"`
+	ShippingCountry    sql.NullString `json:"shipping_country"`
+	ShippingPhone      string         `json:"shipping_phone"`
+	BillingName        sql.NullString `json:"billing_name"`
+	BillingAddress     sql.NullString `json:"billing_address"`
+	BillingCity        sql.NullString `json:"billing_city"`
+	BillingPostalCode  sql.NullString `json:"billing_postal_code"`
+	BillingCountry     sql.NullString `json:"billing_country"`
+	ShippingMethodID   uuid.NullUUID  `json:"shipping_method_id"`
+	ShippingPrice      float64        `json:"shipping_price"`
+}
+
+type OrdersVariant struct {
+	OrderID          uuid.UUID    `json:"order_id"`
+	ProductVariantID uuid.UUID    `json:"product_variant_id"`
+	Quantity         int32        `json:"quantity"`
+	PricePerItem     float64      `json:"price_per_item"`
+	TotalPrice       float64      `json:"total_price"`
+	CreatedAt        sql.NullTime `json:"created_at"`
+	UpdatedAt        sql.NullTime `json:"updated_at"`
+}
+
 type Product struct {
 	ID          uuid.UUID      `json:"id"`
 	CategoryID  uuid.UUID      `json:"category_id"`
@@ -102,6 +181,18 @@ type ProductVariant struct {
 	StockQuantity int32          `json:"stock_quantity"`
 	ImageUrl      sql.NullString `json:"image_url"`
 	VariantName   sql.NullString `json:"variant_name"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
+type ShippingOption struct {
+	ID            uuid.UUID      `json:"id"`
+	Name          string         `json:"name"`
+	Description   sql.NullString `json:"description"`
+	Price         float64        `json:"price"`
+	EstimatedDays sql.NullString `json:"estimated_days"`
+	SortOrder     sql.NullInt32  `json:"sort_order"`
+	IsActive      bool           `json:"is_active"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 }

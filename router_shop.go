@@ -14,6 +14,7 @@ func (cfg *apiConfig) registerShopRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /cart", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleViewCart)))
 	mux.Handle("GET /cart/remove/{id}", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleDeleteCartItem)))
 	mux.Handle("POST /cart/update", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleCartUpdate)))
+	mux.Handle("GET /checkout", cfg.maybeWithAuth(http.HandlerFunc(cfg.handleViewCheckout)))
 	log.Printf("Shop routes registered")
 
 }

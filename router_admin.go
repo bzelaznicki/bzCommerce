@@ -60,5 +60,12 @@ func (cfg *apiConfig) registerAdminRoutes(mux *http.ServeMux) {
 
 	// Delete user
 	mux.Handle("POST /admin/users/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminUserDelete)))
+
+	// View shipping options
+	mux.Handle("GET /admin/shipping", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionsList)))
+
+	// New shipping option form
+	mux.Handle("GET /admin/shipping/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionsNew)))
+	mux.Handle("POST /admin/shipping/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionCreate)))
 	log.Printf("Admin routes registered")
 }

@@ -2,7 +2,7 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE order_status AS ENUM ('pending', 'paid', 'processing', 'shipped', 'cancelled', 'refunded')
+CREATE TYPE order_status AS ENUM ('pending', 'paid', 'processing', 'shipped', 'cancelled', 'refunded');
 
 CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -60,7 +60,8 @@ SELECT
   cv.price_per_item,
   (cv.quantity * cv.price_per_item)
 FROM carts_variants cv
-WHERE cv.cart_id = sqlc.arg(cart_id);
+WHERE cv.cart_id = sqlc.arg(cart_id)
+RETURNING *;
 
 
 -- name: GetOrderItemsByOrderId :many
