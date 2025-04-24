@@ -64,9 +64,6 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 		return
 	}
 
-	if err != nil {
-		cfg.RenderError(w, r, http.StatusBadRequest, "invalid estimated-days")
-	}
 	_, err = cfg.db.CreateShippingOption(r.Context(), database.CreateShippingOptionParams{
 		Name: name,
 		Description: sql.NullString{
