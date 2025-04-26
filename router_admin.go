@@ -66,6 +66,15 @@ func (cfg *apiConfig) registerAdminRoutes(mux *http.ServeMux) {
 
 	// New shipping option form
 	mux.Handle("GET /admin/shipping/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionsNew)))
+
+	// Create shipping option
 	mux.Handle("POST /admin/shipping/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionCreate)))
+
+	// Edit shipping option form
+	mux.Handle("GET /admin/shipping/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionsEdit)))
+	// Update shipping option
+	mux.Handle("POST /admin/shipping/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionUpdate)))
+	// Delete shipping option
+	mux.Handle("POST /admin/shipping/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionDelete)))
 	log.Printf("Admin routes registered")
 }

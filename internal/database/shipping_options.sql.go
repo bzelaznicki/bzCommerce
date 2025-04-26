@@ -51,6 +51,16 @@ func (q *Queries) CreateShippingOption(ctx context.Context, arg CreateShippingOp
 	return i, err
 }
 
+const deleteShippingOption = `-- name: DeleteShippingOption :exec
+DELETE FROM shipping_options
+WHERE id = $1
+`
+
+func (q *Queries) DeleteShippingOption(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteShippingOption, id)
+	return err
+}
+
 const getShippingOptions = `-- name: GetShippingOptions :many
 SELECT id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at FROM shipping_options
 ORDER BY sort_order ASC
@@ -108,4 +118,38 @@ func (q *Queries) SelectShippingOptionById(ctx context.Context, id uuid.UUID) (S
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const updateShippingOption = `-- name: UpdateShippingOption :exec
+UPDATE shipping_options
+SET name = $1,
+    description = $2,
+    price = $3,
+    estimated_days = $4,
+    sort_order = $5,
+    is_active = $6
+WHERE id = $7
+`
+
+type UpdateShippingOptionParams struct {
+	Name          string         `json:"name"`
+	Description   sql.NullString `json:"description"`
+	Price         string         `json:"price"`
+	EstimatedDays sql.NullString `json:"estimated_days"`
+	SortOrder     sql.NullInt32  `json:"sort_order"`
+	IsActive      bool           `json:"is_active"`
+	ID            uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOptionParams) error {
+	_, err := q.db.ExecContext(ctx, updateShippingOption,
+		arg.Name,
+		arg.Description,
+		arg.Price,
+		arg.EstimatedDays,
+		arg.SortOrder,
+		arg.IsActive,
+		arg.ID,
+	)
+	return err
 }

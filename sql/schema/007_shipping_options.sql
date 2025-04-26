@@ -14,8 +14,10 @@ CREATE TABLE shipping_options (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX idx_shipping_options_is_active ON shipping_options(is_active);
+
 ALTER TABLE orders
-ADD COLUMN shipping_method_id UUID REFERENCES shipping_options(id) ON DELETE SET NULL;
+ADD COLUMN shipping_option_id UUID REFERENCES shipping_options(id) ON DELETE SET NULL;
 ALTER TABLE orders
 ADD COLUMN shipping_price NUMERIC(10, 2);
 
@@ -23,7 +25,7 @@ ADD COLUMN shipping_price NUMERIC(10, 2);
 
 -- Drop columns from orders table
 ALTER TABLE orders
-DROP COLUMN IF EXISTS shipping_method_id;
+DROP COLUMN IF EXISTS shipping_option_id;
 
 ALTER TABLE orders
 DROP COLUMN IF EXISTS shipping_price;

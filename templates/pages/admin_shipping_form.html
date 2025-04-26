@@ -4,7 +4,7 @@
 <div class="admin-panel">
   <h2>{{ if .Data.IsEdit }}Edit{{ else }}New{{ end }} Shipping Option</h2>
 
-<form action="{{ if .Data.IsEdit }}/admin/shipping/edit/{{ .Data.ShippingOption.ID }}{{ else }}/admin/shipping/new{{ end }}" method="POST" class="admin-form">
+<form action="{{ if .Data.IsEdit }}/admin/shipping/{{ .Data.ShippingOption.ID }}/edit{{ else }}/admin/shipping/new{{ end }}" method="POST" class="admin-form">
   <label>
     Name:
     <input type="text" name="name" value="{{ .Data.ShippingOption.Name }}" required>

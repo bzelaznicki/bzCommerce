@@ -148,7 +148,7 @@ type Order struct {
 	BillingCity        sql.NullString `json:"billing_city"`
 	BillingPostalCode  sql.NullString `json:"billing_postal_code"`
 	BillingCountry     sql.NullString `json:"billing_country"`
-	ShippingMethodID   uuid.NullUUID  `json:"shipping_method_id"`
+	ShippingOptionID   uuid.NullUUID  `json:"shipping_option_id"`
 	ShippingPrice      float64        `json:"shipping_price"`
 }
 

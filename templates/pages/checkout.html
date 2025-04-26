@@ -24,8 +24,11 @@
       {{ end }}
     </ul>
     <div class="checkout-total">
-      <strong>Total:</strong> ${{ printf "%.2f" $data.Total }}
+      <strong>Total:</strong> $<span id="base-total">{{ printf "%.2f" $data.Total }}</span>
+      <br>
+      <strong>Total + Shipping:</strong> $<span id="total-with-shipping">{{ printf "%.2f" $data.Total }}</span>
     </div>
+    
     {{ else }}
     <p>Your cart is empty.</p>
     {{ end }}
@@ -56,6 +59,25 @@
 
       <label for="shipping_phone">Phone</label>
       <input type="text" id="shipping_phone" name="shipping_phone" required>
+      <fieldset>
+        <legend>Shipping Method</legend>
+      
+        {{ range $data.ShippingOptions }}
+        <label style="display: block; margin-bottom: 0.5rem;">
+          <input type="radio" name="shipping_method_id" value="{{ .ID }}" required data-price="{{ printf "%.2f" .Price }}">
+          <strong>{{ .Name }}</strong>
+          - ${{ printf "%.2f" .Price }}
+          {{ if .EstimatedDays.Valid }}
+            ({{ .EstimatedDays.String }} days)
+          {{ end }}
+
+          {{ if .Description }}
+            <br><small>{{ .Description.String }}</small>
+          {{ end }}
+        </label>
+        {{ end }}
+      </fieldset>
+      
     </fieldset>
 
     <fieldset>
@@ -95,12 +117,39 @@
 <script>
   const toggle = document.getElementById("same_as_shipping");
   const billingFields = document.getElementById("billing-fields");
+  const billingInputs = billingFields.querySelectorAll('input');
 
   function toggleBillingFields() {
-    billingFields.style.display = toggle.checked ? "none" : "block";
+    const disabled = toggle.checked;
+    billingFields.style.display = disabled ? "none" : "block";
+
+    billingInputs.forEach(input => {
+      input.disabled = disabled;
+    });
   }
 
   toggle.addEventListener("change", toggleBillingFields);
-  toggleBillingFields();
+  toggleBillingFields(); 
 </script>
+<script>
+  const shippingOptions = document.querySelectorAll('input[name="shipping_method_id"]');
+  const baseTotal = parseFloat(document.getElementById('base-total').innerText);
+  const totalWithShipping = document.getElementById('total-with-shipping');
+
+  function updateTotal() {
+    const selectedOption = document.querySelector('input[name="shipping_method_id"]:checked');
+    if (selectedOption) {
+      const shippingPrice = parseFloat(selectedOption.dataset.price) || 0;
+      const newTotal = baseTotal + shippingPrice;
+      totalWithShipping.innerText = newTotal.toFixed(2);
+    }
+  }
+
+  shippingOptions.forEach(option => {
+    option.addEventListener('change', updateTotal);
+  });
+
+  updateTotal();
+</script>
+
 {{ end }}
