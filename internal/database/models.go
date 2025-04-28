@@ -150,6 +150,7 @@ type Order struct {
 	BillingCountry     sql.NullString `json:"billing_country"`
 	ShippingOptionID   uuid.NullUUID  `json:"shipping_option_id"`
 	ShippingPrice      float64        `json:"shipping_price"`
+	PaymentOptionID    uuid.NullUUID  `json:"payment_option_id"`
 }
 
 type OrdersVariant struct {
@@ -160,6 +161,16 @@ type OrdersVariant struct {
 	TotalPrice       float64      `json:"total_price"`
 	CreatedAt        sql.NullTime `json:"created_at"`
 	UpdatedAt        sql.NullTime `json:"updated_at"`
+}
+
+type PaymentOption struct {
+	ID          uuid.UUID      `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	IsActive    bool           `json:"is_active"`
+	SortOrder   sql.NullInt32  `json:"sort_order"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 type Product struct {

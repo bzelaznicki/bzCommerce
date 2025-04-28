@@ -24,3 +24,7 @@ sql:
             go_type: "float64"
           - column: "carts_variants.price_per_item"
             go_type: "float64"
+          - column: "orders.total_price"
+            go_type: "float64"
+          - column: "orders.shipping_price"
+            go_type: "float64"

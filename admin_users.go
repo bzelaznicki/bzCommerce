@@ -10,6 +10,25 @@ import (
 	"github.com/google/uuid"
 )
 
+type AdminUserRow struct {
+	ID        uuid.UUID
+	FullName  string
+	Email     string
+	CreatedAt string
+	UpdatedAt string
+	IsAdmin   bool
+}
+
+type AdminUsersListPageData struct {
+	Users       []AdminUserRow
+	Breadcrumbs []Breadcrumb
+}
+
+type AdminUserFormPageData struct {
+	User        User
+	Breadcrumbs []Breadcrumb
+}
+
 func (cfg *apiConfig) handleAdminUsersList(w http.ResponseWriter, r *http.Request) {
 	rows, err := cfg.db.ListUsers(r.Context())
 
@@ -17,15 +36,6 @@ func (cfg *apiConfig) handleAdminUsersList(w http.ResponseWriter, r *http.Reques
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not load users")
 		log.Printf("could not load users: %v", err)
 		return
-	}
-
-	type AdminUserRow struct {
-		ID        uuid.UUID
-		FullName  string
-		Email     string
-		CreatedAt string
-		UpdatedAt string
-		IsAdmin   bool
 	}
 
 	users := make([]AdminUserRow, 0, len(rows))
@@ -41,7 +51,15 @@ func (cfg *apiConfig) handleAdminUsersList(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
-	cfg.Render(w, r, "templates/pages/admin_users.html", users)
+	data := AdminUsersListPageData{
+		Users: users,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Users"},
+		),
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_users.html", data)
+
 }
 
 func (cfg *apiConfig) handleAdminUserEditForm(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +86,16 @@ func (cfg *apiConfig) handleAdminUserEditForm(w http.ResponseWriter, r *http.Req
 		IsAdmin:   u.IsAdmin,
 	}
 
-	cfg.Render(w, r, "templates/pages/admin_user_edit.html", user)
+	data := AdminUserFormPageData{
+		User: user,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Users", URL: "/admin/users"},
+			Breadcrumb{Label: "Edit"},
+		),
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_user_edit.html", data)
+
 }
 
 func (cfg *apiConfig) handleAdminUserUpdate(w http.ResponseWriter, r *http.Request) {

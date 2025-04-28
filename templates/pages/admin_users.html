@@ -1,43 +1,50 @@
-{{ define "title" }}Admin - Products - {{ .StoreName }}{{ end }}
+{{ define "title" }}Admin - Users - {{ .StoreName }}{{ end }}
 
 {{ define "content" }}
 <div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+
   <h2>Manage Users</h2>
 
-  {{ if .Data }}
+  {{ if .Data.Users }}
     <table class="admin-table">
       <thead>
         <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Admin</th>
-            <th>Created at</th>
-            <th>Updated at</th>
-            <th>Actions</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Admin</th>
+          <th>Created at</th>
+          <th>Updated at</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        {{ range .Data }}
+        {{ range .Data.Users }}
         <tr>
-            <td>{{ .FullName }}</td>
-            <td>{{ .Email }}</td>
-            <td>{{ .IsAdmin }}</td>
-            <td>{{ .CreatedAt }}</td>
-            <td>{{ .UpdatedAt }}</td>
-          
+          <td>{{ .FullName }}</td>
+          <td>{{ .Email }}</td>
+          <td>{{ if .IsAdmin }}✔️{{ else }}—{{ end }}</td>
+          <td>{{ .CreatedAt }}</td>
+          <td>{{ .UpdatedAt }}</td>
           <td>
             <a href="/admin/users/{{ .ID }}/edit">Edit</a> |
             <form action="/admin/users/{{ .ID }}/delete" method="POST" style="display:inline;">
               <button type="submit" onclick="return confirm('Delete this user?')">Delete</button>
             </form>
           </td>
-          
         </tr>
         {{ end }}
       </tbody>
     </table>
   {{ else }}
-    <p>No products found.</p>
+    <p>No users found.</p>
   {{ end }}
 </div>
 {{ end }}

@@ -2,6 +2,15 @@
 
 {{ define "content" }}
 <div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+  
   <h2>{{ if .Data.IsEdit }}Edit{{ else }}New{{ end }} Shipping Option</h2>
 
 <form action="{{ if .Data.IsEdit }}/admin/shipping/{{ .Data.ShippingOption.ID }}/edit{{ else }}/admin/shipping/new{{ end }}" method="POST" class="admin-form">

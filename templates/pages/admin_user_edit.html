@@ -2,33 +2,42 @@
 
 {{ define "content" }}
 <div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+
   <h2>Edit User</h2>
 
-  <form method="POST" action="/admin/users/{{ .Data.ID }}" class="admin-form">
+  <form method="POST" action="/admin/users/{{ .Data.User.ID }}" class="admin-form">
     <label for="full_name">Full Name</label>
-    <input type="text" id="full_name" name="full_name" value="{{ .Data.FullName }}" required>
+    <input type="text" id="full_name" name="full_name" value="{{ .Data.User.FullName }}" required>
 
     <label for="email">Email</label>
-    <input type="email" id="email" name="email" value="{{ .Data.Email }}" required>
+    <input type="email" id="email" name="email" value="{{ .Data.User.Email }}" required>
 
     <div class="form-group">
       <label for="is_admin">Is Admin?</label>
       <div class="toggle-wrapper">
-        <input type="checkbox" id="is_admin" name="is_admin" value="true" {{ if .Data.IsAdmin }}checked{{ end }}>
+        <input type="checkbox" id="is_admin" name="is_admin" value="true" {{ if .Data.User.IsAdmin }}checked{{ end }}>
         <label for="is_admin" class="toggle-switch"></label>
       </div>
     </div>
 
     <label for="created_at">Created At</label>
-    <input type="text" id="created_at" value="{{ .Data.CreatedAt.Format "2006-01-02 15:04:05" }}" readonly>
+    <input type="text" id="created_at" value="{{ .Data.User.CreatedAt.Format "2006-01-02 15:04:05" }}" readonly>
 
     <label for="updated_at">Updated At</label>
-    <input type="text" id="updated_at" value="{{ .Data.UpdatedAt.Format "2006-01-02 15:04:05" }}" readonly>
+    <input type="text" id="updated_at" value="{{ .Data.User.UpdatedAt.Format "2006-01-02 15:04:05" }}" readonly>
 
     <hr style="margin: 2rem 0;">
 
     <h3 style="margin-bottom: 1rem;">Update Password <small style="font-weight: normal;">(optional)</small></h3>
-    
+
     <div class="form-group">
       <label for="password">New Password</label>
       <div class="password-field">
@@ -36,7 +45,7 @@
         <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
       </div>
     </div>
-    
+
     <div class="form-group">
       <label for="password_confirm">Confirm Password</label>
       <div class="password-field">
@@ -44,7 +53,7 @@
         <button type="button" class="toggle-password" onclick="togglePassword('password_confirm', this)">👁</button>
       </div>
     </div>
-    
+
     <button type="submit">Update User</button>
   </form>
 </div>

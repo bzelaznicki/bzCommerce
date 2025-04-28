@@ -76,5 +76,24 @@ func (cfg *apiConfig) registerAdminRoutes(mux *http.ServeMux) {
 	mux.Handle("POST /admin/shipping/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionUpdate)))
 	// Delete shipping option
 	mux.Handle("POST /admin/shipping/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminShippingOptionDelete)))
+
+	// Payment options list
+	mux.Handle("GET /admin/payment", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionsList)))
+
+	// New payment option form
+	mux.Handle("GET /admin/payment/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionsNew)))
+
+	// Create payment option
+	mux.Handle("POST /admin/payment/new", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionsCreate)))
+
+	// Edit payment option form
+	mux.Handle("GET /admin/payment/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionEdit)))
+
+	// Update payment option
+	mux.Handle("POST /admin/payment/{id}/edit", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionUpdate)))
+
+	// Delete payment option
+	mux.Handle("POST /admin/payment/{id}/delete", cfg.requireAdmin(http.HandlerFunc(cfg.handleAdminPaymentOptionDelete)))
+
 	log.Printf("Admin routes registered")
 }

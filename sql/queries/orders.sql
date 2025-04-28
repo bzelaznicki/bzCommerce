@@ -14,7 +14,9 @@ INSERT INTO orders (
     billing_city, 
     billing_postal_code, 
     billing_country,
-    shipping_option_id
+    shipping_option_id,
+    shipping_price,
+    payment_option_id
 )
 VALUES (
     sqlc.arg(user_id), 
@@ -31,7 +33,9 @@ VALUES (
     sqlc.arg(billing_city), 
     sqlc.arg(billing_postal_code), 
     sqlc.arg(billing_country),
-    sqlc.arg(shipping_option_id)
+    sqlc.arg(shipping_option_id),
+    sqlc.arg(shipping_price),
+    sqlc.arg(payment_option_id)
 )
 RETURNING *;
 

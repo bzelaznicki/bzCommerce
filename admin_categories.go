@@ -12,6 +12,38 @@ import (
 	"github.com/google/uuid"
 )
 
+type AdminCategoriesListPageData struct {
+	Categories  []AdminCategoryRow
+	Breadcrumbs []Breadcrumb
+}
+
+type AdminCategoryFormPageData struct {
+	IsEdit          bool
+	FormAction      string
+	Category        AdminCategoryForm
+	CategoryOptions []CategoryOption
+	Breadcrumbs     []Breadcrumb
+}
+
+type AdminCategoryRow struct {
+	ID          uuid.UUID
+	Name        string
+	Slug        string
+	Description string
+	ParentName  sql.NullString
+	ParentID    uuid.NullUUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type AdminCategoryForm struct {
+	ID          uuid.UUID
+	Name        string
+	Slug        string
+	Description string
+	ParentID    uuid.NullUUID
+}
+
 func (cfg *apiConfig) handleAdminCategoryList(w http.ResponseWriter, r *http.Request) {
 	rows, err := cfg.db.ListCategoriesWithParent(r.Context())
 
@@ -21,19 +53,7 @@ func (cfg *apiConfig) handleAdminCategoryList(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	type AdminCategoryRow struct {
-		ID          uuid.UUID
-		Name        string
-		Slug        string
-		Description string
-		ParentName  sql.NullString
-		ParentID    uuid.NullUUID
-		CreatedAt   time.Time
-		UpdatedAt   time.Time
-	}
-
 	categories := make([]AdminCategoryRow, 0, len(rows))
-
 	for _, row := range rows {
 		categories = append(categories, AdminCategoryRow{
 			ID:          row.ID,
@@ -47,7 +67,15 @@ func (cfg *apiConfig) handleAdminCategoryList(w http.ResponseWriter, r *http.Req
 		})
 	}
 
-	cfg.Render(w, r, "templates/pages/admin_categories.html", categories)
+	data := AdminCategoriesListPageData{
+		Categories: categories,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Categories"},
+		),
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_categories.html", data)
+
 }
 
 func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.Request) {
@@ -58,31 +86,19 @@ func (cfg *apiConfig) handleAdminCategoryNewForm(w http.ResponseWriter, r *http.
 		return
 	}
 
-	data := struct {
-		IsEdit     bool
-		FormAction string
-		Category   struct {
-			ID          uuid.UUID
-			Name        string
-			Slug        string
-			Description string
-			ParentID    uuid.NullUUID
-		}
-		CategoryOptions []CategoryOption
-	}{
-		IsEdit:     false,
-		FormAction: "/admin/categories",
-		Category: struct {
-			ID          uuid.UUID
-			Name        string
-			Slug        string
-			Description string
-			ParentID    uuid.NullUUID
-		}{},
+	data := AdminCategoryFormPageData{
+		IsEdit:          false,
+		FormAction:      "/admin/categories",
+		Category:        AdminCategoryForm{},
 		CategoryOptions: flattenCategoryOptions(groupCategories(categories)),
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Categories", URL: "/admin/categories"},
+			Breadcrumb{Label: "New"},
+		),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_category_form.html", data)
+
 }
 
 func (cfg *apiConfig) handleAdminCategoryCreate(w http.ResponseWriter, r *http.Request) {
@@ -139,27 +155,10 @@ func (cfg *apiConfig) handleAdminCategoryEditForm(w http.ResponseWriter, r *http
 		return
 	}
 
-	data := struct {
-		IsEdit     bool
-		FormAction string
-		Category   struct {
-			ID          uuid.UUID
-			Name        string
-			Slug        string
-			Description string
-			ParentID    uuid.NullUUID
-		}
-		CategoryOptions []CategoryOption
-	}{
+	data := AdminCategoryFormPageData{
 		IsEdit:     true,
 		FormAction: fmt.Sprintf("/admin/categories/%s", id),
-		Category: struct {
-			ID          uuid.UUID
-			Name        string
-			Slug        string
-			Description string
-			ParentID    uuid.NullUUID
-		}{
+		Category: AdminCategoryForm{
 			ID:          cat.ID,
 			Name:        cat.Name,
 			Slug:        cat.Slug,
@@ -167,9 +166,14 @@ func (cfg *apiConfig) handleAdminCategoryEditForm(w http.ResponseWriter, r *http
 			ParentID:    cat.ParentID,
 		},
 		CategoryOptions: flattenCategoryOptions(groupCategories(categories)),
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Categories", URL: "/admin/categories"},
+			Breadcrumb{Label: "Edit"},
+		),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_category_form.html", data)
+
 }
 
 func (cfg *apiConfig) handleAdminCategoryUpdate(w http.ResponseWriter, r *http.Request) {

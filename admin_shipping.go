@@ -21,10 +21,14 @@ func (cfg *apiConfig) handleAdminShippingOptionsList(w http.ResponseWriter, r *h
 
 	type AdminShippingListPageData struct {
 		ShippingOptions []database.ShippingOption
+		Breadcrumbs     []Breadcrumb
 	}
 
 	data := AdminShippingListPageData{
 		ShippingOptions: rows,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Shipping Options"},
+		),
 	}
 	cfg.Render(w, r, "templates/pages/admin_shipping_list.html", data)
 }
@@ -32,12 +36,17 @@ func (cfg *apiConfig) handleAdminShippingOptionsList(w http.ResponseWriter, r *h
 type AdminShippingFormPageData struct {
 	ShippingOption database.ShippingOption
 	IsEdit         bool
+	Breadcrumbs    []Breadcrumb
 }
 
 func (cfg *apiConfig) handleAdminShippingOptionsNew(w http.ResponseWriter, r *http.Request) {
 	data := AdminShippingFormPageData{
 		ShippingOption: database.ShippingOption{},
 		IsEdit:         false,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Shipping Options", URL: "/admin/shipping"},
+			Breadcrumb{Label: "New"},
+		),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_shipping_form.html", data)
@@ -55,7 +64,7 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 	price := r.FormValue("price")
 	estimatedDays := r.FormValue("estimated_days")
 	sortOrder := r.FormValue("sort_order")
-	isActive := r.FormValue("is_active") == "true"
+	isActive := r.FormValue("is_active") != ""
 
 	sortOrderInt, err := strconv.Atoi(sortOrder)
 
@@ -110,6 +119,10 @@ func (cfg *apiConfig) handleAdminShippingOptionsEdit(w http.ResponseWriter, r *h
 	data := AdminShippingFormPageData{
 		ShippingOption: shippingOption,
 		IsEdit:         true,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Shipping Options", URL: "/admin/shipping"},
+			Breadcrumb{Label: "New"},
+		),
 	}
 
 	cfg.Render(w, r, "templates/pages/admin_shipping_form.html", data)

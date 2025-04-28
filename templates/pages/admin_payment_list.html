@@ -1,0 +1,44 @@
+{{ define "title" }}Payment Options - Admin - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+  
+  <h2>Payment Options</h2>
+
+  <a href="/admin/payment/new" class="primary-button" style="margin-bottom: 1rem; display: inline-block;">Add New Payment Option</a>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Sort Order</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Data.PaymentOptions }}
+      <tr>
+        <td>{{ .Name }}</td>
+        <td>{{ if .IsActive }}Active{{ else }}Inactive{{ end }}</td>
+        <td>{{ if .SortOrder.Valid }}{{ .SortOrder.Int32 }}{{ else }}-{{ end }}</td>
+        <td class="admin-actions">
+          <a href="/admin/payment/{{ .ID }}/edit">Edit</a>
+          <form action="/admin/payment/{{ .ID }}/delete" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this payment option?');">
+            <button type="submit" class="link-button">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}

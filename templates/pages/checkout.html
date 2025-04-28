@@ -77,6 +77,19 @@
         </label>
         {{ end }}
       </fieldset>
+      <fieldset>
+        <legend>Payment Method</legend>
+      
+        {{ range .Data.PaymentOptions }}
+        <label style="display: block; margin-bottom: 0.5rem;">
+          <input type="radio" name="payment_method_id" value="{{ .ID }}" required>
+          <strong>{{ .Name }}</strong>
+          {{ if .Description.Valid }}
+          <br><small>{{ .Description.String }}</small>
+          {{ end }}
+        </label>
+        {{ end }}
+      </fieldset>
       
     </fieldset>
 

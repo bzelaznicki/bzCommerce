@@ -2,10 +2,19 @@
 
 {{ define "content" }}
 <div class="admin-panel">
-  <h2>Manage Products</h2>
-  <p><a href="/admin/products/new">+ Add New Product</a></p>
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range .Data.Breadcrumbs }}
+        › {{ if .URL }}<a href="{{ .URL }}">{{ .Label }}</a>{{ else }}{{ .Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
 
-  {{ if .Data }}
+  <h2>Manage Products</h2>
+  <p><a href="/admin/products/new" class="primary-button">+ Add New Product</a></p>
+
+  {{ if .Data.Products }}
     <table class="admin-table">
       <thead>
         <tr>
@@ -16,22 +25,29 @@
         </tr>
       </thead>
       <tbody>
-        {{ range .Data }}
+        {{ range .Data.Products }}
         <tr>
-          <td>{{ .Name }}</td>
+          <td>
+            {{ if .ImagePath }}
+              <img src="{{ .ImagePath }}" alt="{{ .Name }}" style="width: 50px; height: auto; vertical-align: middle; margin-right: 8px;">
+            {{ end }}
+            {{ .Name }}
+          </td>
           <td>{{ .Slug }}</td>
           <td>
-            <a href="/category/{{ .CategorySlug }}">{{ .CategoryName }}</a>
+            {{ if .CategorySlug }}
+              <a href="/category/{{ .CategorySlug }}">{{ .CategoryName }}</a>
+            {{ else }}
+              —
+            {{ end }}
           </td>
-          
-          <td>
-            <a href="/admin/products/{{ .ID }}/edit">Edit</a> |
-            <a href="/admin/products/{{ .ID }}/variants">Variants</a> |
+          <td class="admin-actions">
+            <a href="/admin/products/{{ .ID }}/edit">Edit</a>
+            <a href="/admin/products/{{ .ID }}/variants">Variants</a>
             <form action="/admin/products/{{ .ID }}/delete" method="POST" style="display:inline;">
               <button type="submit" onclick="return confirm('Delete this product?')">Delete</button>
             </form>
           </td>
-          
         </tr>
         {{ end }}
       </tbody>

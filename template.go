@@ -129,3 +129,12 @@ func (cfg *apiConfig) RenderError(w http.ResponseWriter, r *http.Request, code i
 
 	cfg.Render(w, r, "templates/pages/error.html", data)
 }
+
+type Breadcrumb struct {
+	Label string
+	URL   string
+}
+
+func NewBreadcrumbTrail(items ...Breadcrumb) []Breadcrumb {
+	return items
+}

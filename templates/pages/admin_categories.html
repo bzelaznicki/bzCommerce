@@ -2,11 +2,20 @@
 
 {{ define "content" }}
 <div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+  
   <h2>Manage Categories</h2>
 
-  <p><a href="/admin/categories/new">+ Add New Category</a></p>
+  <p><a href="/admin/categories/new" class="primary-button">+ Add New Category</a></p>
 
-  {{ if .Data }}
+  {{ if .Data.Categories }}
     <table class="admin-table">
       <thead>
         <tr>
@@ -18,9 +27,11 @@
         </tr>
       </thead>
       <tbody>
-        {{ range .Data }}
+        {{ range .Data.Categories }}
         <tr>
-          <td>{{ .Name }}</td>
+          <td>
+            {{ if .ParentID.Valid }}&nbsp;&nbsp;&nbsp;&nbsp;↳ {{ end }}{{ .Name }}
+          </td>
           <td>{{ .Slug }}</td>
           <td>{{ .Description }}</td>
           <td>
@@ -30,7 +41,6 @@
               —
             {{ end }}
           </td>
-          
           <td class="admin-actions">
             <a href="/admin/categories/{{ .ID }}/edit">Edit</a>
             <form action="/admin/categories/{{ .ID }}/delete" method="POST" style="display:inline;">
@@ -39,6 +49,7 @@
           </td>
         </tr>
         {{ end }}
+        
       </tbody>
     </table>
   {{ else }}

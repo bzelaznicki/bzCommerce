@@ -2,6 +2,15 @@
 
 {{ define "content" }}
 <h2>Shipping Options</h2>
+<nav class="breadcrumb">
+  <a href="/admin">Dashboard</a>
+  {{ if .Data.Breadcrumbs }}
+    {{ range $index, $crumb := .Data.Breadcrumbs }}
+      › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+    {{ end }}
+  {{ end }}
+</nav>
+
 
 <a href="/admin/shipping/new" class="primary-button" style="margin-bottom: 1rem; display: inline-block;">Add New Shipping Option</a>
 

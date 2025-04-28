@@ -128,3 +128,18 @@ opacity: 0.85;
     background-color: #0056b3;
   }
   
+  .breadcrumb {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: #555;
+  }
+  
+  .breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+  

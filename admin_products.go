@@ -11,22 +11,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type AdminProductsListPageData struct {
+	Products    []AdminProductRow
+	Breadcrumbs []Breadcrumb
+}
+type AdminProductRow struct {
+	ID           uuid.UUID
+	Name         string
+	Slug         string
+	Description  string
+	ImagePath    string
+	CategoryName string
+	CategorySlug string
+}
+
 func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Request) {
 	rows, err := cfg.db.ListProductsWithCategory(r.Context())
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not load products")
 		log.Printf("could not load products: %v", err)
 		return
-	}
-
-	type AdminProductRow struct {
-		ID           uuid.UUID
-		Name         string
-		Slug         string
-		Description  string
-		ImagePath    string
-		CategoryName string
-		CategorySlug string
 	}
 
 	products := make([]AdminProductRow, 0, len(rows))
@@ -41,7 +45,15 @@ func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Requ
 			CategorySlug: row.CategorySlug,
 		})
 	}
-	cfg.Render(w, r, "templates/pages/admin_products.html", products)
+
+	data := AdminProductsListPageData{
+		Products: products,
+		Breadcrumbs: NewBreadcrumbTrail(
+			Breadcrumb{Label: "Products"},
+		),
+	}
+
+	cfg.Render(w, r, "templates/pages/admin_products.html", data)
 }
 
 func (cfg *apiConfig) handleAdminProductNewForm(w http.ResponseWriter, r *http.Request) {
