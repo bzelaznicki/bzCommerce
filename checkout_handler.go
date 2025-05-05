@@ -199,5 +199,5 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error creating order: %v", err)
 		return
 	}
-
+	http.Redirect(w, r, "/checkout/payment", http.StatusSeeOther)
 }
