@@ -33,7 +33,7 @@
     <p>Your cart is empty.</p>
     {{ end }}
   </div>
-
+  {{ if $data.Items }}
   <!-- Checkout Form -->
   <form action="/checkout" method="POST" class="checkout-form">
     <fieldset>
@@ -125,6 +125,7 @@
 
     <button class="primary-button" type="submit">Place Order</button>
   </form>
+  {{end}}
 </div>
 
 <script>

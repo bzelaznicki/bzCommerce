@@ -90,13 +90,11 @@ func (cfg *apiConfig) redirectIfAuthenticated(next http.Handler) http.Handler {
 			})
 
 			if err == nil && token.Valid {
-				// Already logged in — redirect away
 				http.Redirect(w, r, "/account", http.StatusSeeOther)
 				return
 			}
 		}
 
-		// Continue to login/register handler
 		next.ServeHTTP(w, r)
 	})
 }

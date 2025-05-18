@@ -227,3 +227,20 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 	IsAdmin      bool      `json:"is_admin"`
 }
+
+type UsersAddress struct {
+	ID                uuid.UUID      `json:"id"`
+	UserID            uuid.UUID      `json:"user_id"`
+	Name              string         `json:"name"`
+	Address           sql.NullString `json:"address"`
+	City              sql.NullString `json:"city"`
+	PostalCode        sql.NullString `json:"postal_code"`
+	CountryID         uuid.UUID      `json:"country_id"`
+	Phone             string         `json:"phone"`
+	IsShipping        bool           `json:"is_shipping"`
+	IsShippingDefault bool           `json:"is_shipping_default"`
+	IsBilling         bool           `json:"is_billing"`
+	IsBillingDefault  bool           `json:"is_billing_default"`
+	CreatedAt         sql.NullTime   `json:"created_at"`
+	UpdatedAt         sql.NullTime   `json:"updated_at"`
+}
