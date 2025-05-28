@@ -17,6 +17,6 @@ fi
 
 echo "DB_URL=$DB_URL"
 
-cd sql/schema || exit 1
+cd backend/sql/schema || exit 1
 
 goose -v postgres "$DB_URL" down
