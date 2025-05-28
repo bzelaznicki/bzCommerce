@@ -1,0 +1,28 @@
+import Link from 'next/link'
+import type { Product } from '../types/product'
+
+type Props = {
+  product: Product
+}
+
+export default function ProductCard({ product }: Props) {
+  return (
+    <Link href={`/product/${product.slug}`} className="block group">
+      <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm transition hover:shadow-md">
+        <img
+          src={`http://localhost:8080${product.imagePath}`}
+          alt={product.name}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+        />
+        <div className="p-4">
+          <h3 className="text-lg font-semibold group-hover:text-blue-600">
+            {product.name}
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {product.description.slice(0, 60)}...
+          </p>
+        </div>
+      </div>
+    </Link>
+  )
+}

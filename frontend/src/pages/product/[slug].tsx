@@ -27,41 +27,77 @@ export default function ProductPage({ productData }: Props) {
         <title>{product.name} | bzCommerce</title>
         <meta name="description" content={product.description} />
       </Head>
-      <div style={{ display: 'flex', gap: '2rem' }}>
-        <div>
+
+      <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-10">
+        {/* Image */}
+        <div className="rounded-lg overflow-hidden shadow-md">
           <img
             src={`http://localhost:8080${product.imagePath}`}
             alt={product.name}
-            style={{ maxWidth: '300px', borderRadius: '8px' }}
+            className="w-full object-cover"
           />
         </div>
-        <div>
-          <h1>{product.name}</h1>
-          <p>{product.description}</p>
-          {hasVariants && selectedVariant ? (
-            <>
-              <select
-                value={selectedVariant.id}
-                onChange={(e) =>
-                  setSelectedVariant(
-                    product.variants.find((v) => v.id === e.target.value) || null
-                  )
-                }
-              >
-                {product.variants.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.variantName || 'Default'}
-                  </option>
-                ))}
-              </select>
-              <p>
-                <strong>Price: {selectedVariant.price.toFixed(2)} PLN</strong>
-              </p>
-              <p>In stock: {selectedVariant.stockQuantity}</p>
-            </>
-          ) : (
-            <p>No product variants currently available.</p>
-          )}
+
+        {/* Product Info */}
+        <div className="flex flex-col justify-between">
+          <div>
+            {/* Breadcrumbs */}
+            <nav className="text-sm text-gray-500 mb-2">
+              {breadcrumbs.map((b, i) => (
+                <span key={b.id}>
+                  {i > 0 && ' / '}
+                  {b.name}
+                </span>
+              ))}
+            </nav>
+
+            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+            <p className="text-gray-700 mb-6">{product.description}</p>
+
+            {hasVariants && selectedVariant ? (
+              <>
+                <label className="block mb-2 font-medium text-sm">
+                  Choose variant:
+                </label>
+                <select
+                  value={selectedVariant.id}
+                  onChange={(e) =>
+                    setSelectedVariant(
+                      product.variants.find((v) => v.id === e.target.value) || null
+                    )
+                  }
+                  className="mb-4 p-2 border border-gray-300 rounded w-full"
+                >
+                  {product.variants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.variantName || 'Default'}
+                    </option>
+                  ))}
+                </select>
+
+                <p className="text-xl font-semibold mb-2">
+                  {selectedVariant.price.toFixed(2)} PLN
+                </p>
+
+                <p className="mb-4 text-sm text-gray-500">
+                  In stock: {selectedVariant.stockQuantity}
+                </p>
+
+                <button
+                  disabled={selectedVariant.stockQuantity <= 0}
+                  className={`w-full py-3 text-white rounded ${
+                    selectedVariant.stockQuantity > 0
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {selectedVariant.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+                </button>
+              </>
+            ) : (
+              <p className="text-red-600 italic">No product variants currently available.</p>
+            )}
+          </div>
         </div>
       </div>
     </>
