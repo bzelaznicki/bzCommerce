@@ -1,0 +1,59 @@
+{{ define "title" }}Admin - Categories - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range $index, $crumb := .Data.Breadcrumbs }}
+        › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+  
+  <h2>Manage Categories</h2>
+
+  <p><a href="/admin/categories/new" class="primary-button">+ Add New Category</a></p>
+
+  {{ if .Data.Categories }}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Description</th>
+          <th>Parent</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Categories }}
+        <tr>
+          <td>
+            {{ if .ParentID.Valid }}&nbsp;&nbsp;&nbsp;&nbsp;↳ {{ end }}{{ .Name }}
+          </td>
+          <td>{{ .Slug }}</td>
+          <td>{{ .Description }}</td>
+          <td>
+            {{ if .ParentName.Valid }}
+              {{ .ParentName.String }}
+            {{ else }}
+              —
+            {{ end }}
+          </td>
+          <td class="admin-actions">
+            <a href="/admin/categories/{{ .ID }}/edit">Edit</a>
+            <form action="/admin/categories/{{ .ID }}/delete" method="POST" style="display:inline;">
+              <button type="submit" onclick="return confirm('Delete this category?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {{ end }}
+        
+      </tbody>
+    </table>
+  {{ else }}
+    <p>No categories found.</p>
+  {{ end }}
+</div>
+{{ end }}

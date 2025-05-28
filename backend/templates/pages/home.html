@@ -1,0 +1,35 @@
+{{ define "title" }}Home - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+  <h2>Browse Categories</h2>
+
+  {{ if .Categories }}
+    <ul class="category-list">
+      {{ range .Categories }}
+        <li><a href="/category/{{ .Parent.Slug }}">{{ .Parent.Name }}</a></li>
+      {{ end }}
+    </ul>
+  {{ else }}
+    <p>No categories available.</p>
+  {{ end }}
+
+  <h2 style="margin-top: 2rem;">Featured Products</h2>
+
+  {{ if .Data }}
+    <ul class="product-list">
+      {{ range .Data }}
+        <li>
+          <a href="/product/{{ .Slug }}">
+            {{ if .ImagePath }}
+              <img src="{{ .ImagePath }}" alt="{{ .Name }}">
+            {{ end }}
+            <strong>{{ .Name }}</strong>
+          </a>
+          <p>{{ .Description }}</p>
+        </li>
+      {{ end }}
+    </ul>
+  {{ else }}
+    <p>No products available.</p>
+  {{ end }}
+{{ end }}

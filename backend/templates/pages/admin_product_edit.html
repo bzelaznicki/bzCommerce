@@ -1,0 +1,60 @@
+{{ define "title" }}Edit Product - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a> › 
+    <a href="/admin/products">Products</a> › 
+    Edit Product
+  </nav>
+
+  <h2>Edit Product</h2>
+
+  <form action="/admin/products/{{ .Data.Product.ID }}" method="POST" class="admin-form">
+    <fieldset>
+      <legend>Product Details</legend>
+
+      <label for="name">Product Name</label>
+      <input type="text" id="name" name="name" value="{{ .Data.Product.Name }}" required>
+
+      <label for="slug">Slug</label>
+      <input type="text" id="slug" name="slug" value="{{ .Data.Product.Slug }}" required>
+
+      <label for="description">Description</label>
+      <textarea id="description" name="description">{{ .Data.Product.Description }}</textarea>
+
+      <label for="image_url">Image URL</label>
+      <input type="text" id="image_url" name="image_url" value="{{ .Data.Product.ImagePath }}">
+
+      <label for="category_id">Category</label>
+      <select id="category_id" name="category_id" required>
+        <option value="">-- Choose Category --</option>
+        {{ range .Data.CategoryOptions }}
+          <option value="{{ .ID }}" {{ if eq .ID $.Data.Product.CategoryID }}selected{{ end }}>
+            {{ .Name }}
+          </option>
+        {{ end }}
+      </select>
+    </fieldset>
+
+    <button type="submit" class="primary-button">Update Product</button>
+  </form>
+</div>
+<script>
+  const nameInput = document.getElementById('name');
+  const slugInput = document.getElementById('slug');
+
+  if (nameInput && slugInput) {
+    nameInput.addEventListener('input', () => {
+      const slug = nameInput.value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')  // Remove non-alphanumerics
+        .replace(/\s+/g, '-')           // Replace spaces with hyphens
+        .replace(/-+/g, '-');           // Collapse multiple hyphens
+      slugInput.value = slug;
+    });
+  }
+</script>
+
+{{ end }}

@@ -1,0 +1,45 @@
+{{ define "title" }}Variants - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+  <h2>Variants for Product: {{ .Data.Product.Name }}</h2>
+
+  <p><a href="/admin/products/{{ .Data.Product.ID }}/variants/new">+ Add Variant</a></p>
+
+  {{ if .Data.Variants }}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>SKU</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Image</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Variants }}
+        <tr>
+          <td>{{ .VariantName.String }}</td>
+          <td>{{ .Sku }}</td>
+          <td>${{ .Price }}</td>
+          <td>{{ .StockQuantity }}</td>
+          <td>
+            {{ if .ImageUrl.Valid }}
+              <img src="{{ .ImageUrl.String }}" style="max-width: 60px;">
+            {{ end }}
+          </td>
+          <td class="admin-actions">
+            <a href="/admin/variants/{{ .ID }}/edit">Edit</a>
+            <form action="/admin/variants/{{ .ID }}/delete" method="POST" style="display:inline;">
+              <button type="submit" onclick="return confirm('Delete this variant?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  {{ else }}
+    <p>No variants found.</p>
+  {{ end }}
+{{ end }}

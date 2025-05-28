@@ -1,0 +1,45 @@
+{{ define "title" }}{{ if .Data.IsEdit }}Edit{{ else }}New{{ end }} Payment Option - Admin - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+    <nav class="breadcrumb">
+        <a href="/admin">Dashboard</a>
+        {{ if .Data.Breadcrumbs }}
+          {{ range $index, $crumb := .Data.Breadcrumbs }}
+            › {{ if $crumb.URL }}<a href="{{ $crumb.URL }}">{{ $crumb.Label }}</a>{{ else }}{{ $crumb.Label }}{{ end }}
+          {{ end }}
+        {{ end }}
+      </nav>
+      
+  <h2>{{ if .Data.IsEdit }}Edit{{ else }}New{{ end }} Payment Option</h2>
+
+  <form action="{{ if .Data.IsEdit }}/admin/payment/{{ .Data.PaymentOption.ID }}/edit{{ else }}/admin/payment/new{{ end }}" method="POST" class="admin-form">
+    <label>
+      Name:
+      <input type="text" name="name" value="{{ .Data.PaymentOption.Name }}" required>
+    </label>
+
+    <label>
+      Description:
+      <textarea name="description">{{ if .Data.PaymentOption.Description.Valid }}{{ .Data.PaymentOption.Description.String }}{{ end }}</textarea>
+    </label>
+
+    <label>
+      Sort Order:
+      <input type="number" name="sort_order" value="{{ if .Data.PaymentOption.SortOrder.Valid }}{{ .Data.PaymentOption.SortOrder.Int32 }}{{ end }}">
+    </label>
+
+    <label class="toggle-label">
+      <div class="toggle-switch">
+        <input type="checkbox" name="is_active" id="is_active" value="true" {{ if .Data.PaymentOption.IsActive }}checked{{ end }}>
+        <span class="toggle-slider"></span>
+      </div>
+      <span>Active</span>
+    </label>
+
+    <button type="submit" class="primary-button">
+      {{ if .Data.IsEdit }}Update{{ else }}Create{{ end }} Payment Option
+    </button>
+  </form>
+</div>
+{{ end }}

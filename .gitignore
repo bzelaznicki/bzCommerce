@@ -2,26 +2,26 @@
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+backend/*.exe
+backend/*.exe~
+backend/*.dll
+backend/*.so
+backend/*.dylib
 
-bzCommerce
+backend/bzCommerce
 
 # Test binary, built with `go test -c`
-*.test
+backend/*.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+backend/*.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+# backend/vendor/
 
 # Go workspace file
-go.work
-go.work.sum
+backend/go.work
+backend/go.work.sum
 
 # env file
 .env
@@ -50,4 +50,4 @@ Icon
 .com.apple.TimeMachine.Snapshot
 
 # Logs folder
-logs/
+backend/logs/

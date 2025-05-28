@@ -1,9 +1,0 @@
-{{ define "title" }}Error - {{ .StoreName }}{{ end }}
-
-{{ define "content" }}
-  <div class="error-page">
-    <h2>Error {{ .Data.Code }}</h2>
-    <p>{{ .Data.Message }}</p>
-    <p><a href="/">Return to homepage</a></p>
-  </div>
-{{ end }}

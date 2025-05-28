@@ -1,0 +1,169 @@
+{{ define "title" }}Checkout - {{ $.StoreName }}{{ end }}
+
+{{ define "content" }}
+{{ $data := .Data }}
+
+<div class="checkout-wrapper">
+  <!-- Order Summary -->
+  <div class="checkout-summary">
+    <h2>Your Order</h2>
+
+    {{ if $data.Items }}
+    <ul class="checkout-items">
+      {{ range $data.Items }}
+      <li>
+        <div>
+          <strong>{{ .ProductName }}</strong>
+          {{ if .VariantName.Valid }}
+          <div class="muted">{{ .VariantName.String }}</div>
+          {{ end }}
+          <div>Qty: {{ .Quantity }}</div>
+        </div>
+        <div>${{ printf "%.2f" (mulf .Quantity .PricePerItem) }}</div>
+      </li>
+      {{ end }}
+    </ul>
+    <div class="checkout-total">
+      <strong>Total:</strong> $<span id="base-total">{{ printf "%.2f" $data.Total }}</span>
+      <br>
+      <strong>Total + Shipping:</strong> $<span id="total-with-shipping">{{ printf "%.2f" $data.Total }}</span>
+    </div>
+    
+    {{ else }}
+    <p>Your cart is empty.</p>
+    {{ end }}
+  </div>
+  {{ if $data.Items }}
+  <!-- Checkout Form -->
+  <form action="/checkout" method="POST" class="checkout-form">
+    <fieldset>
+      <legend>Contact & Shipping Info</legend>
+
+      <label for="customer_email">Email</label>
+      <input type="email" id="customer_email" name="customer_email" required>
+
+      <label for="shipping_name">Full Name</label>
+      <input type="text" id="shipping_name" name="shipping_name" required>
+
+      <label for="shipping_address">Address</label>
+      <input type="text" id="shipping_address" name="shipping_address" required>
+
+      <label for="shipping_city">City</label>
+      <input type="text" id="shipping_city" name="shipping_city" required>
+
+      <label for="shipping_postal_code">Postal Code</label>
+      <input type="text" id="shipping_postal_code" name="shipping_postal_code" required>
+
+      <label for="shipping_country">Country</label>
+      <input type="text" id="shipping_country" name="shipping_country" required>
+
+      <label for="shipping_phone">Phone</label>
+      <input type="text" id="shipping_phone" name="shipping_phone" required>
+      <fieldset>
+        <legend>Shipping Method</legend>
+      
+        {{ range $data.ShippingOptions }}
+        <label style="display: block; margin-bottom: 0.5rem;">
+          <input type="radio" name="shipping_method_id" value="{{ .ID }}" required data-price="{{ printf "%.2f" .Price }}">
+          <strong>{{ .Name }}</strong>
+          - ${{ printf "%.2f" .Price }}
+          {{ if .EstimatedDays.Valid }}
+            ({{ .EstimatedDays.String }} days)
+          {{ end }}
+
+          {{ if .Description }}
+            <br><small>{{ .Description.String }}</small>
+          {{ end }}
+        </label>
+        {{ end }}
+      </fieldset>
+      <fieldset>
+        <legend>Payment Method</legend>
+      
+        {{ range .Data.PaymentOptions }}
+        <label style="display: block; margin-bottom: 0.5rem;">
+          <input type="radio" name="payment_method_id" value="{{ .ID }}" required>
+          <strong>{{ .Name }}</strong>
+          {{ if .Description.Valid }}
+          <br><small>{{ .Description.String }}</small>
+          {{ end }}
+        </label>
+        {{ end }}
+      </fieldset>
+      
+    </fieldset>
+
+    <fieldset>
+      <legend>Billing Info</legend>
+
+      <label class="toggle-wrapper">
+        <input type="checkbox" id="same_as_shipping" name="same_as_shipping" checked>
+        <span class="toggle-switch"></span>
+        Same as shipping
+      </label>
+      
+      
+      
+
+      <div id="billing-fields">
+        <label for="billing_name">Full Name</label>
+        <input type="text" id="billing_name" name="billing_name">
+
+        <label for="billing_address">Address</label>
+        <input type="text" id="billing_address" name="billing_address">
+
+        <label for="billing_city">City</label>
+        <input type="text" id="billing_city" name="billing_city">
+
+        <label for="billing_postal_code">Postal Code</label>
+        <input type="text" id="billing_postal_code" name="billing_postal_code">
+
+        <label for="billing_country">Country</label>
+        <input type="text" id="billing_country" name="billing_country">
+      </div>
+    </fieldset>
+
+    <button class="primary-button" type="submit">Place Order</button>
+  </form>
+  {{end}}
+</div>
+
+<script>
+  const toggle = document.getElementById("same_as_shipping");
+  const billingFields = document.getElementById("billing-fields");
+  const billingInputs = billingFields.querySelectorAll('input');
+
+  function toggleBillingFields() {
+    const disabled = toggle.checked;
+    billingFields.style.display = disabled ? "none" : "block";
+
+    billingInputs.forEach(input => {
+      input.disabled = disabled;
+    });
+  }
+
+  toggle.addEventListener("change", toggleBillingFields);
+  toggleBillingFields(); 
+</script>
+<script>
+  const shippingOptions = document.querySelectorAll('input[name="shipping_method_id"]');
+  const baseTotal = parseFloat(document.getElementById('base-total').innerText);
+  const totalWithShipping = document.getElementById('total-with-shipping');
+
+  function updateTotal() {
+    const selectedOption = document.querySelector('input[name="shipping_method_id"]:checked');
+    if (selectedOption) {
+      const shippingPrice = parseFloat(selectedOption.dataset.price) || 0;
+      const newTotal = baseTotal + shippingPrice;
+      totalWithShipping.innerText = newTotal.toFixed(2);
+    }
+  }
+
+  shippingOptions.forEach(option => {
+    option.addEventListener('change', updateTotal);
+  });
+
+  updateTotal();
+</script>
+
+{{ end }}

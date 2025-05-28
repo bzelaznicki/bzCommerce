@@ -1,0 +1,59 @@
+{{ define "title" }}Admin - Products - {{ .StoreName }}{{ end }}
+
+{{ define "content" }}
+<div class="admin-panel">
+  <nav class="breadcrumb">
+    <a href="/admin">Dashboard</a>
+    {{ if .Data.Breadcrumbs }}
+      {{ range .Data.Breadcrumbs }}
+        › {{ if .URL }}<a href="{{ .URL }}">{{ .Label }}</a>{{ else }}{{ .Label }}{{ end }}
+      {{ end }}
+    {{ end }}
+  </nav>
+
+  <h2>Manage Products</h2>
+  <p><a href="/admin/products/new" class="primary-button">+ Add New Product</a></p>
+
+  {{ if .Data.Products }}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Slug</th>
+          <th>Category</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ range .Data.Products }}
+        <tr>
+          <td>
+            {{ if .ImagePath }}
+              <img src="{{ .ImagePath }}" alt="{{ .Name }}" style="width: 50px; height: auto; vertical-align: middle; margin-right: 8px;">
+            {{ end }}
+            {{ .Name }}
+          </td>
+          <td>{{ .Slug }}</td>
+          <td>
+            {{ if .CategorySlug }}
+              <a href="/category/{{ .CategorySlug }}">{{ .CategoryName }}</a>
+            {{ else }}
+              —
+            {{ end }}
+          </td>
+          <td class="admin-actions">
+            <a href="/admin/products/{{ .ID }}/edit">Edit</a>
+            <a href="/admin/products/{{ .ID }}/variants">Variants</a>
+            <form action="/admin/products/{{ .ID }}/delete" method="POST" style="display:inline;">
+              <button type="submit" onclick="return confirm('Delete this product?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  {{ else }}
+    <p>No products found.</p>
+  {{ end }}
+</div>
+{{ end }}

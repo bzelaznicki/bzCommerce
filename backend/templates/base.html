@@ -1,0 +1,64 @@
+{{ define "base.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ block "title" . }}{{ .StoreName }}{{ end }}</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components.css">
+<link rel="stylesheet" href="/static/css/product.css">
+<link rel="stylesheet" href="/static/css/cart.css">
+<link rel="stylesheet" href="/static/css/checkout.css">
+<link rel="stylesheet" href="/static/css/admin.css">
+<link rel="stylesheet" href="/static/css/auth.css">
+<link rel="stylesheet" href="/static/css/checkout.css">
+
+
+</head>
+<body>
+  <header>
+    <h1><a href="/">{{ .StoreName }}</a></h1>
+    <nav>
+      <a href="/">Home</a>
+      {{ range .Categories }}
+        <div class="nav-item dropdown">
+          <a href="/category/{{ .Parent.Slug }}">{{ .Parent.Name }}</a>
+          {{ if .Children }}
+            <div class="dropdown-content">
+              {{ range .Children }}
+                <a href="/category/{{ .Slug }}">{{ .Name }}</a>
+        {{ end }}
+      </div>
+    {{ end }}
+  </div>
+{{ end }}
+
+      <a href="/cart">Cart</a>
+      <a href="/checkout">Checkout</a>
+    
+      {{ if .IsLoggedIn }}
+        <a href="/account">Account</a>
+        <a href="/logout">Logout</a>
+        {{ if .IsAdmin }}
+          <a href="/admin">Admin Panel</a>
+        {{ end }}
+      {{ else }}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      {{ end }}
+    </nav>
+    
+  </header>
+
+  <main>
+    {{ block "content" . }}{{ end }}
+  </main>
+
+  <footer>
+    <p>&copy; 2025 {{ .StoreName }}</p>
+  </footer>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>
+{{ end }}
