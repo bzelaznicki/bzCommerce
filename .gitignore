@@ -9,6 +9,7 @@ backend/*.so
 backend/*.dylib
 
 backend/bzCommerce
+bzCommerce
 
 # Test binary, built with `go test -c`
 backend/*.test
