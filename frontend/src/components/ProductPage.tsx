@@ -49,7 +49,6 @@ export default function ProductPage() {
     if (!productData || !selectedVariant) return <p>Loading product...</p>
 
       const { product, breadcrumbs } = productData
-  const variant = product.variants[0] 
 
       return (
     <div style={{ display: 'flex', gap: '2rem' }}>

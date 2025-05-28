@@ -3,9 +3,37 @@ package main
 import (
 	"net/http"
 
+	"log"
+
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/google/uuid"
 )
+
+func (cfg *apiConfig) handleApiGetProducts(w http.ResponseWriter, r *http.Request) {
+	dbProducts, err := cfg.db.ListProducts(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("Error rendering products: %v", err)
+		return
+	}
+
+	products := make([]Product, 0, len(dbProducts))
+
+	for _, dbProduct := range dbProducts {
+		product := Product{
+			ID:          dbProduct.ID,
+			Name:        dbProduct.Name,
+			Slug:        dbProduct.Slug,
+			ImagePath:   dbProduct.ImageUrl.String,
+			CategoryID:  dbProduct.CategoryID,
+			Description: dbProduct.Description.String,
+		}
+		products = append(products, product)
+	}
+
+	respondWithJSON(w, http.StatusOK, products)
+}
 
 func (cfg *apiConfig) handleApiGetSingleProduct(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
