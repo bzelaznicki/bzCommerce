@@ -52,4 +52,6 @@ Icon
 
 # Logs folder
 logs/
+
+# Ignore the static/images folder and its contents
 static/images/
