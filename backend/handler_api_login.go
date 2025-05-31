@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
+	"github.com/bzelaznicki/bzCommerce/internal/database"
 )
 
 func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +49,25 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	refreshToken, err := auth.MakeRefreshToken()
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("error generating refresh token: %v", err)
+		return
+	}
+
+	addedToken, err := cfg.db.AddRefreshToken(r.Context(), database.AddRefreshTokenParams{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().UTC().Add(refreshTokenExpiration),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
+		log.Printf("error adding refresh token: %v", err)
+		return
+	}
+
 	type response struct {
 		User         User   `json:"user"`
 		Token        string `json:"token"`
@@ -62,8 +84,9 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := response{
-		User:  userResponse,
-		Token: signedToken,
+		User:         userResponse,
+		Token:        signedToken,
+		RefreshToken: addedToken.Token,
 	}
 	respondWithJSON(w, http.StatusOK, resp)
 }

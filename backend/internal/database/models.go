@@ -206,6 +206,15 @@ type ProductVariant struct {
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
+type RefreshToken struct {
+	Token     string       `json:"token"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	UserID    uuid.UUID    `json:"user_id"`
+	ExpiresAt time.Time    `json:"expires_at"`
+	RevokedAt sql.NullTime `json:"revoked_at"`
+}
+
 type ShippingOption struct {
 	ID            uuid.UUID      `json:"id"`
 	Name          string         `json:"name"`
