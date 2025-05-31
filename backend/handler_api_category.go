@@ -8,6 +8,29 @@ import (
 	"github.com/google/uuid"
 )
 
+func (cfg *apiConfig) handleApiGetCategories(w http.ResponseWriter, r *http.Request) {
+	dbCategories, err := cfg.db.GetCategories(r.Context())
+
+	if err != nil {
+		respondWithJSON(w, http.StatusInternalServerError, "Error getting categories")
+		return
+	}
+
+	categories := make([]Category, 0, len(dbCategories))
+	for _, dbCategory := range dbCategories {
+		categories = append(categories, Category{
+			ID:          dbCategory.ID,
+			Name:        dbCategory.Name,
+			Slug:        dbCategory.Slug,
+			Description: dbCategory.Description.String,
+			ParentID:    dbCategory.ParentID.UUID,
+			CreatedAt:   dbCategory.CreatedAt,
+			UpdatedAt:   dbCategory.UpdatedAt,
+		})
+	}
+	respondWithJSON(w, http.StatusOK, categories)
+}
+
 //TODO: refactor into separate calls for breadcrumbs and child categories
 
 func (cfg *apiConfig) handleApiGetCategoryProducts(w http.ResponseWriter, r *http.Request) {

@@ -51,7 +51,7 @@ export default function CategoryPage({
   return (
     <>
       <Head>
-        <title>{categoryName} | bzCommerce</title>
+        <title>{`${categoryName} | bzCommerce`}</title>
         <meta name="description" content={categoryName} />
       </Head>
 
@@ -63,7 +63,7 @@ export default function CategoryPage({
             <h2 className="text-xl font-semibold mb-2">Subcategories</h2>
             <ul className="list-inside list-none">
               {children.map(child => (
-                <Link href={`/category/${child.slug}`}><li key={child.id}>{child.name}</li></Link>
+                <li key={child.id}><Link href={`/category/${child.slug}`}>{child.name}</Link></li>
               ))}
             </ul>
           </div>

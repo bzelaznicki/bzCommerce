@@ -1,9 +1,27 @@
+import { buildCategoryTree, CategoryTree } from '@/lib/categoryTree'
+import { API_BASE_URL } from '@/lib/config'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   // TODO: Replace with real auth check
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [categories, setCategories] = useState<CategoryTree[]>([])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        console.log(API_BASE_URL)
+        const res = await fetch(`http://localhost:8080/api/categories`)
+        const data = await res.json()
+        setCategories(buildCategoryTree(data))
+      } catch (err) {
+        console.error('Failed to fetch categories:', err)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -14,8 +32,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             bzCommerce
           </Link>
 
-          <nav className="space-x-6 text-sm font-medium text-gray-700">
+          <nav className="flex gap-6 text-sm font-medium text-gray-700 items-center">
             <Link href="/">Home</Link>
+
+            {categories.map(parent => (
+              <div key={parent.id} className="relative group inline-block text-left">
+                <Link
+                  href={`/category/${parent.slug}`}
+                  className="hover:text-blue-600 px-2 py-1 block"
+                >
+                  {parent.name}
+                </Link>
+
+                {parent.children.length > 0 && (
+                  <div
+                    className="absolute left-0 top-full mt-2 bg-white shadow-lg border rounded z-50
+                               opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all"
+                  >
+                    <ul className="whitespace-nowrap text-sm text-gray-800 py-2 px-4">
+                      {parent.children.map(child => (
+                        <li key={child.id}>
+                          <Link
+                            href={`/category/${child.slug}`}
+                            className="block py-1 hover:text-blue-600"
+                          >
+                            {child.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+
             <Link href="/account">Account</Link>
             <Link href="/cart">Cart</Link>
 

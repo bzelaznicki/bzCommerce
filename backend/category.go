@@ -11,7 +11,7 @@ type Category struct {
 	Name        string    `json:"name"`
 	Slug        string    `json:"slug"`
 	Description string    `json:"description"`
-	ParentID    uuid.UUID `json:"parent_id"`
+	ParentID    uuid.UUID `json:"parent_id,omitzero"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

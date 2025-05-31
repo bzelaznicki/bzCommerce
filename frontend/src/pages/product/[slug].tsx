@@ -26,7 +26,7 @@ export default function ProductPage({ productData }: Props) {
   return (
     <>
       <Head>
-        <title>{product.name} | bzCommerce</title>
+        <title>{`${product.name} | bzCommerce`}</title>
         <meta name="description" content={product.description} />
       </Head>
 
