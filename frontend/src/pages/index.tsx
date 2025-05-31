@@ -2,13 +2,15 @@ import { GetServerSideProps } from 'next'
 import ProductCard from '../components/ProductCard'
 import type { Product } from '../types/product'
 import Head from 'next/head'
+import { API_BASE_URL } from '@/lib/config'
 
 type Props = {
   products: Product[]
 }
 
+
 export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  const res = await fetch('http://localhost:8080/api/products')
+  const res = await fetch(`${API_BASE_URL}/api/products`)
   const data = await res.json()
 
   return {

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Product } from '../types/product'
+import { API_BASE_URL } from '@/lib/config'
 
 type Props = {
   product: Product
@@ -10,7 +11,7 @@ export default function ProductCard({ product }: Props) {
     <Link href={`/product/${product.slug}`} className="block group">
       <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm transition hover:shadow-md">
         <img
-          src={`http://localhost:8080${product.imagePath}`}
+          src={`${API_BASE_URL}${product.imagePath}`}
           alt={product.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
         />

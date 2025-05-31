@@ -6,6 +6,7 @@ import type { Category } from "@/types/category"
 import type { Breadcrumb } from "@/types/global"
 import Breadcrumbs from "@/components/Breadcrumbs"
 import Link from "next/link"
+import { API_BASE_URL } from "@/lib/config"
 
 type Props = {
   categoryName: string
@@ -17,7 +18,7 @@ type Props = {
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
   const slug = context.params?.slug
   try {
-  const res = await fetch(`http://localhost:8080/api/categories/${slug}/products`)
+  const res = await fetch(`${API_BASE_URL}/api/categories/${slug}/products`)
 
   if (!res.ok){
     return {notFound: true}

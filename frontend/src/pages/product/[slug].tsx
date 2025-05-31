@@ -3,6 +3,7 @@ import Head from 'next/head'
 import type { ProductResponse } from '../../types/product'
 import { useState } from 'react'
 import Breadcrumbs from '@/components/Breadcrumbs'
+import { API_BASE_URL } from '@/lib/config'
 
 type Props = {
   productData: ProductResponse
@@ -10,7 +11,7 @@ type Props = {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = context.params?.slug
-  const res = await fetch(`http://localhost:8080/api/products/${slug}`)
+  const res = await fetch(`${API_BASE_URL}/api/products/${slug}`)
   const productData = await res.json()
   return { props: { productData } }
 }
@@ -33,7 +34,7 @@ export default function ProductPage({ productData }: Props) {
         {/* Image */}
         <div className="rounded-lg overflow-hidden shadow-md">
           <img
-            src={`http://localhost:8080${product.imagePath}`}
+            src={`${API_BASE_URL}${product.imagePath}`}
             alt={product.name}
             className="w-full object-cover"
           />
