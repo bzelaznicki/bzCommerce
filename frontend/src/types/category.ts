@@ -3,10 +3,7 @@ export type Category = {
     name: string
     slug: string
     parentId: string
-    description: {
-        string: string
-        valid: boolean
-    }
+    description: string
     createdAt: string
     updatedAt: string
 }

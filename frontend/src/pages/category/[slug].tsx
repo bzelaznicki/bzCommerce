@@ -28,10 +28,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
   return {
     props: {
-      categoryName: data.CategoryName ?? '',
-      products: data.Products ?? [],
-      children: data.Children ?? [],
-      breadcrumbs: data.Breadcrumbs ?? []
+      categoryName: data.category_name ?? '',
+      products: data.products ?? [],
+      children: data.children ?? [],
+      breadcrumbs: data.breadcrumbs ?? []
     }
   }} catch (err) {
     console.error("Failed to fetch category data:", err)

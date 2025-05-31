@@ -10,10 +10,10 @@ import (
 )
 
 type CategoryPageData struct {
-	CategoryName string
-	Products     []Product
-	Children     []database.Category
-	Breadcrumbs  []database.GetCategoryPathByIDRow
+	CategoryName string                            `json:"category_name"`
+	Products     []Product                         `json:"products"`
+	Children     []Category                        `json:"children"`
+	Breadcrumbs  []database.GetCategoryPathByIDRow `json:"breadcrumbs"`
 }
 
 func (cfg *apiConfig) handleCategoryPage(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +61,7 @@ func (cfg *apiConfig) handleCategoryPage(w http.ResponseWriter, r *http.Request)
 		})
 	}
 
-	children, err := cfg.db.GetChildCategories(r.Context(), uuid.NullUUID{
+	dbChildren, err := cfg.db.GetChildCategories(r.Context(), uuid.NullUUID{
 		UUID:  cat.ID,
 		Valid: true,
 	})
@@ -69,6 +69,19 @@ func (cfg *apiConfig) handleCategoryPage(w http.ResponseWriter, r *http.Request)
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to load subcategories")
 		log.Printf("error loading subcategories for category %s: %v", slug, err)
 		return
+	}
+
+	children := make([]Category, 0, len(dbChildren))
+	for _, dbChild := range dbChildren {
+		children = append(children, Category{
+			ID:          dbChild.ID,
+			Name:        dbChild.Name,
+			Slug:        dbChild.Slug,
+			Description: dbChild.Description.String,
+			ParentID:    dbChild.ParentID.UUID,
+			CreatedAt:   dbChild.CreatedAt,
+			UpdatedAt:   dbChild.UpdatedAt,
+		})
 	}
 
 	categoryData := CategoryPageData{

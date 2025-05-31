@@ -55,7 +55,7 @@ func (cfg *apiConfig) handleApiGetCategoryProducts(w http.ResponseWriter, r *htt
 			Description: dbProduct.Description.String,
 		})
 	}
-	children, err := cfg.db.GetChildCategories(r.Context(), uuid.NullUUID{
+	dbChildren, err := cfg.db.GetChildCategories(r.Context(), uuid.NullUUID{
 		UUID:  cat.ID,
 		Valid: true,
 	})
@@ -63,6 +63,19 @@ func (cfg *apiConfig) handleApiGetCategoryProducts(w http.ResponseWriter, r *htt
 		respondWithError(w, http.StatusInternalServerError, "Failed to load subcategories")
 		log.Printf("error loading subcategories for category %s: %v", slug, err)
 		return
+	}
+
+	children := make([]Category, 0, len(dbChildren))
+	for _, dbChild := range dbChildren {
+		children = append(children, Category{
+			ID:          dbChild.ID,
+			Name:        dbChild.Name,
+			Slug:        dbChild.Slug,
+			Description: dbChild.Description.String,
+			ParentID:    dbChild.ParentID.UUID,
+			CreatedAt:   dbChild.CreatedAt,
+			UpdatedAt:   dbChild.UpdatedAt,
+		})
 	}
 
 	categoryData := CategoryPageData{
