@@ -4,6 +4,7 @@ import ProductCard from "@/components/ProductCard"
 import type { Product } from "@/types/product"
 import type { Category } from "@/types/category"
 import type { Breadcrumb } from "@/types/global"
+import Breadcrumbs from "@/components/Breadcrumbs"
 
 type Props = {
   categoryName: string
@@ -44,6 +45,7 @@ export default function CategoryPage({
       </Head>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
         <h1 className="text-2xl font-bold mb-6">{categoryName}</h1>
 
         {hasProducts ? (

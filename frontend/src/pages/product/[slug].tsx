@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import type { ProductResponse } from '../../types/product'
 import { useState } from 'react'
+import Breadcrumbs from '@/components/Breadcrumbs'
 
 type Props = {
   productData: ProductResponse
@@ -42,14 +43,7 @@ export default function ProductPage({ productData }: Props) {
         <div className="flex flex-col justify-between">
           <div>
             {/* Breadcrumbs */}
-            <nav className="text-sm text-gray-500 mb-2">
-              {breadcrumbs.map((b, i) => (
-                <span key={b.id}>
-                  {i > 0 && ' / '}
-                  {b.name}
-                </span>
-              ))}
-            </nav>
+            <Breadcrumbs breadcrumbs={productData.breadcrumbs} />
 
             <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
             <p className="text-gray-700 mb-6">{product.description}</p>
