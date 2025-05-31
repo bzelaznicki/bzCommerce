@@ -5,6 +5,7 @@ import type { Product } from "@/types/product"
 import type { Category } from "@/types/category"
 import type { Breadcrumb } from "@/types/global"
 import Breadcrumbs from "@/components/Breadcrumbs"
+import Link from "next/link"
 
 type Props = {
   categoryName: string
@@ -15,7 +16,13 @@ type Props = {
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
   const slug = context.params?.slug
+  try {
   const res = await fetch(`http://localhost:8080/api/categories/${slug}/products`)
+
+  if (!res.ok){
+    return {notFound: true}
+  }
+  
   const data = await res.json()
 
   return {
@@ -25,6 +32,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       children: data.Children ?? [],
       breadcrumbs: data.Breadcrumbs ?? []
     }
+  }} catch (err) {
+    console.error("Failed to fetch category data:", err)
+    return {notFound: true}
   }
 }
 
@@ -47,7 +57,16 @@ export default function CategoryPage({
       <div className="max-w-6xl mx-auto px-4 py-8">
         <Breadcrumbs breadcrumbs={breadcrumbs} />
         <h1 className="text-2xl font-bold mb-6">{categoryName}</h1>
-
+        {hasChildren ? (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Subcategories</h2>
+            <ul className="list-inside list-none">
+              {children.map(child => (
+                <Link href={`/category/${child.slug}`}><li key={child.id}>{child.name}</li></Link>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {hasProducts ? (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {products.map(product => (
