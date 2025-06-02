@@ -91,7 +91,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	srv := &http.Server{
-		Handler: mux,
+		Handler: withCORS(mux),
 		Addr:    ":" + port,
 	}
 
