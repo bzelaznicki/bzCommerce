@@ -46,17 +46,20 @@ func (cfg *apiConfig) handleManageAddressesList(w http.ResponseWriter, r *http.R
 	userID, ok := r.Context().Value(userIDContextKey).(string)
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
 	}
 	userUUID, err := uuid.Parse(userID)
 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to parse UUID")
 		log.Printf("Failed to parse UUID: %v", err)
+		return
 	}
 	rows, err := cfg.db.GetUserAddresses(r.Context(), userUUID)
 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to get addresses")
+		return
 	}
 
 	addresses := make([]UserAddressRow, 0, len(rows))
