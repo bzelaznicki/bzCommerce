@@ -69,9 +69,8 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type response struct {
-		User         User   `json:"user"`
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
+		User  User   `json:"user"`
+		Token string `json:"token"`
 	}
 
 	userResponse := User{
@@ -83,10 +82,59 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 		IsAdmin:   user.IsAdmin,
 	}
 
+	secureCookie := cfg.platform != "dev" // non-secure only on "dev" environment, set in .env
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    addedToken.Token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secureCookie,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Now().Add(refreshTokenExpiration),
+	})
+
 	resp := response{
-		User:         userResponse,
-		Token:        signedToken,
-		RefreshToken: addedToken.Token,
+		User:  userResponse,
+		Token: signedToken,
 	}
 	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (cfg *apiConfig) handleApiRefreshToken(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+
+	if err != nil || cookie.Value == "" {
+		respondWithError(w, http.StatusUnauthorized, "No refresh token provided")
+		return
+	}
+
+	refreshToken := cookie.Value
+
+	dbToken, err := cfg.db.GetRefreshToken(r.Context(), refreshToken)
+
+	if err != nil || dbToken.ExpiresAt.Before(time.Now().UTC()) {
+		respondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+		return
+	}
+
+	user, err := cfg.db.GetUserById(r.Context(), dbToken.UserID)
+
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid user")
+		return
+	}
+
+	signedToken, err := auth.GenerateJWT(user.ID.String(), user.Email, cfg.jwtSecret, user.IsAdmin, CookieExpirationTime)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error generating access token")
+		return
+	}
+
+	type response struct {
+		Token string `json:"token"`
+	}
+
+	respondWithJSON(w, http.StatusOK, response{Token: signedToken})
 }

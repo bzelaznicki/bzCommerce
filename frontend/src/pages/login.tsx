@@ -16,6 +16,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_BASE_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       })
 
@@ -25,12 +26,11 @@ export default function LoginPage() {
       }
 
       const data = await res.json()
-      // Save tokens (e.g., to localStorage or a cookie)
-      localStorage.setItem('access_token', data.token)
-      localStorage.setItem('refresh_token', data.refresh_token)
+    
+      localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // Redirect to homepage or dashboard
+      
       router.push('/')
     } catch (err) {
       console.error('Login failed:', err)

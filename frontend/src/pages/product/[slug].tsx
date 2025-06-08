@@ -11,7 +11,11 @@ type Props = {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = context.params?.slug
-  const res = await fetch(`${API_BASE_URL}/api/products/${slug}`)
+  const res = await fetch(`${API_BASE_URL}/api/products/${slug}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',    
+  })
   const productData = await res.json()
   return { props: { productData } }
 }

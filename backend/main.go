@@ -21,6 +21,7 @@ type apiConfig struct {
 	platform           string
 	templates          *template.Template
 	storeName          string
+	frontendUrl        string
 	cartTimeoutMinutes int
 	cartCookieKey      []byte
 }
@@ -56,7 +57,10 @@ func main() {
 	if platform == "" {
 		log.Fatal("PLATFORM cannot be empty")
 	}
-
+	frontendUrl := os.Getenv("FRONTEND_URL")
+	if frontendUrl == "" {
+		log.Fatal("FRONTEND_URL cannot be empty")
+	}
 	port := os.Getenv("PORT")
 
 	if port == "" {
@@ -84,18 +88,18 @@ func main() {
 		platform:           platform,
 		templates:          templates,
 		storeName:          storeName,
+		frontendUrl:        frontendUrl,
 		cartTimeoutMinutes: timeoutMinutes,
 		cartCookieKey:      []byte(cartCookieKey),
 	}
 
 	mux := http.NewServeMux()
-
+	cfg.registerRoutes(mux)
 	srv := &http.Server{
-		Handler: withCORS(mux),
+		Handler: cfg.withCORS(mux),
 		Addr:    ":" + port,
 	}
 
-	cfg.registerRoutes(mux)
 	cfg.startCartExpirationWorker()
 	fmt.Printf("serving on port %s\n", port)
 

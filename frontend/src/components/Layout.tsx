@@ -12,7 +12,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const fetchCategories = async () => {
       try {
         console.log(API_BASE_URL)
-        const res = await fetch(`http://localhost:8080/api/categories`)
+        const res = await fetch(`http://localhost:8080/api/categories`, {
+          method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  
+        })
         const data = await res.json()
         setCategories(buildCategoryTree(data))
       } catch (err) {
