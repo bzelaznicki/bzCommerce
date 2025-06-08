@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { API_BASE_URL } from '@/lib/config'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function LoginPage() {
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,9 +29,8 @@ export default function LoginPage() {
 
       const data = await res.json()
     
-      localStorage.setItem('token', data.token)
+      login(data.token);
       localStorage.setItem('user', JSON.stringify(data.user))
-
       
       router.push('/')
     } catch (err) {

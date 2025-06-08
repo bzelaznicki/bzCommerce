@@ -60,7 +60,7 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	addedToken, err := cfg.db.AddRefreshToken(r.Context(), database.AddRefreshTokenParams{
 		UserID:    user.ID,
 		Token:     refreshToken,
-		ExpiresAt: time.Now().UTC().Add(refreshTokenExpiration),
+		ExpiresAt: time.Now().Add(refreshTokenExpiration),
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Internal Server Error")
@@ -83,6 +83,8 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	secureCookie := cfg.platform != "dev" // non-secure only on "dev" environment, set in .env
+	expiresAt := time.Now().Add(refreshTokenExpiration)
+	log.Println("Setting refresh token expiration to:", expiresAt)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -91,7 +93,7 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   secureCookie,
 		SameSite: http.SameSiteStrictMode,
-		Expires:  time.Now().Add(refreshTokenExpiration),
+		Expires:  expiresAt,
 	})
 
 	resp := response{
@@ -137,4 +139,33 @@ func (cfg *apiConfig) handleApiRefreshToken(w http.ResponseWriter, r *http.Reque
 	}
 
 	respondWithJSON(w, http.StatusOK, response{Token: signedToken})
+}
+
+func (cfg *apiConfig) handleApiLogout(w http.ResponseWriter, r *http.Request) {
+
+	cookie, err := r.Cookie("refresh_token")
+
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Refresh token missing")
+		return
+	}
+
+	err = cfg.db.InvalidateRefreshToken(r.Context(), cookie.Value)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not revoke token")
+		return
+	}
+	secureCookie := cfg.platform != "dev" // non-secure only on "dev" environment, set in .env
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: secureCookie,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  time.Unix(0, 0),
+	})
+
+	respondWithJSON(w, http.StatusOK, nil)
 }

@@ -2,10 +2,13 @@ import { buildCategoryTree, CategoryTree } from '@/lib/categoryTree'
 import { API_BASE_URL } from '@/lib/config'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import { useAuth } from '@/lib/AuthContext'
+
+
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // TODO: Replace with real auth check
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { isLoggedIn, logout } = useAuth()
   const [categories, setCategories] = useState<CategoryTree[]>([])
 
   useEffect(() => {
@@ -73,26 +76,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/account">Account</Link>
             <Link href="/cart">Cart</Link>
 
-            {isLoggedIn ? (
-              <>
-                <Link href="/admin">Admin</Link>
-                <button
-                  onClick={() => setIsLoggedIn(false)}
-                  className="text-red-500 hover:underline"
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">Login</Link>
-                <Link href="/register">Register</Link>
-              </>
-            )}
+              {isLoggedIn ? (
+                <>
+                  <Link href="/admin">Admin</Link>
+                  <button onClick={logout} className="text-red-500 hover:underline">
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">Login</Link>
+                  <Link href="/register">Register</Link>
+                </>
+              )}
           </nav>
         </div>
       </header>
-
+ 
       {/* Main */}
       <main className="flex-grow">{children}</main>
 
