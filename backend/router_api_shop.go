@@ -13,6 +13,7 @@ func (cfg *apiConfig) registerApiShopRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /api/categories/{slug}/products", cfg.withCORS(http.HandlerFunc(cfg.handleApiGetCategoryProducts)))
 	mux.Handle("POST /api/login", cfg.withCORS(http.HandlerFunc(cfg.handleApiLogin)))
 	mux.Handle("POST /api/refresh", cfg.withCORS(http.HandlerFunc(cfg.handleApiRefreshToken)))
+	mux.Handle("GET /api/account", cfg.checkAuth(http.HandlerFunc(cfg.handleApiGetAccount)))
 	mux.Handle("POST /api/logout", cfg.withCORS(http.HandlerFunc(cfg.handleApiLogout)))
 	log.Printf("Shop API routes registered")
 }
