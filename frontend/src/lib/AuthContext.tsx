@@ -1,5 +1,6 @@
-import {createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
+import { API_BASE_URL } from './config'
 
 type JwtPayload = {
   exp: number
@@ -23,16 +24,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (token) {
+
+    const initializeAuth = async () => {
+      if (!token) return
+
       try {
         const decoded = jwtDecode<JwtPayload>(token)
-        setIsAdmin(decoded.is_admin)
-        setIsLoggedIn(decoded.exp * 1000 > Date.now())
+
+        if (decoded.exp * 1000 > Date.now()) {
+          setIsLoggedIn(true)
+          setIsAdmin(decoded.is_admin)
+        } else {
+          const { token: newToken } = await tryRefreshToken()
+          if (newToken) {
+            localStorage.setItem('token', newToken)
+            const refreshed = jwtDecode<JwtPayload>(newToken)
+            setIsLoggedIn(true)
+            setIsAdmin(refreshed.is_admin)
+          } else {
+            await logout()
+          }
+        }
       } catch {
-        setIsLoggedIn(false)
-        setIsAdmin(false)
+        await logout()
       }
     }
+
+    initializeAuth()
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      try {
+        const decoded = jwtDecode<JwtPayload>(token)
+        const timeLeft = decoded.exp * 1000 - Date.now()
+
+        if (timeLeft < 2 * 60 * 1000) {
+          const { token: newToken } = await tryRefreshToken()
+          if (newToken) {
+            localStorage.setItem('token', newToken)
+            const refreshed = jwtDecode<JwtPayload>(newToken)
+            setIsLoggedIn(true)
+            setIsAdmin(refreshed.is_admin)
+          } else {
+            await logout()
+          }
+        }
+      } catch {
+        await logout()
+      }
+    }, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const login = (token: string) => {
@@ -48,17 +94,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-
   const logout = async () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
     setIsAdmin(false)
-        await fetch(`http://localhost:8080/api/logout`, {
-          method: 'POST',
+
+    try {
+      await fetch(`${API_BASE_URL}/api/logout`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  
-        })      
+        credentials: 'include',
+      })
+    } catch (e) {
+      console.warn('Logout request failed:', e)
+    }
   }
 
   return (
@@ -66,6 +116,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
+}
+
+async function tryRefreshToken(): Promise<{ token: string | null }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    if (!res.ok) return { token: null }
+
+    const data = await res.json()
+    return { token: data.token }
+  } catch {
+    return { token: null }
+  }
 }
 
 export function useAuth() {
