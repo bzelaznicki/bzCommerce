@@ -10,6 +10,7 @@ type JwtPayload = {
 
 type AuthContextType = {
   isLoggedIn: boolean
+  isAdmin: boolean
   login: (token: string) => void
   logout: () => Promise<void>
 }
@@ -18,28 +19,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (token) {
       try {
         const decoded = jwtDecode<JwtPayload>(token)
+        setIsAdmin(decoded.is_admin)
         setIsLoggedIn(decoded.exp * 1000 > Date.now())
       } catch {
         setIsLoggedIn(false)
+        setIsAdmin(false)
       }
     }
   }, [])
 
   const login = (token: string) => {
     localStorage.setItem('token', token)
-    setIsLoggedIn(true)
+
+    try {
+      const decoded = jwtDecode<JwtPayload>(token)
+      setIsLoggedIn(decoded.exp * 1000 > Date.now())
+      setIsAdmin(decoded.is_admin)
+    } catch {
+      setIsLoggedIn(false)
+      setIsAdmin(false)
+    }
   }
+
 
   const logout = async () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
+    setIsAdmin(false)
         await fetch(`http://localhost:8080/api/logout`, {
           method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

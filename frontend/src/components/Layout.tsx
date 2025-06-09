@@ -2,13 +2,12 @@ import { buildCategoryTree, CategoryTree } from '@/lib/categoryTree'
 import { API_BASE_URL } from '@/lib/config'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { jwtDecode } from 'jwt-decode'
 import { useAuth } from '@/lib/AuthContext'
 
 
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, logout } = useAuth()
+  const { isLoggedIn, isAdmin, logout } = useAuth()
   const [categories, setCategories] = useState<CategoryTree[]>([])
 
   useEffect(() => {
@@ -78,7 +77,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
               {isLoggedIn ? (
                 <>
-                  <Link href="/admin">Admin</Link>
+                  {isAdmin ? (
+                    <Link href="/admin">Admin</Link>
+                  ) : null}
                   <button onClick={logout} className="text-red-500 hover:underline">
                     Log out
                   </button>
