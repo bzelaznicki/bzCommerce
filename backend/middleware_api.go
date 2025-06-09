@@ -1,6 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+
+	"github.com/bzelaznicki/bzCommerce/internal/auth"
+)
 
 func (cfg *apiConfig) withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -18,5 +23,31 @@ func (cfg *apiConfig) withCORS(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+const (
+	contextKeyUserID  contextKey = "userID"
+	contextKeyIsAdmin contextKey = "isAdmin"
+)
+
+func (cfg *apiConfig) checkAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bearerToken, err := auth.GetBearerToken(r.Header)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "Bearer Token missing or invalid")
+			return
+		}
+
+		userID, isAdmin, err := auth.ValidateJWT(bearerToken, cfg.jwtSecret)
+		if err != nil {
+			respondWithError(w, http.StatusUnauthorized, "Invalid or expired token")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+		ctx = context.WithValue(ctx, contextKeyIsAdmin, isAdmin)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

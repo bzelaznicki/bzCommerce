@@ -26,7 +26,7 @@ func GenerateJWT(userId, email, tokenSecret string, isAdmin bool, tokenExpiratio
 	return signedToken, nil
 }
 
-func ValidateJWT(tokenString, tokenSecret string) (string, error) {
+func ValidateJWT(tokenString, tokenSecret string) (string, bool, error) {
 	claims := jwt.MapClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -34,22 +34,24 @@ func ValidateJWT(tokenString, tokenSecret string) (string, error) {
 	})
 
 	if err != nil || !token.Valid {
-		return "", fmt.Errorf("invalid token: %v", err)
+		return "", false, fmt.Errorf("invalid token: %v", err)
 	}
 	exp, ok := claims["exp"].(float64)
 	if !ok {
-		return "", fmt.Errorf("expiration (exp) not found in token claims")
+		return "", false, fmt.Errorf("expiration (exp) not found in token claims")
 	}
 	if int64(exp) < time.Now().Unix() {
-		return "", fmt.Errorf("token has expired")
+		return "", false, fmt.Errorf("token has expired")
 	}
 
 	userId, ok := claims["user_id"].(string)
 	if !ok {
-		return "", fmt.Errorf("user_id not found in token claims")
+		return "", false, fmt.Errorf("user_id not found in token claims")
 	}
 
-	return userId, nil
+	isAdmin, _ := claims["is_admin"].(bool)
+
+	return userId, isAdmin, nil
 }
 
 func MakeRefreshToken() (string, error) {
