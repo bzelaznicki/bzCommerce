@@ -4,9 +4,20 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+type CategoryResponse struct {
+	ID          uuid.UUID  `json:"id"`
+	Name        string     `json:"name"`
+	Slug        string     `json:"slug"`
+	Description string     `json:"description"`
+	ParentID    *uuid.UUID `json:"parent_id,omitzero"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
 
 func (cfg *apiConfig) handleApiGetCategories(w http.ResponseWriter, r *http.Request) {
 	dbCategories, err := cfg.db.GetCategories(r.Context())
@@ -16,14 +27,18 @@ func (cfg *apiConfig) handleApiGetCategories(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	categories := make([]Category, 0, len(dbCategories))
+	categories := make([]CategoryResponse, 0, len(dbCategories))
 	for _, dbCategory := range dbCategories {
-		categories = append(categories, Category{
+		var parentID *uuid.UUID
+		if dbCategory.ParentID.Valid {
+			parentID = &dbCategory.ParentID.UUID
+		}
+		categories = append(categories, CategoryResponse{
 			ID:          dbCategory.ID,
 			Name:        dbCategory.Name,
 			Slug:        dbCategory.Slug,
 			Description: dbCategory.Description.String,
-			ParentID:    dbCategory.ParentID.UUID,
+			ParentID:    parentID,
 			CreatedAt:   dbCategory.CreatedAt,
 			UpdatedAt:   dbCategory.UpdatedAt,
 		})

@@ -14,7 +14,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const fetchCategories = async () => {
       try {
         console.log(API_BASE_URL)
-        const res = await fetch(`http://localhost:8080/api/categories`, {
+        const res = await fetch(`${API_BASE_URL}/api/categories`, {
           method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',  
