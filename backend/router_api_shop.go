@@ -15,5 +15,6 @@ func (cfg *apiConfig) registerApiShopRoutes(mux *http.ServeMux) {
 	mux.Handle("POST /api/refresh", cfg.withCORS(http.HandlerFunc(cfg.handleApiRefreshToken)))
 	mux.Handle("GET /api/account", cfg.checkAuth(http.HandlerFunc(cfg.handleApiGetAccount)))
 	mux.Handle("POST /api/logout", cfg.withCORS(http.HandlerFunc(cfg.handleApiLogout)))
+	mux.Handle("POST /api/users", http.HandlerFunc(cfg.handlerApiRegister))
 	log.Printf("Shop API routes registered")
 }
