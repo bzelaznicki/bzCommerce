@@ -1,104 +1,214 @@
-import { GetServerSideProps } from 'next'
-import Head from 'next/head'
-import type { ProductResponse } from '../../types/product'
-import { useState } from 'react'
-import Breadcrumbs from '@/components/Breadcrumbs'
-import { API_BASE_URL } from '@/lib/config'
+import { GetServerSideProps } from 'next';
+import Head from 'next/head';
+import { useState, useEffect, useMemo } from 'react';
+import type { ProductResponse, Product, Variant } from '../../types/product';
+import type { Breadcrumb } from '../../types/global';
+import Breadcrumbs from '@/components/Breadcrumbs';
+import { API_BASE_URL } from '@/lib/config';
 
-type Props = {
-  productData: ProductResponse
-}
+type ProductPageProps = {
+  productData: ProductResponse | null;
+  error?: string;
+};
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const slug = context.params?.slug
-  const res = await fetch(`${API_BASE_URL}/api/products/${slug}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',    
-  })
-  const productData = await res.json()
-  return { props: { productData } }
-}
+export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (context) => {
+  const { slug } = context.params || {};
 
-export default function ProductPage({ productData }: Props) {
-  const { product, breadcrumbs } = productData
-  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0
-  const [selectedVariant, setSelectedVariant] = useState(
-    hasVariants ? product.variants[0] : null
-  )
+  if (!slug || typeof slug !== 'string') {
+    return {
+      notFound: true,
+    };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/products/${slug}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      if (res.status === 404) {
+        return { notFound: true };
+      }
+      const errorText = await res.text();
+      return {
+        props: {
+          productData: null,
+          error: `Failed to fetch product: ${res.status} ${res.statusText} - ${errorText}`,
+        },
+      };
+    }
+
+    const productData: ProductResponse = await res.json();
+
+    if (!productData || !productData.product) {
+      return { notFound: true };
+    }
+
+    return {
+      props: { productData },
+    };
+  } catch (error: any) {
+    console.error(`Error fetching product ${slug}:`, error);
+    return {
+      props: {
+        productData: null,
+        error: `An unexpected error occurred: ${error.message}`,
+      },
+    };
+  }
+};
+
+export default function ProductPage({ productData, error }: ProductPageProps) {
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error!</strong>
+          <span className="block sm:inline ml-2">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!productData || !productData.product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-xl text-gray-700">Product not found.</p>
+      </div>
+    );
+  }
+
+  const { product, breadcrumbs } = productData;
+  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+
+  const initialVariant = useMemo(() => {
+    return hasVariants ? product.variants[0] : null;
+  }, [hasVariants, product.variants]);
+
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(initialVariant);
+
+  useEffect(() => {
+    setSelectedVariant(initialVariant);
+  }, [initialVariant]);
+
+  const displayPrice = selectedVariant?.price ?? 0;
+  const displayStock = selectedVariant?.stockQuantity ?? 0;
+  const canAddToCart = hasVariants && displayStock > 0;
 
   return (
     <>
       <Head>
         <title>{`${product.name} | bzCommerce`}</title>
         <meta name="description" content={product.description} />
+        <meta property="og:title" content={`${product.name} | bzCommerce`} />
+        <meta property="og:description" content={product.description} />
+        <meta property="og:image" content={`${API_BASE_URL}${product.imagePath}`} />
+        <meta property="og:url" content={`${API_BASE_URL}/product/${product.slug}`} />
+        <meta property="og:type" content="product" />
       </Head>
 
-      <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Image */}
-        <div className="rounded-lg overflow-hidden shadow-md">
-          <img
-            src={`${API_BASE_URL}${product.imagePath}`}
-            alt={product.name}
-            className="w-full object-cover"
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50 py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <div className="mb-6">
+              <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
+          )}
 
-        {/* Product Info */}
-        <div className="flex flex-col justify-between">
-          <div>
-            {/* Breadcrumbs */}
-            <Breadcrumbs breadcrumbs={productData.breadcrumbs} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 bg-white shadow-lg rounded-lg p-6 lg:p-8">
+            <div className="flex flex-col items-center">
+              <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
+                <img
+                  src={`${API_BASE_URL}${product.imagePath}`}
+                  alt={product.name}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            </div>
 
-            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-            <p className="text-gray-700 mb-6">{product.description}</p>
+            <div className="flex flex-col justify-between">
+              <div>
+                <h1 className="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+                  {product.name}
+                </h1>
 
-            {hasVariants && selectedVariant ? (
-              <>
-                <label className="block mb-2 font-medium text-sm">
-                  Choose variant:
-                </label>
-                <select
-                  value={selectedVariant.id}
-                  onChange={(e) =>
-                    setSelectedVariant(
-                      product.variants.find((v) => v.id === e.target.value) || null
-                    )
-                  }
-                  className="mb-4 p-2 border border-gray-300 rounded w-full"
-                >
-                  {product.variants.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.variantName || 'Default'}
-                    </option>
-                  ))}
-                </select>
+                <p className="text-gray-700 mb-6 leading-relaxed">{product.description}</p>
 
-                <p className="text-xl font-semibold mb-2">
-                  {selectedVariant.price.toFixed(2)} PLN
-                </p>
+                {hasVariants ? (
+                  <>
+                    <div className="mb-4">
+                      <label htmlFor="variant-select" className="block text-sm font-medium text-gray-700 mb-2">
+                        Choose a variant:
+                      </label>
+                      <select
+                        id="variant-select"
+                        value={selectedVariant?.id || ''}
+                        onChange={(e) => {
+                          const foundVariant = product.variants?.find((v) => v.id === e.target.value);
+                          setSelectedVariant(foundVariant || null);
+                        }}
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
+                      >
+                        {product.variants?.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.variantName || 'Default Variant'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <p className="mb-4 text-sm text-gray-500">
-                  In stock: {selectedVariant.stockQuantity}
-                </p>
+                    <p className="text-4xl font-extrabold text-gray-900 mb-4">
+                      {displayPrice.toFixed(2)} PLN
+                    </p>
 
-                <button
-                  disabled={selectedVariant.stockQuantity <= 0}
-                  className={`w-full py-3 text-white rounded ${
-                    selectedVariant.stockQuantity > 0
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {selectedVariant.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
-                </button>
-              </>
-            ) : (
-              <p className="text-red-600 italic">No product variants currently available.</p>
-            )}
+                    <p className="mb-6 text-sm text-gray-500">
+                      Availability: <span className={canAddToCart ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                        {displayStock > 0 ? `${displayStock} in stock` : 'Out of Stock'}
+                      </span>
+                    </p>
+
+                    <button
+                      disabled={!canAddToCart}
+                      className={`w-full py-3 px-6 text-lg font-semibold rounded-lg transition duration-300 ease-in-out ${
+                        canAddToCart
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
+                          : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      }`}
+                    >
+                      {canAddToCart ? 'Add to Cart' : 'Out of Stock'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-red-600 italic mt-4">No variants currently available.</p>
+                    <button
+                        disabled={true}
+                        className="w-full py-3 px-6 text-lg font-semibold rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed"
+                    >
+                        No variants available
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 bg-white shadow-lg rounded-lg p-6 lg:p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4 border-b pb-2">Product Information</h2>
+            <div className="prose max-w-none text-gray-700">
+                <p>This product features high-quality materials and craftsmanship. Perfect for daily use or special occasions.</p>
+                <ul>
+                    <li>Feature 1: Durable construction</li>
+                    <li>Feature 2: Ergonomic design</li>
+                    <li>Feature 3: Eco-friendly materials</li>
+                </ul>
+                <p>Please refer to the sizing chart for accurate dimensions.</p>
+            </div>
           </div>
         </div>
       </div>
     </>
-  )
+  );
 }
