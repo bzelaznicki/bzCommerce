@@ -195,18 +195,7 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
             </div>
           </div>
 
-          <div className="mt-12 bg-white shadow-lg rounded-lg p-6 lg:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 border-b pb-2">Product Information</h2>
-            <div className="prose max-w-none text-gray-700">
-                <p>This product features high-quality materials and craftsmanship. Perfect for daily use or special occasions.</p>
-                <ul>
-                    <li>Feature 1: Durable construction</li>
-                    <li>Feature 2: Ergonomic design</li>
-                    <li>Feature 3: Eco-friendly materials</li>
-                </ul>
-                <p>Please refer to the sizing chart for accurate dimensions.</p>
-            </div>
-          </div>
+          
         </div>
       </div>
     </>
