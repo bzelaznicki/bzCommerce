@@ -72,11 +72,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             ))}
 
-            <Link href="/account">Account</Link>
+            
             <Link href="/cart">Cart</Link>
 
               {isLoggedIn ? (
                 <>
+                <Link href="/account">Account</Link>
                   {isAdmin ? (
                     <Link href="/admin">Admin</Link>
                   ) : null}

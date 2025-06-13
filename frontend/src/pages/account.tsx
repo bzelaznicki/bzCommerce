@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Head from 'next/head';
 import { API_BASE_URL } from "@/lib/config";
 import type { Account } from "@/types/account"; 
+import { authFetch } from "@/lib/authFetch";
 
 export default function AccountPage() {
     const [account, setAccount] = useState<Account | null>(null);
@@ -10,21 +11,9 @@ export default function AccountPage() {
 
     useEffect(() => {
         const fetchAccount = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                setError("Not authenticated. Please log in.");
-                setLoading(false); 
-                return;
-            }
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/account`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include'
-                });
+                const res = await authFetch(`${API_BASE_URL}/api/account`);
 
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => ({ message: "Failed to fetch account" }));
