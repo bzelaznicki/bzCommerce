@@ -25,6 +25,10 @@ func (cfg *apiConfig) handlerApiRegister(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Error decoding parameters")
 		return
 	}
+	if params.FullName == "" {
+		respondWithError(w, http.StatusBadRequest, "Name cannot be empty")
+		return
+	}
 
 	if params.Email == "" || len(params.Password) < MinPasswordLength {
 		respondWithError(w, http.StatusBadRequest, "Invalid email or password")

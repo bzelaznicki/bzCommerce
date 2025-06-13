@@ -4,7 +4,7 @@ import router from "next/router";
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
-    const [fullName, setFullName] = useState('');
+    const [full_name, setFullName] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -23,11 +23,12 @@ export default function RegisterPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ fullName, email, password }),
+                body: JSON.stringify({ full_name, email, password }),
             });
 
             if (!res.ok) {
-                setError('Registration failed');
+                const errorData = await res.json();
+                setError(`Registration failed: ${errorData.error}`);
                 return;
             }
 
@@ -45,7 +46,7 @@ export default function RegisterPage() {
                 <input
                     type="text"
                     placeholder="Full name"
-                    value={fullName}
+                    value={full_name}
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     className="w-full border px-3 py-2 rounded"
