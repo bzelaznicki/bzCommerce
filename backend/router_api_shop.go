@@ -7,14 +7,10 @@ import (
 
 func (cfg *apiConfig) registerApiShopRoutes(mux *http.ServeMux) {
 	log.Printf("Registering Shop API routes...")
-	mux.Handle("GET /api/products/{slug}", cfg.withCORS(http.HandlerFunc(cfg.handleApiGetSingleProduct)))
-	mux.Handle("GET /api/products", cfg.withCORS(http.HandlerFunc(cfg.handleApiGetProducts)))
-	mux.Handle("GET /api/categories", cfg.withCORS(http.HandlerFunc(cfg.handleApiGetCategories)))
-	mux.Handle("GET /api/categories/{slug}/products", cfg.withCORS(http.HandlerFunc(cfg.handleApiGetCategoryProducts)))
-	mux.Handle("POST /api/login", cfg.withCORS(http.HandlerFunc(cfg.handleApiLogin)))
-	mux.Handle("POST /api/refresh", cfg.withCORS(http.HandlerFunc(cfg.handleApiRefreshToken)))
-	mux.Handle("GET /api/account", cfg.checkAuth(http.HandlerFunc(cfg.handleApiGetAccount)))
-	mux.Handle("POST /api/logout", cfg.withCORS(http.HandlerFunc(cfg.handleApiLogout)))
-	mux.Handle("POST /api/users", http.HandlerFunc(cfg.handlerApiRegister))
+	mux.Handle("GET /api/products/{slug}", http.HandlerFunc(cfg.handleApiGetSingleProduct))
+	mux.Handle("GET /api/products", http.HandlerFunc(cfg.handleApiGetProducts))
+	mux.Handle("GET /api/categories", http.HandlerFunc(cfg.handleApiGetCategories))
+	mux.Handle("GET /api/categories/{slug}/products", http.HandlerFunc(cfg.handleApiGetCategoryProducts))
+	mux.Handle("POST /api/carts/add", cfg.optionalAuth(http.HandlerFunc(cfg.handleApiAddToCart)))
 	log.Printf("Shop API routes registered")
 }

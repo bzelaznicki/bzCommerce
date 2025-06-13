@@ -89,7 +89,7 @@ func getCartIDFromCookie(r *http.Request, secret []byte) (uuid.UUID, bool) {
 	return cartID, true
 }
 
-func setCartIDCookie(w http.ResponseWriter, cartID uuid.UUID, secret []byte) {
+func (cfg *apiConfig) setCartIDCookie(w http.ResponseWriter, cartID uuid.UUID, secret []byte) {
 	cartIDStr := cartID.String()
 	sig := auth.SignCartID(cartIDStr, secret)
 
@@ -99,13 +99,14 @@ func setCartIDCookie(w http.ResponseWriter, cartID uuid.UUID, secret []byte) {
 		Path:     "/",
 		MaxAge:   60 * 60 * 24 * 30,
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   cfg.platform != "dev",
 	})
 }
 
 func (cfg *apiConfig) getOrCreateCartID(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
 	ctx := r.Context()
 	userID := getUserIDFromContext(ctx)
+	fmt.Printf("User ID: %v\n", userID)
 
 	cartID, ok := getCartIDFromCookie(r, cfg.cartCookieKey)
 	if ok && cartID != uuid.Nil {
@@ -127,7 +128,7 @@ func (cfg *apiConfig) getOrCreateCartID(w http.ResponseWriter, r *http.Request) 
 		if err == nil {
 			for _, cart := range carts {
 				if cart.Status == "new" {
-					setCartIDCookie(w, cart.ID, cfg.cartCookieKey)
+					cfg.setCartIDCookie(w, cart.ID, cfg.cartCookieKey)
 					return cart.ID, nil
 				}
 			}
@@ -142,7 +143,7 @@ func (cfg *apiConfig) getOrCreateCartID(w http.ResponseWriter, r *http.Request) 
 		return uuid.Nil, fmt.Errorf("failed to create cart: %w", err)
 	}
 
-	setCartIDCookie(w, newCart.ID, cfg.cartCookieKey)
+	cfg.setCartIDCookie(w, newCart.ID, cfg.cartCookieKey)
 	return newCart.ID, nil
 }
 

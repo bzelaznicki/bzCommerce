@@ -51,3 +51,19 @@ func (cfg *apiConfig) checkAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (cfg *apiConfig) optionalAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bearerToken, err := auth.GetBearerToken(r.Header)
+		if err == nil && bearerToken != "" {
+			userID, isAdmin, err := auth.ValidateJWT(bearerToken, cfg.jwtSecret)
+			if err == nil {
+				ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+				ctx = context.WithValue(ctx, contextKeyIsAdmin, isAdmin)
+				r = r.WithContext(ctx)
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

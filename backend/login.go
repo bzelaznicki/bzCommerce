@@ -64,7 +64,7 @@ func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 
 	userCartID, err := cfg.getOrCreateCartIDForUser(r.Context(), user.ID)
 	if err == nil {
-		setCartIDCookie(w, userCartID, cfg.cartCookieKey)
+		cfg.setCartIDCookie(w, userCartID, cfg.cartCookieKey)
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
