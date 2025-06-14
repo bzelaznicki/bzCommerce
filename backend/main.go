@@ -28,7 +28,7 @@ type apiConfig struct {
 
 func main() {
 	logger()
-	godotenv.Load("../.env")
+	godotenv.Load()
 
 	pathToDB := os.Getenv("DB_URL")
 	if pathToDB == "" {
