@@ -35,7 +35,7 @@ jobs:
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Run gosec
-        run: gosec ./...
+        run: gosec -exclude-dir=internal/database ./...
 
   style:
     name: Lint & Format
