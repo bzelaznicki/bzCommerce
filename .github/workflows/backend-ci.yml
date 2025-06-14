@@ -1,16 +1,21 @@
-name: ci
+name: Backend CI
 
 on:
   pull_request:
-    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
 
 jobs:
   tests:
-    name: Tests
+    name: Go Unit Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Go
@@ -26,12 +31,16 @@ jobs:
 
       - name: Run gosec
         run: gosec ./...
+
   style:
-    name: Style
+    name: Lint & Format
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Go
@@ -42,8 +51,8 @@ jobs:
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-      - name: Test the style
-        run: test -z $(go fmt ./...)
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
 
-      - name: Test linting
+      - name: Run staticcheck
         run: staticcheck ./...
