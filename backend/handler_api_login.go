@@ -85,7 +85,6 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 
 	secureCookie := cfg.platform != "dev" // non-secure only on "dev" environment, set in .env
 	expiresAt := time.Now().Add(refreshTokenExpiration)
-	log.Println("Setting refresh token expiration to:", expiresAt)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -182,6 +181,8 @@ func (cfg *apiConfig) handleApiLogout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		Expires:  time.Unix(0, 0),
 	})
+
+	clearCartIDCookie(w)
 
 	respondWithJSON(w, http.StatusOK, nil)
 }

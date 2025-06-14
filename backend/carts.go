@@ -106,7 +106,6 @@ func (cfg *apiConfig) setCartIDCookie(w http.ResponseWriter, cartID uuid.UUID, s
 func (cfg *apiConfig) getOrCreateCartID(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
 	ctx := r.Context()
 	userID := getUserIDFromContext(ctx)
-	fmt.Printf("User ID: %v\n", userID)
 
 	cartID, ok := getCartIDFromCookie(r, cfg.cartCookieKey)
 	if ok && cartID != uuid.Nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -48,11 +49,39 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Could not get or create cart")
 		return
 	}
+	userID := getUserIDFromContext(r.Context())
+	fmt.Printf("User of the current user is: %v\n", userID)
+
+	cart, err := cfg.db.GetCartById(r.Context(), cartID)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
+		return
+	}
+
+	//checking if the current user owns the cart - edge case
+	if cart.UserID.Valid && cart.UserID.UUID != userID || cart.UserID.Valid && userID == uuid.Nil {
+		fmt.Printf("This is not this user's cart, deleting cookie\n")
+		clearCartIDCookie(w)
+
+		// Create a new cart for the current user - subsequent operations will use this new cart ID
+		cartID, err = cfg.getOrCreateCartID(w, r)
+		fmt.Printf("new cart ID: %v", cartID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Could not load cart")
+			return
+		}
+	}
 
 	dbVariant, err := cfg.db.GetVariantByID(r.Context(), variantId)
 
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Variant not found")
+		return
+	}
+
+	if dbVariant.StockQuantity < params.Quantity {
+		respondWithError(w, http.StatusBadRequest, "Not enough stock available")
 		return
 	}
 
