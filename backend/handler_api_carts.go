@@ -11,6 +11,7 @@ import (
 type CartResponse struct {
 	ItemCount int                                           `json:"item_count"`
 	Items     []database.GetCartDetailsWithSnapshotPriceRow `json:"items"`
+	Total     float64                                       `json:"total"`
 }
 
 func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request) {
@@ -75,9 +76,56 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Failed to get cart items")
 		return
 	}
+
+	total := calculateCartTotal(cartItems)
 	resp := CartResponse{
 		ItemCount: len(cartItems),
 		Items:     cartItems,
+		Total:     total,
 	}
 	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
+	cartID, err := cfg.getOrCreateCartID(w, r)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not get or create cart")
+		return
+	}
+	userID := getUserIDFromContext(r.Context())
+
+	cart, err := cfg.db.GetCartById(r.Context(), cartID)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
+		return
+	}
+	if cart.UserID.Valid == true && cart.UserID.UUID != userID {
+		clearCartIDCookie(w)
+		response := CartResponse{
+			ItemCount: 0,
+			Items:     []database.GetCartDetailsWithSnapshotPriceRow{},
+			Total:     0.0,
+		}
+		respondWithJSON(w, http.StatusOK, response)
+		return
+	}
+
+	items, err := cfg.db.GetCartDetailsWithSnapshotPrice(r.Context(), cartID)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
+		return
+	}
+
+	total := calculateCartTotal(items)
+
+	response := CartResponse{
+		ItemCount: len(items),
+		Items:     items,
+		Total:     total,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
 }
