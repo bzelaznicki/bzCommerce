@@ -8,6 +8,7 @@ import (
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +100,15 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	resp := response{
 		User:  userResponse,
 		Token: signedToken,
+	}
+
+	cartID, ok := getCartIDFromCookie(r, cfg.cartCookieKey)
+
+	if ok && cartID != uuid.Nil {
+		err := cfg.mergeAnonymousCart(r.Context(), cartID, user.ID)
+		if err != nil {
+			log.Printf("error merging carts: %v", err)
+		}
 	}
 
 	userCartID, err := cfg.getOrCreateCartIDForUser(r.Context(), user.ID)
