@@ -33,7 +33,7 @@ func main() {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Fatal("Failed to load environment variables: %v", err)
+		log.Fatalf("Failed to load environment variables: %v", err)
 	}
 
 	pathToDB := os.Getenv("DB_URL")
