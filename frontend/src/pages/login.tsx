@@ -1,18 +1,18 @@
-import { useState } from 'react'
-import { useRouter } from 'next/router'
-import { API_BASE_URL } from '@/lib/config'
-import { useAuth } from '@/lib/AuthContext'
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { API_BASE_URL } from '@/lib/config';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError('');
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/login`, {
@@ -20,24 +20,24 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password }),
-      })
+      });
 
       if (!res.ok) {
-        setError('Invalid email or password')
-        return
+        setError('Invalid email or password');
+        return;
       }
 
-      const data = await res.json()
-    
+      const data = await res.json();
+
       login(data.token);
-      localStorage.setItem('user', JSON.stringify(data.user))
-      
-      router.push('/')
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      router.push('/');
     } catch (err) {
-      console.error('Login failed:', err)
-      setError('Something went wrong. Please try again.')
+      console.error('Login failed:', err);
+      setError('Something went wrong. Please try again.');
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto mt-12 p-6 border rounded shadow">
@@ -68,5 +68,5 @@ export default function LoginPage() {
         </button>
       </form>
     </div>
-  )
+  );
 }

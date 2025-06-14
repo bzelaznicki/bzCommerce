@@ -1,52 +1,48 @@
-import { GetServerSideProps } from "next"
-import Head from "next/head"
-import ProductCard from "@/components/ProductCard"
-import type { Product } from "@/types/product"
-import type { Category } from "@/types/category"
-import type { Breadcrumb } from "@/types/global"
-import Breadcrumbs from "@/components/Breadcrumbs"
-import Link from "next/link"
-import { API_BASE_URL } from "@/lib/config"
+import { GetServerSideProps } from 'next';
+import Head from 'next/head';
+import ProductCard from '@/components/ProductCard';
+import type { Product } from '@/types/product';
+import type { Category } from '@/types/category';
+import type { Breadcrumb } from '@/types/global';
+import Breadcrumbs from '@/components/Breadcrumbs';
+import Link from 'next/link';
+import { API_BASE_URL } from '@/lib/config';
 
 type Props = {
-  categoryName: string
-  products: Product[]
-  children: Category[]
-  breadcrumbs: Breadcrumb[]
-}
+  categoryName: string;
+  products: Product[];
+  children: Category[];
+  breadcrumbs: Breadcrumb[];
+};
 
 export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
-  const slug = context.params?.slug
+  const slug = context.params?.slug;
   try {
-  const res = await fetch(`${API_BASE_URL}/api/categories/${slug}/products`)
+    const res = await fetch(`${API_BASE_URL}/api/categories/${slug}/products`);
 
-  if (!res.ok){
-    return {notFound: true}
-  }
-  
-  const data = await res.json()
-
-  return {
-    props: {
-      categoryName: data.category_name ?? '',
-      products: data.products ?? [],
-      children: data.children ?? [],
-      breadcrumbs: data.breadcrumbs ?? []
+    if (!res.ok) {
+      return { notFound: true };
     }
-  }} catch (err) {
-    console.error("Failed to fetch category data:", err)
-    return {notFound: true}
-  }
-}
 
-export default function CategoryPage({
-  categoryName,
-  products,
-  children,
-  breadcrumbs
-}: Props) {
-  const hasProducts = products.length > 0
-  const hasChildren = children.length > 0
+    const data = await res.json();
+
+    return {
+      props: {
+        categoryName: data.category_name ?? '',
+        products: data.products ?? [],
+        children: data.children ?? [],
+        breadcrumbs: data.breadcrumbs ?? [],
+      },
+    };
+  } catch (err) {
+    console.error('Failed to fetch category data:', err);
+    return { notFound: true };
+  }
+};
+
+export default function CategoryPage({ categoryName, products, children, breadcrumbs }: Props) {
+  const hasProducts = products.length > 0;
+  const hasChildren = children.length > 0;
 
   return (
     <>
@@ -62,15 +58,17 @@ export default function CategoryPage({
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-2">Subcategories</h2>
             <ul className="list-inside list-none">
-              {children.map(child => (
-                <li key={child.id}><Link href={`/category/${child.slug}`}>{child.name}</Link></li>
+              {children.map((child) => (
+                <li key={child.id}>
+                  <Link href={`/category/${child.slug}`}>{child.name}</Link>
+                </li>
               ))}
             </ul>
           </div>
         ) : null}
         {hasProducts ? (
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {products.map(product => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -79,5 +77,5 @@ export default function CategoryPage({
         )}
       </div>
     </>
-  )
+  );
 }

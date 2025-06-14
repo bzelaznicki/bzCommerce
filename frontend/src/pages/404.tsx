@@ -1,7 +1,7 @@
 // pages/404.tsx
 
-import Link from 'next/link'
-import Head from 'next/head'
+import Link from 'next/link';
+import Head from 'next/head';
 
 export default function Custom404() {
   return (
@@ -22,5 +22,5 @@ export default function Custom404() {
         </Link>
       </div>
     </>
-  )
+  );
 }

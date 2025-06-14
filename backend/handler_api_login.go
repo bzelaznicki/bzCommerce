@@ -100,6 +100,12 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 		User:  userResponse,
 		Token: signedToken,
 	}
+
+	userCartID, err := cfg.getOrCreateCartIDForUser(r.Context(), user.ID)
+
+	if err == nil {
+		cfg.setCartIDCookie(w, userCartID, cfg.cartCookieKey)
+	}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 

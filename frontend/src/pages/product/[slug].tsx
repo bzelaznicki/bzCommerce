@@ -67,7 +67,12 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
 export default function ProductPage({ productData, error }: ProductPageProps) {
   // Always call hooks before any early returns
   const hasVariants = useMemo(() => {
-    return !!(productData && productData.product && Array.isArray(productData.product.variants) && productData.product.variants.length > 0);
+    return !!(
+      productData &&
+      productData.product &&
+      Array.isArray(productData.product.variants) &&
+      productData.product.variants.length > 0
+    );
   }, [productData]);
 
   const initialVariant = useMemo(() => {
@@ -86,7 +91,10 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
           <strong className="font-bold">Error!</strong>
           <span className="block sm:inline ml-2">{error}</span>
         </div>
@@ -130,7 +138,7 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 bg-white shadow-lg rounded-lg p-6 lg:p-8">
             <div className="flex flex-col items-center">
-                <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
+              <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
                 <Image
                   src={`${API_BASE_URL}${product.imagePath}`}
                   alt={product.name}
@@ -139,7 +147,7 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                   className="w-full h-auto object-cover"
                   priority
                 />
-                </div>
+              </div>
             </div>
 
             <div className="flex flex-col justify-between">
@@ -153,14 +161,19 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                 {hasVariants ? (
                   <>
                     <div className="mb-4">
-                      <label htmlFor="variant-select" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="variant-select"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Choose a variant:
                       </label>
                       <select
                         id="variant-select"
                         value={selectedVariant?.id || ''}
                         onChange={(e) => {
-                          const foundVariant = product.variants?.find((v) => v.id === e.target.value);
+                          const foundVariant = product.variants?.find(
+                            (v) => v.id === e.target.value,
+                          );
                           setSelectedVariant(foundVariant || null);
                         }}
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
@@ -178,7 +191,14 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                     </p>
 
                     <p className="mb-6 text-sm text-gray-500">
-                      Availability: <span className={canAddToCart ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                      Availability:{' '}
+                      <span
+                        className={
+                          canAddToCart
+                            ? 'text-green-600 font-semibold'
+                            : 'text-red-600 font-semibold'
+                        }
+                      >
                         {displayStock > 0 ? `${displayStock} in stock` : 'Out of Stock'}
                       </span>
                     </p>
@@ -198,18 +218,16 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                   <>
                     <p className="text-red-600 italic mt-4">No variants currently available.</p>
                     <button
-                        disabled={true}
-                        className="w-full py-3 px-6 text-lg font-semibold rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed"
+                      disabled={true}
+                      className="w-full py-3 px-6 text-lg font-semibold rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed"
                     >
-                        No variants available
+                      No variants available
                     </button>
                   </>
                 )}
               </div>
             </div>
           </div>
-
-          
         </div>
       </div>
     </>

@@ -1,79 +1,79 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { jwtDecode } from 'jwt-decode'
-import { API_BASE_URL } from './config'
+import { createContext, useContext, useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { API_BASE_URL } from './config';
 
 type JwtPayload = {
-    exp: number
-    email: string
-    user_id: string
-    is_admin: boolean
-}
+  exp: number;
+  email: string;
+  user_id: string;
+  is_admin: boolean;
+};
 
 type AuthContextType = {
-    isLoggedIn: boolean
-    isAdmin: boolean
-    login: (token: string) => void
-    logout: () => Promise<void>
-}
+  isLoggedIn: boolean;
+  isAdmin: boolean;
+  login: (token: string) => void;
+  logout: () => Promise<void>;
+};
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
-    const [isAdmin, setIsAdmin] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token')
-        if (!token) return
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-        try {
-        const decoded = jwtDecode<JwtPayload>(token)
-        setIsLoggedIn(true)
-        setIsAdmin(decoded.is_admin)
-        } catch {
-        setIsLoggedIn(false)
-        setIsAdmin(false)
-        }
-    }, [])
-
-    const login = (token: string) => {
-        localStorage.setItem('token', token)
-        try {
-        const decoded = jwtDecode<JwtPayload>(token)
-        setIsLoggedIn(true)
-        setIsAdmin(decoded.is_admin)
-        } catch {
-        setIsLoggedIn(false)
-        setIsAdmin(false)
-        }
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      setIsLoggedIn(true);
+      setIsAdmin(decoded.is_admin);
+    } catch {
+      setIsLoggedIn(false);
+      setIsAdmin(false);
     }
+  }, []);
 
-    const logout = async () => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        setIsLoggedIn(false)
-        setIsAdmin(false)
-
-        try {
-        await fetch(`${API_BASE_URL}/api/logout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        })
-        } catch (e) {
-        console.warn('Logout request failed:', e)
-        }
+  const login = (token: string) => {
+    localStorage.setItem('token', token);
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      setIsLoggedIn(true);
+      setIsAdmin(decoded.is_admin);
+    } catch {
+      setIsLoggedIn(false);
+      setIsAdmin(false);
     }
+  };
 
-    return (
-        <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout }}>
-        {children}
-        </AuthContext.Provider>
-    )
+  const logout = async () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setIsAdmin(false);
+
+    try {
+      await fetch(`${API_BASE_URL}/api/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+    } catch (e) {
+      console.warn('Logout request failed:', e);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    const context = useContext(AuthContext)
-    if (!context) throw new Error('useAuth must be used within AuthProvider')
-    return context
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 }
