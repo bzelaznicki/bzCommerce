@@ -67,13 +67,13 @@ func (cfg *apiConfig) handleAdminPaymentOptionsCreate(w http.ResponseWriter, r *
 	sortOrderStr := r.FormValue("sort_order")
 	var sortOrder sql.NullInt32
 	if sortOrderStr != "" {
-		sortOrderInt, err := strconv.Atoi(sortOrderStr)
+		sortOrderInt64, err := strconv.ParseInt(sortOrderStr, 10, 32)
 		if err != nil {
 			cfg.RenderError(w, r, http.StatusBadRequest, "Invalid sort order")
 			log.Printf("invalid sort order %v: %v", sortOrderStr, err)
 			return
 		}
-		sortOrder = sql.NullInt32{Int32: int32(sortOrderInt), Valid: true}
+		sortOrder = sql.NullInt32{Int32: int32(sortOrderInt64), Valid: true}
 	}
 
 	_, err := cfg.db.CreatePaymentOption(r.Context(), database.CreatePaymentOptionParams{
@@ -144,13 +144,13 @@ func (cfg *apiConfig) handleAdminPaymentOptionUpdate(w http.ResponseWriter, r *h
 	sortOrderStr := r.FormValue("sort_order")
 	var sortOrder sql.NullInt32
 	if sortOrderStr != "" {
-		sortOrderInt, err := strconv.Atoi(sortOrderStr)
+		sortOrderInt64, err := strconv.ParseInt(sortOrderStr, 10, 32)
 		if err != nil {
 			cfg.RenderError(w, r, http.StatusBadRequest, "Invalid sort order")
 			log.Printf("invalid sort order %v: %v", sortOrderStr, err)
 			return
 		}
-		sortOrder = sql.NullInt32{Int32: int32(sortOrderInt), Valid: true}
+		sortOrder = sql.NullInt32{Int32: int32(sortOrderInt64), Valid: true}
 	}
 
 	err = cfg.db.UpdatePaymentOption(r.Context(), database.UpdatePaymentOptionParams{

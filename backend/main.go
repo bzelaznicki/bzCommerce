@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/joho/godotenv"
@@ -24,11 +25,16 @@ type apiConfig struct {
 	frontendUrl        string
 	cartTimeoutMinutes int
 	cartCookieKey      []byte
+	maxCartQuantity    int
 }
 
 func main() {
 	logger()
-	godotenv.Load()
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Failed to load environment variables: %v", err)
+	}
 
 	pathToDB := os.Getenv("DB_URL")
 	if pathToDB == "" {
@@ -78,6 +84,16 @@ func main() {
 		}
 	}
 
+	maxCartStr := os.Getenv("MAX_CART_QUANTITY")
+	maxCart := defaultMaxCartSize
+	if maxCartStr != "" {
+		if parsed, err := strconv.Atoi(maxCartStr); err == nil {
+			if parsed <= maxInt32 {
+				maxCart = parsed
+			}
+		}
+	}
+
 	templates := template.Must(template.ParseFiles(
 		"templates/base.html",
 	))
@@ -91,13 +107,18 @@ func main() {
 		frontendUrl:        frontendUrl,
 		cartTimeoutMinutes: timeoutMinutes,
 		cartCookieKey:      []byte(cartCookieKey),
+		maxCartQuantity:    maxCart,
 	}
 
 	mux := http.NewServeMux()
 	cfg.registerRoutes(mux)
 	srv := &http.Server{
-		Handler: cfg.withCORS(mux),
-		Addr:    ":" + port,
+		Handler:           cfg.withCORS(mux),
+		Addr:              ":" + port,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	cfg.startCartExpirationWorker()

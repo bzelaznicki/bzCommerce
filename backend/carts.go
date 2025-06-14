@@ -31,8 +31,8 @@ func (cfg *apiConfig) handleAddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	quantity, err := strconv.Atoi(r.FormValue("quantity"))
-	if err != nil || quantity <= 0 {
+	quantityInt, err := strconv.ParseInt(r.FormValue("quantity"), 10, 32)
+	if err != nil || quantityInt <= 0 {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid quantity")
 		return
 	}
@@ -52,7 +52,7 @@ func (cfg *apiConfig) handleAddToCart(w http.ResponseWriter, r *http.Request) {
 	variant := database.UpsertVariantToCartParams{
 		CartID:           cartID,
 		ProductVariantID: variantID,
-		Quantity:         int32(quantity),
+		Quantity:         int32(quantityInt),
 		PricePerItem:     v.Price,
 	}
 	_, err = cfg.db.UpsertVariantToCart(r.Context(), variant)
@@ -326,14 +326,14 @@ func (cfg *apiConfig) handleCartUpdate(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			quantity, err := strconv.Atoi(values[0])
+			quantity64, err := strconv.ParseInt(values[0], 10, 32)
 			if err != nil {
 				log.Printf("invalid quantity for %s: %v", variantIDStr, err)
 				continue
 			}
+			quantity := int32(quantity64)
 
 			if quantity <= 0 {
-
 				if err := cfg.db.DeleteCartVariant(r.Context(), database.DeleteCartVariantParams{
 					CartID:           cartID,
 					ProductVariantID: variantID,
@@ -341,11 +341,14 @@ func (cfg *apiConfig) handleCartUpdate(w http.ResponseWriter, r *http.Request) {
 					log.Printf("error deleting variant ID %v from cart: %v", variantID, err)
 				}
 			} else {
-
+				if int(quantity) > cfg.maxCartQuantity {
+					cfg.RenderError(w, r, http.StatusBadRequest, "Invalid number of variants")
+					return
+				}
 				_, err := cfg.db.UpdateCartVariantQuantity(r.Context(), database.UpdateCartVariantQuantityParams{
 					CartID:           cartID,
 					ProductVariantID: variantID,
-					Quantity:         int32(quantity),
+					Quantity:         quantity,
 				})
 				if err != nil {
 					log.Printf("error updating variant ID %v in cart: %v", variantID, err)

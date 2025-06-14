@@ -66,14 +66,14 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 	sortOrder := r.FormValue("sort_order")
 	isActive := r.FormValue("is_active") != ""
 
-	sortOrderInt, err := strconv.Atoi(sortOrder)
-
+	sortOrderInt64, err := strconv.ParseInt(sortOrder, 10, 32)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid sort order")
 		log.Printf("invalid sort order: %v", err)
 		return
 	}
 
+	sortOrderInt32 := int32(sortOrderInt64)
 	_, err = cfg.db.CreateShippingOption(r.Context(), database.CreateShippingOptionParams{
 		Name: name,
 		Description: sql.NullString{
@@ -86,7 +86,7 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 			Valid:  true,
 		},
 		SortOrder: sql.NullInt32{
-			Int32: int32(sortOrderInt),
+			Int32: sortOrderInt32,
 			Valid: true,
 		},
 		IsActive: isActive,
@@ -151,14 +151,14 @@ func (cfg *apiConfig) handleAdminShippingOptionUpdate(w http.ResponseWriter, r *
 	sortOrder := r.FormValue("sort_order")
 	isActive := r.PostFormValue("is_active") != ""
 
-	sortOrderInt, err := strconv.Atoi(sortOrder)
-
+	sortOrderInt64, err := strconv.ParseInt(sortOrder, 10, 32)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid sort order")
 		log.Printf("invalid sort order: %v", err)
 		return
 	}
 
+	sortOrderInt32 := int32(sortOrderInt64)
 	err = cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
 		ID:   id,
 		Name: name,
@@ -173,7 +173,7 @@ func (cfg *apiConfig) handleAdminShippingOptionUpdate(w http.ResponseWriter, r *
 		},
 		IsActive: isActive,
 		SortOrder: sql.NullInt32{
-			Int32: int32(sortOrderInt),
+			Int32: sortOrderInt32,
 			Valid: true,
 		},
 	},

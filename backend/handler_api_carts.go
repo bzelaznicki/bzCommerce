@@ -17,7 +17,7 @@ type CartResponse struct {
 func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		VariantId string `json:"variant_id"`
-		Quantity  int    `json:"quantity"`
+		Quantity  int32  `json:"quantity"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -59,7 +59,7 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 	variant := database.UpsertVariantToCartParams{
 		CartID:           cartID,
 		ProductVariantID: dbVariant.ID,
-		Quantity:         int32(params.Quantity),
+		Quantity:         params.Quantity,
 		PricePerItem:     dbVariant.Price,
 	}
 

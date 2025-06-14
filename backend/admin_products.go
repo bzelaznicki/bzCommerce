@@ -118,7 +118,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Error converting price")
 	}
 	variantSku := r.FormValue("variant_sku")
-	variantStock, err := strconv.Atoi(r.FormValue("variant_stock"))
+	variantStock64, err := strconv.ParseInt(r.FormValue("variant_stock"), 10, 32)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid stock quantity")
 		log.Printf("invalid stock quantity: %v", err)
@@ -131,7 +131,7 @@ func (cfg *apiConfig) handleAdminProductCreate(w http.ResponseWriter, r *http.Re
 		Name:          sql.NullString{String: variantName, Valid: variantName != ""},
 		Sku:           variantSku,
 		Price:         float64(variantPrice),
-		StockQuantity: int32(variantStock),
+		StockQuantity: int32(variantStock64),
 		ImageUrl:      sql.NullString{String: variantImage, Valid: variantImage != ""},
 	})
 	if err != nil {
@@ -335,7 +335,7 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Error converting price")
 	}
-	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
+	stockQty64, err := strconv.ParseInt(r.FormValue("stock_quantity"), 10, 32)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid stock quantity")
 		log.Printf("invalid stock quantity in variant create: %v", err)
@@ -348,7 +348,7 @@ func (cfg *apiConfig) handleAdminVariantCreate(w http.ResponseWriter, r *http.Re
 		ProductID:     productID,
 		Sku:           sku,
 		Price:         float64(price),
-		StockQuantity: int32(stockQty),
+		StockQuantity: int32(stockQty64),
 		ImageUrl:      sql.NullString{String: imageURL, Valid: imageURL != ""},
 		VariantName:   sql.NullString{String: variantName, Valid: variantName != ""},
 	})
@@ -422,11 +422,10 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 
 	sku := r.FormValue("sku")
 	price, err := strconv.Atoi(r.FormValue("price"))
-
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Error converting price")
 	}
-	stockQty, err := strconv.Atoi(r.FormValue("stock_quantity"))
+	stockQty64, err := strconv.ParseInt(r.FormValue("stock_quantity"), 10, 32)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid stock quantity")
 		log.Printf("invalid stock quantity in variant update: %v", err)
@@ -439,7 +438,7 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 		ID:            id,
 		Sku:           sku,
 		Price:         float64(price),
-		StockQuantity: int32(stockQty),
+		StockQuantity: int32(stockQty64),
 		ImageUrl:      sql.NullString{String: imageURL, Valid: imageURL != ""},
 		VariantName:   sql.NullString{String: variantName, Valid: variantName != ""},
 	})
