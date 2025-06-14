@@ -101,7 +101,7 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
 		return
 	}
-	if cart.UserID.Valid == true && cart.UserID.UUID != userID {
+	if cart.UserID.Valid && cart.UserID.UUID != userID {
 		clearCartIDCookie(w)
 		response := CartResponse{
 			ItemCount: 0,
