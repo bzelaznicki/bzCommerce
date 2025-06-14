@@ -46,7 +46,7 @@ export default function AccountPage() {
         try {
             const date = new Date(dateString);
             return date.toLocaleString(); 
-        } catch (e) {
+        } catch {
             return dateString; 
         }
     };

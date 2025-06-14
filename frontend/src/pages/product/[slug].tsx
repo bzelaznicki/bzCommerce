@@ -1,8 +1,8 @@
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
-import type { ProductResponse, Product, Variant } from '../../types/product';
-import type { Breadcrumb } from '../../types/global';
+import type { ProductResponse, Variant } from '../../types/product';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import { API_BASE_URL } from '@/lib/config';
 
@@ -49,18 +49,40 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
     return {
       props: { productData },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error fetching product ${slug}:`, error);
+    let errorMessage = 'An unexpected error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
     return {
       props: {
         productData: null,
-        error: `An unexpected error occurred: ${error.message}`,
+        error: `An unexpected error occurred: ${errorMessage}`,
       },
     };
   }
 };
 
 export default function ProductPage({ productData, error }: ProductPageProps) {
+  // Always call hooks before any early returns
+  const hasVariants = useMemo(() => {
+    return !!(productData && productData.product && Array.isArray(productData.product.variants) && productData.product.variants.length > 0);
+  }, [productData]);
+
+  const initialVariant = useMemo(() => {
+    if (hasVariants && productData && productData.product) {
+      return productData.product.variants[0];
+    }
+    return null;
+  }, [hasVariants, productData]);
+
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(initialVariant);
+
+  useEffect(() => {
+    setSelectedVariant(initialVariant);
+  }, [initialVariant]);
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -81,17 +103,6 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
   }
 
   const { product, breadcrumbs } = productData;
-  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
-
-  const initialVariant = useMemo(() => {
-    return hasVariants ? product.variants[0] : null;
-  }, [hasVariants, product.variants]);
-
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(initialVariant);
-
-  useEffect(() => {
-    setSelectedVariant(initialVariant);
-  }, [initialVariant]);
 
   const displayPrice = selectedVariant?.price ?? 0;
   const displayStock = selectedVariant?.stockQuantity ?? 0;
@@ -119,13 +130,16 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 bg-white shadow-lg rounded-lg p-6 lg:p-8">
             <div className="flex flex-col items-center">
-              <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
-                <img
+                <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
+                <Image
                   src={`${API_BASE_URL}${product.imagePath}`}
                   alt={product.name}
+                  width={800}
+                  height={800}
                   className="w-full h-auto object-cover"
+                  priority
                 />
-              </div>
+                </div>
             </div>
 
             <div className="flex flex-col justify-between">
