@@ -9,10 +9,12 @@ import (
 )
 
 type CartResponse struct {
-	CartID    uuid.UUID                                     `json:"cart_id:"`
-	ItemCount int                                           `json:"item_count"`
-	Items     []database.GetCartDetailsWithSnapshotPriceRow `json:"items"`
-	Total     float64                                       `json:"total"`
+	CartID      uuid.UUID                                     `json:"cart_id:"`
+	ItemCount   int                                           `json:"item_count"`
+	Items       []database.GetCartDetailsWithSnapshotPriceRow `json:"items"`
+	Subtotal    float64                                       `json:"subtotal"`
+	ShippingFee float64                                       `json:"shipping"`
+	Total       float64                                       `json:"total"`
 }
 
 func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +102,7 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 		response := CartResponse{
 			ItemCount: 0,
 			Items:     []database.GetCartDetailsWithSnapshotPriceRow{},
-			Total:     0.0,
+			Subtotal:  0.0,
 		}
 		respondWithJSON(w, http.StatusOK, response)
 		return
@@ -119,7 +121,7 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 		CartID:    cartID,
 		ItemCount: len(items),
 		Items:     items,
-		Total:     total,
+		Subtotal:  total,
 	}
 
 	respondWithJSON(w, http.StatusOK, response)
