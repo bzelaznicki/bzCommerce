@@ -124,3 +124,42 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusOK, response)
 }
+
+func (cfg *apiConfig) handleApiDeleteFromCart(w http.ResponseWriter, r *http.Request) {
+	cartID, err := cfg.getOrCreateCartID(w, r)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error getting cart")
+		return
+	}
+
+	variantId, err := uuid.Parse(r.PathValue("id"))
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Variant not found")
+		return
+	}
+
+	err = cfg.db.DeleteCartVariant(r.Context(), database.DeleteCartVariantParams{
+		CartID:           cartID,
+		ProductVariantID: variantId,
+	})
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error deleting cart item")
+		return
+	}
+
+	cartItems, err := cfg.db.GetCartDetailsWithSnapshotPrice(r.Context(), cartID)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to get cart items")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, CartResponse{
+		CartID:    cartID,
+		ItemCount: len(cartItems),
+		Items:     cartItems,
+		Total:     calculateCartTotal(cartItems),
+	})
+}
