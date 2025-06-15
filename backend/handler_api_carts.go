@@ -74,12 +74,9 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, CartResponse{
-		CartID:    cartID,
-		ItemCount: len(cartItems),
-		Items:     cartItems,
-		Total:     calculateCartTotal(cartItems),
-	})
+	resp := calculateCartTotal(cartID, cartItems, 0)
+
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
@@ -115,16 +112,9 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	total := calculateCartTotal(items)
+	resp := calculateCartTotal(cartID, items, 0)
 
-	response := CartResponse{
-		CartID:    cartID,
-		ItemCount: len(items),
-		Items:     items,
-		Subtotal:  total,
-	}
-
-	respondWithJSON(w, http.StatusOK, response)
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (cfg *apiConfig) handleApiDeleteFromCart(w http.ResponseWriter, r *http.Request) {
@@ -158,10 +148,7 @@ func (cfg *apiConfig) handleApiDeleteFromCart(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, CartResponse{
-		CartID:    cartID,
-		ItemCount: len(cartItems),
-		Items:     cartItems,
-		Total:     calculateCartTotal(cartItems),
-	})
+	resp := calculateCartTotal(cartID, cartItems, 0)
+
+	respondWithJSON(w, http.StatusOK, resp)
 }
