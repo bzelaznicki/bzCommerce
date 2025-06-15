@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -10,6 +9,7 @@ import (
 )
 
 type CartResponse struct {
+	CartID    uuid.UUID                                     `json:"cart_id:"`
 	ItemCount int                                           `json:"item_count"`
 	Items     []database.GetCartDetailsWithSnapshotPriceRow `json:"items"`
 	Total     float64                                       `json:"total"`
@@ -21,18 +21,13 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 		Quantity  int32  `json:"quantity"`
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-
-	err := decoder.Decode(&params)
-
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not decode parameters")
+	var params parameters
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Could not decode parameters")
 		return
 	}
 
-	variantId, err := uuid.Parse(params.VariantId)
-
+	variantID, err := uuid.Parse(params.VariantId)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid variant ID")
 		return
@@ -44,37 +39,12 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 	}
 
 	cartID, err := cfg.getOrCreateCartID(w, r)
-
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not get or create cart")
 		return
 	}
-	userID := getUserIDFromContext(r.Context())
-	fmt.Printf("User of the current user is: %v\n", userID)
 
-	cart, err := cfg.db.GetCartById(r.Context(), cartID)
-
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
-		return
-	}
-
-	//checking if the current user owns the cart - edge case
-	if cart.UserID.Valid && cart.UserID.UUID != userID || cart.UserID.Valid && userID == uuid.Nil {
-		fmt.Printf("This is not this user's cart, deleting cookie\n")
-		clearCartIDCookie(w)
-
-		// Create a new cart for the current user - subsequent operations will use this new cart ID
-		cartID, err = cfg.getOrCreateCartID(w, r)
-		fmt.Printf("new cart ID: %v", cartID)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Could not load cart")
-			return
-		}
-	}
-
-	dbVariant, err := cfg.db.GetVariantByID(r.Context(), variantId)
-
+	dbVariant, err := cfg.db.GetVariantByID(r.Context(), variantID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Variant not found")
 		return
@@ -85,34 +55,29 @@ func (cfg *apiConfig) handleApiAddToCart(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	variant := database.UpsertVariantToCartParams{
+	_, err = cfg.db.UpsertVariantToCart(r.Context(), database.UpsertVariantToCartParams{
 		CartID:           cartID,
 		ProductVariantID: dbVariant.ID,
 		Quantity:         params.Quantity,
 		PricePerItem:     dbVariant.Price,
-	}
-
-	_, err = cfg.db.UpsertVariantToCart(r.Context(), variant)
-
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Could not add to cart")
 		return
 	}
 
 	cartItems, err := cfg.db.GetCartDetailsWithSnapshotPrice(r.Context(), cartID)
-
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to get cart items")
 		return
 	}
 
-	total := calculateCartTotal(cartItems)
-	resp := CartResponse{
+	respondWithJSON(w, http.StatusOK, CartResponse{
+		CartID:    cartID,
 		ItemCount: len(cartItems),
 		Items:     cartItems,
-		Total:     total,
-	}
-	respondWithJSON(w, http.StatusOK, resp)
+		Total:     calculateCartTotal(cartItems),
+	})
 }
 
 func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +95,7 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Could not load cart")
 		return
 	}
-	if cart.UserID.Valid && cart.UserID.UUID != userID {
+	if cart.UserID.UUID != userID {
 		clearCartIDCookie(w)
 		response := CartResponse{
 			ItemCount: 0,
@@ -151,6 +116,7 @@ func (cfg *apiConfig) handleApiGetCart(w http.ResponseWriter, r *http.Request) {
 	total := calculateCartTotal(items)
 
 	response := CartResponse{
+		CartID:    cartID,
 		ItemCount: len(items),
 		Items:     items,
 		Total:     total,
