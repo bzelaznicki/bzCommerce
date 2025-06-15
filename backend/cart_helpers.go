@@ -1,12 +1,24 @@
 package main
 
-import "github.com/bzelaznicki/bzCommerce/internal/database"
+import (
+	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
+)
 
-func calculateCartTotal(cartItems []database.GetCartDetailsWithSnapshotPriceRow) float64 {
-	total := 0.0
+func calculateCartTotal(cartId uuid.UUID, cartItems []database.GetCartDetailsWithSnapshotPriceRow, shippingFee float64) CartResponse {
+	subtotal := 0.0
 	for _, item := range cartItems {
-		total += float64(item.Quantity) * item.PricePerItem
+		subtotal += float64(item.Quantity) * item.PricePerItem
 	}
+	itemCount := len(cartItems)
+	total := subtotal + shippingFee
 
-	return total
+	return CartResponse{
+		CartID:      cartId,
+		ItemCount:   itemCount,
+		Items:       cartItems,
+		Subtotal:    subtotal,
+		ShippingFee: shippingFee,
+		Total:       total,
+	}
 }
