@@ -18,9 +18,12 @@ jobs:
           go-version: '1.21'
 
       - name: Build migrate command
-        run: go build -o migrate ./backend/cmd/migrate
+        working-directory: ./backend
+        run: go build -o ../migrate ./cmd/migrate
+
 
       - name: Run migrations
-        env:
-          DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
         run: ./migrate
+        env:
+            DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+
