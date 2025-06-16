@@ -30,11 +30,7 @@ type apiConfig struct {
 
 func main() {
 	logger()
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatalf("Failed to load environment variables: %v", err)
-	}
+	_ = godotenv.Load()
 
 	pathToDB := os.Getenv("DB_URL")
 	if pathToDB == "" {
