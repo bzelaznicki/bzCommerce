@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 
 import { API_BASE_URL } from '@/lib/config';
 import { authFetch } from '@/lib/authFetch';
+import toast from 'react-hot-toast';
 
 type ProductPageProps = {
   productData: ProductResponse | null;
@@ -100,8 +101,10 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
       }
 
       const updatedCart = await res.json();
+      toast.success('Added to cart!');
       setCart(updatedCart);
     } catch (err) {
+      toast.error('Failed to add to cart.');
       console.error('Error adding to cart:', err);
     }
   };
