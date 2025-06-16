@@ -194,12 +194,7 @@ func (cfg *apiConfig) handleApiUpdateCartVariant(w http.ResponseWriter, r *http.
 			return
 		}
 
-		if dbVariant.StockQuantity < params.Quantity {
-			respondWithError(w, http.StatusBadRequest, "Not enough stock available")
-			return
-		}
-
-		_, err = cfg.db.UpsertVariantToCart(ctx, database.UpsertVariantToCartParams{
+		_, err = cfg.db.UpdateCartVariant(ctx, database.UpdateCartVariantParams{
 			CartID:           cartID,
 			ProductVariantID: variantID,
 			Quantity:         params.Quantity,

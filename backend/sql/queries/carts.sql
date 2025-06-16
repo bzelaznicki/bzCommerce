@@ -136,3 +136,13 @@ SET
   price_per_item = EXCLUDED.price_per_item,
   updated_at = CURRENT_TIMESTAMP
 RETURNING *;
+
+-- name: UpdateCartVariant :one
+INSERT INTO carts_variants (cart_id, product_variant_id, quantity, price_per_item)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (cart_id, product_variant_id) DO UPDATE
+SET 
+  quantity = EXCLUDED.quantity,
+  price_per_item = EXCLUDED.price_per_item,
+  updated_at = CURRENT_TIMESTAMP
+RETURNING cart_id, product_variant_id, quantity, price_per_item, created_at, updated_at;
