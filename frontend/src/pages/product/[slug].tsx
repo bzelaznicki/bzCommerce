@@ -223,15 +223,38 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                       >
                         Quantity:
                       </label>
-                      <input
-                        id="quantity"
-                        type="number"
-                        min={1}
-                        max={displayStock}
-                        value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value))}
-                        className="mt-1 block w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                          className="px-2 py-1 text-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded"
+                        >
+                          –
+                        </button>
+                        <input
+                          id="quantity"
+                          type="number"
+                          min={1}
+                          max={displayStock}
+                          value={quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1) setQuantity(val);
+                          }}
+                          className="w-16 text-center border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm spinner-hidden text-black bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuantity((q) =>
+                              displayStock ? Math.min(q + 1, displayStock) : q + 1,
+                            )
+                          }
+                          className="px-2 py-1 text-lg font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
 
                     <p className="text-4xl font-extrabold text-gray-900 mb-4">
