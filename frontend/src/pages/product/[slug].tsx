@@ -4,7 +4,10 @@ import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
 import type { ProductResponse, Variant } from '../../types/product';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import { useCart } from '@/context/CartContext';
+
 import { API_BASE_URL } from '@/lib/config';
+import { authFetch } from '@/lib/authFetch';
 
 type ProductPageProps = {
   productData: ProductResponse | null;
@@ -65,7 +68,9 @@ export const getServerSideProps: GetServerSideProps<ProductPageProps> = async (c
 };
 
 export default function ProductPage({ productData, error }: ProductPageProps) {
-  // Always call hooks before any early returns
+  const [quantity, setQuantity] = useState(1);
+  const { setCart } = useCart();
+
   const hasVariants = useMemo(() => {
     return !!(
       productData &&
@@ -74,6 +79,32 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
       productData.product.variants.length > 0
     );
   }, [productData]);
+  const handleAddToCart = async () => {
+    if (!selectedVariant || quantity <= 0) return;
+
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/api/carts/variants`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            variant_id: selectedVariant.id,
+            quantity: quantity,
+          }),
+        },
+        { requireAuth: false },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Add to cart failed: ${res.status}`);
+      }
+
+      const updatedCart = await res.json();
+      setCart(updatedCart);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+    }
+  };
 
   const initialVariant = useMemo(() => {
     if (hasVariants && productData && productData.product) {
@@ -185,6 +216,23 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
                         ))}
                       </select>
                     </div>
+                    <div className="mb-4">
+                      <label
+                        htmlFor="quantity"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Quantity:
+                      </label>
+                      <input
+                        id="quantity"
+                        type="number"
+                        min={1}
+                        max={displayStock}
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        className="mt-1 block w-24 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
 
                     <p className="text-4xl font-extrabold text-gray-900 mb-4">
                       {displayPrice.toFixed(2)} PLN
@@ -205,6 +253,7 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
 
                     <button
                       disabled={!canAddToCart}
+                      onClick={handleAddToCart}
                       className={`w-full py-3 px-6 text-lg font-semibold rounded-lg transition duration-300 ease-in-out ${
                         canAddToCart
                           ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'

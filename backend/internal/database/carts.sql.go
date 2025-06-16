@@ -474,6 +474,43 @@ func (q *Queries) UpdateCartOwner(ctx context.Context, arg UpdateCartOwnerParams
 	return i, err
 }
 
+const updateCartVariant = `-- name: UpdateCartVariant :one
+INSERT INTO carts_variants (cart_id, product_variant_id, quantity, price_per_item)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (cart_id, product_variant_id) DO UPDATE
+SET 
+  quantity = EXCLUDED.quantity,
+  price_per_item = EXCLUDED.price_per_item,
+  updated_at = CURRENT_TIMESTAMP
+RETURNING cart_id, product_variant_id, quantity, price_per_item, created_at, updated_at
+`
+
+type UpdateCartVariantParams struct {
+	CartID           uuid.UUID `json:"cart_id"`
+	ProductVariantID uuid.UUID `json:"product_variant_id"`
+	Quantity         int32     `json:"quantity"`
+	PricePerItem     float64   `json:"price_per_item"`
+}
+
+func (q *Queries) UpdateCartVariant(ctx context.Context, arg UpdateCartVariantParams) (CartsVariant, error) {
+	row := q.db.QueryRowContext(ctx, updateCartVariant,
+		arg.CartID,
+		arg.ProductVariantID,
+		arg.Quantity,
+		arg.PricePerItem,
+	)
+	var i CartsVariant
+	err := row.Scan(
+		&i.CartID,
+		&i.ProductVariantID,
+		&i.Quantity,
+		&i.PricePerItem,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateCartVariantQuantity = `-- name: UpdateCartVariantQuantity :one
 UPDATE carts_variants
 SET quantity = $1

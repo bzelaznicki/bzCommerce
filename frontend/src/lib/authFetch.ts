@@ -29,19 +29,23 @@ async function refreshTokenIfNeeded(): Promise<string | null> {
     if (!res.ok) return null;
 
     const data = await res.json();
-
-    localStorage.setItem('token', data.token);
-
+    localStorage.setItem('token', data.token); // store refreshed token
     return data.token;
   } catch {
     return null;
   }
 }
 
-export async function authFetch(input: RequestInfo, init: RequestInit = {}): Promise<Response> {
+export async function authFetch(
+  input: RequestInfo,
+  init: RequestInit = {},
+  options: { requireAuth?: boolean } = {},
+): Promise<Response> {
+  const { requireAuth = true } = options;
+
   const token = await refreshTokenIfNeeded();
 
-  if (!token) {
+  if (requireAuth && !token) {
     await logout();
     return new Response(
       JSON.stringify({ message: 'Unauthorized: Token missing or refresh failed' }),
@@ -50,7 +54,9 @@ export async function authFetch(input: RequestInfo, init: RequestInit = {}): Pro
   }
 
   const headers = new Headers(init.headers || {});
-  headers.set('Authorization', `Bearer ${token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
   headers.set('Content-Type', 'application/json');
 
   return fetch(input, {

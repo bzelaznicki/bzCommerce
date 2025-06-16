@@ -49,6 +49,35 @@ func (q *Queries) DeleteUserById(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getUserAccountById = `-- name: GetUserAccountById :one
+SELECT id, email, full_name, created_at, updated_at, is_admin
+FROM users
+WHERE id = $1
+`
+
+type GetUserAccountByIdRow struct {
+	ID        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	FullName  string    `json:"full_name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsAdmin   bool      `json:"is_admin"`
+}
+
+func (q *Queries) GetUserAccountById(ctx context.Context, id uuid.UUID) (GetUserAccountByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserAccountById, id)
+	var i GetUserAccountByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FullName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsAdmin,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin FROM users
 WHERE email = $1
