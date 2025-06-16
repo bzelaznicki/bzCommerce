@@ -101,10 +101,10 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
       }
 
       const updatedCart = await res.json();
-      toast.success("Added to cart!")
+      toast.success('Added to cart!');
       setCart(updatedCart);
     } catch (err) {
-      toast.error("Failed to add to cart.")
+      toast.error('Failed to add to cart.');
       console.error('Error adding to cart:', err);
     }
   };

@@ -27,10 +27,10 @@ export default function CartDrawer() {
       }
 
       const updatedCart = await res.json();
-      toast.success('Deleted from cart')
+      toast.success('Deleted from cart');
       setCart(updatedCart);
     } catch (err) {
-        toast.error('Error removing item')
+      toast.error('Error removing item');
       console.error('Error removing item:', err);
     }
   };
