@@ -12,7 +12,7 @@ export default function ProductCard({ product }: Props) {
     <Link href={`/product/${product.slug}`} className="block group">
       <div className="rounded-lg border border-gray-200 overflow-hidden shadow-sm transition hover:shadow-md">
         <Image
-          src={`${API_BASE_URL}${product.imagePath}`}
+          src={product.imagePath}
           alt={product.name}
           width={400}
           height={192}

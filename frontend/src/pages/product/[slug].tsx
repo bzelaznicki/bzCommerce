@@ -140,7 +140,7 @@ export default function ProductPage({ productData, error }: ProductPageProps) {
             <div className="flex flex-col items-center">
               <div className="w-full max-w-lg overflow-hidden rounded-lg shadow-md border border-gray-200">
                 <Image
-                  src={`${API_BASE_URL}${product.imagePath}`}
+                  src={product.imagePath}
                   alt={product.name}
                   width={800}
                   height={800}
