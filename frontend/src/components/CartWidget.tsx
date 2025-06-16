@@ -5,6 +5,7 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function CartDrawer() {
   const { cart } = useCart();
@@ -60,16 +61,19 @@ export default function CartDrawer() {
                               ? item.variant_name.String
                               : item.product_name;
 
-                            const price = item.price_per_item / 100;
-                            const total = (item.price_per_item * item.quantity) / 100;
+                            const price = item.price_per_item;
+                            const total = item.price_per_item * item.quantity;
 
                             return (
                               <li key={idx} className="flex py-6">
                                 <div className="size-24 shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                  <img
+                                  <Image
                                     src={imageUrl}
                                     alt={name}
-                                    className="size-full object-cover"
+                                    width={96}
+                                    height={96}
+                                    className="rounded-md object-cover border border-gray-200"
+                                    unoptimized
                                   />
                                 </div>
 
@@ -77,7 +81,14 @@ export default function CartDrawer() {
                                   <div>
                                     <div className="flex justify-between text-base font-medium text-gray-900">
                                       <h3>{name}</h3>
-                                      <p className="ml-4">€{price.toFixed(2)}</p>
+                                      <div className="text-right">
+                                        <p className="text-gray-900 font-semibold">
+                                          €{price.toFixed(2)} each
+                                        </p>
+                                        <p className="text-gray-600 text-sm">
+                                          €{total.toFixed(2)} total
+                                        </p>
+                                      </div>
                                     </div>
                                     <p className="mt-1 text-sm text-gray-500">SKU: {item.sku}</p>
                                   </div>
