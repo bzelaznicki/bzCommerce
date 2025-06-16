@@ -1,0 +1,26 @@
+name: Run Goose Migrations on Render DB
+
+on:
+  workflow_dispatch: {}  
+
+jobs:
+  migrate:
+    name: Run Goose Migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build migrate command
+        run: go build -o migrate ./backend/cmd/migrate
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.RENDER_DATABASE_URL }}
+        run: ./migrate
