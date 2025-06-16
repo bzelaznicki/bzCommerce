@@ -32,37 +32,36 @@ export default function CartDrawer() {
     }
   };
   const handleUpdateCartQuantity = async (variantId: string, quantity: number) => {
-  if (quantity < 0) return; 
+    if (quantity < 0) return;
 
-  try {
-    const res = await authFetch(
-      `${API_BASE_URL}/api/carts/variants`,
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          variant_id: variantId,
-          quantity,
-        }),
-      },
-      { requireAuth: false }
-    );
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/api/carts/variants`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            variant_id: variantId,
+            quantity,
+          }),
+        },
+        { requireAuth: false },
+      );
 
-    if (!res.ok) {
-      throw new Error(`Failed to update cart item (status ${res.status})`);
+      if (!res.ok) {
+        throw new Error(`Failed to update cart item (status ${res.status})`);
+      }
+
+      const updatedCart = await res.json();
+      setCart(updatedCart);
+    } catch (err) {
+      console.error('Error updating cart quantity:', err);
     }
-
-    const updatedCart = await res.json();
-    setCart(updatedCart);
-  } catch (err) {
-    console.error('Error updating cart quantity:', err);
-  }
-};
-
+  };
 
   const { cart } = useCart();
   const [open, setOpen] = useState(false);
 
-  const subtotal = (cart?.subtotal ?? 0);
+  const subtotal = cart?.subtotal ?? 0;
 
   return (
     <div>
@@ -144,41 +143,48 @@ export default function CartDrawer() {
                                     <p className="mt-1 text-sm text-gray-500">SKU: {item.sku}</p>
                                   </div>
                                   <div className="flex flex-1 items-end justify-between text-sm">
-                                   <div className="flex items-center gap-2">
-  <button
-    onClick={() =>
-      handleUpdateCartQuantity(item.product_variant_id, item.quantity - 1)
-    }
-    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-    disabled={item.quantity <= 1}
-  >
-    –
-  </button>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() =>
+                                          handleUpdateCartQuantity(
+                                            item.product_variant_id,
+                                            item.quantity - 1,
+                                          )
+                                        }
+                                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                                        disabled={item.quantity <= 1}
+                                      >
+                                        –
+                                      </button>
 
-  <input
-    type="number"
-    min={1}
-    value={item.quantity}
-    onChange={(e) => {
-      const value = parseInt(e.target.value, 10);
-      if (!isNaN(value)) {
-        handleUpdateCartQuantity(item.product_variant_id, value);
-      }
-    }}
-    className="spinner-hidden w-14 text-center border border-gray-300 rounded px-2 py-1 text-sm"
-  />
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={item.quantity}
+                                        onChange={(e) => {
+                                          const value = parseInt(e.target.value, 10);
+                                          if (!isNaN(value)) {
+                                            handleUpdateCartQuantity(
+                                              item.product_variant_id,
+                                              value,
+                                            );
+                                          }
+                                        }}
+                                        className="spinner-hidden w-14 text-center border border-gray-300 rounded px-2 py-1 text-sm"
+                                      />
 
-  <button
-    onClick={() =>
-      handleUpdateCartQuantity(item.product_variant_id, item.quantity + 1)
-    }
-    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-  >
-    +
-  </button>
-</div>
-
-
+                                      <button
+                                        onClick={() =>
+                                          handleUpdateCartQuantity(
+                                            item.product_variant_id,
+                                            item.quantity + 1,
+                                          )
+                                        }
+                                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
 
                                     <div className="flex">
                                       <button
