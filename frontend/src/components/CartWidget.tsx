@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
+import toast from 'react-hot-toast';
 
 export default function CartDrawer() {
   const { setCart } = useCart();
@@ -26,8 +27,10 @@ export default function CartDrawer() {
       }
 
       const updatedCart = await res.json();
+      toast.success('Deleted from cart')
       setCart(updatedCart);
     } catch (err) {
+        toast.error('Error removing item')
       console.error('Error removing item:', err);
     }
   };
