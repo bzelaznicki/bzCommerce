@@ -6,8 +6,32 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
+import { authFetch } from '@/lib/authFetch';
+import { API_BASE_URL } from '@/lib/config';
 
 export default function CartDrawer() {
+  const { setCart } = useCart();
+  const handleRemoveFromCart = async (variantId: string) => {
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/api/carts/variants/${variantId}`,
+        {
+          method: 'DELETE',
+        },
+        { requireAuth: false },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Failed to remove item (status ${res.status})`);
+      }
+
+      const updatedCart = await res.json();
+      setCart(updatedCart);
+    } catch (err) {
+      console.error('Error removing item:', err);
+    }
+  };
+
   const { cart } = useCart();
   const [open, setOpen] = useState(false);
 
@@ -99,7 +123,9 @@ export default function CartDrawer() {
                                       <button
                                         type="button"
                                         className="font-medium text-indigo-600 hover:text-indigo-500"
-                                        onClick={() => alert('TODO: Remove item')}
+                                        onClick={() =>
+                                          handleRemoveFromCart(item.product_variant_id)
+                                        }
                                       >
                                         Remove
                                       </button>

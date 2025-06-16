@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 type CartItem = {
   product_name: string;
   sku: string;
+  product_variant_id: string;
   variant_name: { String: string; Valid: boolean };
   variant_image: { String: string; Valid: boolean };
   quantity: number;
