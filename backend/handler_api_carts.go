@@ -9,7 +9,7 @@ import (
 )
 
 type CartResponse struct {
-	CartID      uuid.UUID                                     `json:"cart_id:"`
+	CartID      uuid.UUID                                     `json:"cart_id"`
 	ItemCount   int                                           `json:"item_count"`
 	Items       []database.GetCartDetailsWithSnapshotPriceRow `json:"items"`
 	Subtotal    float64                                       `json:"subtotal"`

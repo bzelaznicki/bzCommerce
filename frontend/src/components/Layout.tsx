@@ -3,6 +3,7 @@ import { API_BASE_URL } from '@/lib/config';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import CartDrawer from './CartWidget';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isAdmin, logout } = useAuth();
@@ -51,7 +52,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {parent.children.length > 0 && (
                   <div
                     className="absolute left-0 top-full mt-2 bg-white shadow-lg border rounded z-50
-                               opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all"
+                        opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all"
                   >
                     <ul className="whitespace-nowrap text-sm text-gray-800 py-2 px-4">
                       {parent.children.map((child) => (
@@ -70,7 +71,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             ))}
 
-            <Link href="/cart">Cart</Link>
+            <CartDrawer />
 
             {isLoggedIn ? (
               <>

@@ -13,6 +13,9 @@ func calculateCartTotal(cartId uuid.UUID, cartItems []database.GetCartDetailsWit
 	itemCount := len(cartItems)
 	total := subtotal + shippingFee
 
+	if cartItems == nil {
+		cartItems = make([]database.GetCartDetailsWithSnapshotPriceRow, 0)
+	}
 	return CartResponse{
 		CartID:      cartId,
 		ItemCount:   itemCount,
