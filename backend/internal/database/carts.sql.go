@@ -287,6 +287,7 @@ FROM carts_variants cv
 JOIN product_variants v ON cv.product_variant_id = v.id
 JOIN products p ON v.product_id = p.id
 WHERE cv.cart_id = $1
+ORDER BY cv.created_at ASC
 `
 
 type GetCartDetailsWithSnapshotPriceRow struct {
