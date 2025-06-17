@@ -98,3 +98,5 @@ Contributions are welcome! Please follow these steps:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+[![Backend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml) [![Frontend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml)
