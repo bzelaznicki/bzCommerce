@@ -1,5 +1,7 @@
 # bzCommerce
 
+[![Backend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml) [![Frontend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml)
+
 bzCommerce is a modern e-commerce platform featuring a robust Go backend and a Next.js frontend. It provides a seamless shopping experience for users and powerful management tools for administrators. The platform is designed for speed, security, and scalability.
 
 ## Features
@@ -99,4 +101,3 @@ Contributions are welcome! Please follow these steps:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-[![Backend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/backend-ci.yml) [![Frontend CI](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/bzelaznicki/bzCommerce/actions/workflows/frontend-ci.yml)
