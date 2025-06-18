@@ -12,6 +12,7 @@ type JwtPayload = {
 type AuthContextType = {
   isLoggedIn: boolean;
   isAdmin: boolean;
+  loading: boolean;
   login: (token: string) => void;
   logout: () => Promise<void>;
 };
@@ -21,19 +22,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      setIsLoggedIn(true);
-      setIsAdmin(decoded.is_admin);
+      const expired = decoded.exp * 1000 < Date.now();
+
+      if (expired) {
+        localStorage.removeItem('token');
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+      } else {
+        setIsLoggedIn(true);
+        setIsAdmin(decoded.is_admin);
+      }
     } catch {
       setIsLoggedIn(false);
       setIsAdmin(false);
     }
+
+    setLoading(false);
   }, []);
 
   const login = (token: string) => {
@@ -66,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
