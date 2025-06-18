@@ -27,7 +27,7 @@ export function useAdminGuard() {
 
       if (!decoded.is_admin || expired) {
         toast.error('Not authorized');
-        router.replace('/');
+        router.replace('/unauthorized');
       } else {
         setIsAdmin(true);
       }

@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { API_BASE_URL } from '@/lib/config';
 import { useAuth } from '@/lib/AuthContext';
+import Spinner from '@/components/Spinner';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, isLoggedIn, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && isLoggedIn) {
+      router.replace('/');
+    }
+  }, [isLoggedIn, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <Spinner />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
