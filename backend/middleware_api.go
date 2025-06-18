@@ -67,3 +67,15 @@ func (cfg *apiConfig) optionalAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (cfg *apiConfig) checkAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		isAdmin, ok := r.Context().Value(contextKeyIsAdmin).(bool)
+
+		if !ok || !isAdmin {
+			respondWithError(w, http.StatusUnauthorized, "Admin access required")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
