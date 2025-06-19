@@ -22,6 +22,21 @@ FROM products p
 JOIN categories c ON p.category_id = c.id
 ORDER BY p.name;
 
+-- name: ListProductsWithCategoryPaginated :many
+SELECT
+  p.id,
+  p.name,
+  p.slug,
+  p.description,
+  p.image_url,
+  p.category_id,
+  c.name AS category_name,
+  c.slug AS category_slug
+FROM products p
+JOIN categories c ON p.category_id = c.id
+ORDER BY p.name
+LIMIT $1 OFFSET $2;
+
 -- name: ListProductsByCategory :many
 SELECT * FROM products
 WHERE category_id = (SELECT id FROM categories WHERE slug = sqlc.arg(category_slug))
@@ -124,3 +139,7 @@ WHERE id = sqlc.arg('id');
 -- name: DeleteVariant :exec
 DELETE FROM product_variants
 WHERE id = sqlc.arg('id');
+
+
+-- name: CountProducts :one
+SELECT COUNT(*) FROM products;
