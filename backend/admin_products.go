@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/google/uuid"
@@ -16,13 +17,15 @@ type AdminProductsListPageData struct {
 	Breadcrumbs []Breadcrumb
 }
 type AdminProductRow struct {
-	ID           uuid.UUID
-	Name         string
-	Slug         string
-	Description  string
-	ImagePath    string
-	CategoryName string
-	CategorySlug string
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Slug         string    `json:"slug"`
+	Description  string    `json:"description"`
+	ImagePath    string    `json:"image_path"`
+	CategoryName string    `json:"category_name"`
+	CategorySlug string    `json:"category_slug"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 func (cfg *apiConfig) handleAdminProductList(w http.ResponseWriter, r *http.Request) {

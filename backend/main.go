@@ -18,6 +18,7 @@ import (
 
 type apiConfig struct {
 	db                 *database.Queries
+	sqlDB              *sql.DB
 	jwtSecret          string
 	platform           string
 	templates          *template.Template
@@ -96,6 +97,7 @@ func main() {
 
 	cfg := apiConfig{
 		db:                 dbQueries,
+		sqlDB:              db,
 		jwtSecret:          jwtSecret,
 		platform:           platform,
 		templates:          templates,
