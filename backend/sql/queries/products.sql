@@ -143,3 +143,25 @@ WHERE id = sqlc.arg('id');
 
 -- name: CountProducts :one
 SELECT COUNT(*) FROM products;
+
+-- name: ListProductsWithFilters :many
+SELECT
+  p.id,
+  p.name,
+  p.slug,
+  p.description,
+  p.image_url AS image_path,
+  c.name AS category_name,
+  c.slug AS category_slug
+FROM products p
+JOIN categories c ON p.category_id = c.id
+WHERE p.name ILIKE $1
+/*sqlc:order by_clause:ORDER BY p.created_at ASC */
+LIMIT $2 OFFSET $3;
+
+
+
+-- name: CountFilteredProducts :one
+SELECT COUNT(*)
+FROM products
+WHERE name ILIKE $1;
