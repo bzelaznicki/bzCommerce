@@ -215,7 +215,7 @@ func (cfg *apiConfig) handleAdminProductUpdate(w http.ResponseWriter, r *http.Re
 	imageURL := r.FormValue("image_url")
 	categoryID := r.FormValue("category_id")
 
-	err = cfg.db.UpdateProduct(r.Context(), database.UpdateProductParams{
+	_, err = cfg.db.UpdateProduct(r.Context(), database.UpdateProductParams{
 		ID:          id,
 		Name:        name,
 		Slug:        slug,

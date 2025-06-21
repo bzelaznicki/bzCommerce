@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -225,4 +226,54 @@ func (cfg *apiConfig) handleApiCreateProduct(w http.ResponseWriter, r *http.Requ
 	}
 
 	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (cfg *apiConfig) handleApiUpdateProduct(w http.ResponseWriter, r *http.Request) {
+	productID, err := uuid.Parse(r.PathValue("id"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		return
+	}
+
+	type parameters struct {
+		Name        string    `json:"name"`
+		Slug        string    `json:"slug"`
+		Description string    `json:"description"`
+		ImageURL    string    `json:"image_url"`
+		CategoryID  uuid.UUID `json:"category_id"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+
+	params := parameters{}
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+		return
+	}
+
+	if params.Name == "" || params.Slug == "" || params.CategoryID == uuid.Nil {
+		respondWithError(w, http.StatusBadRequest, "Name, slug, and category_id cannot be empty")
+		return
+	}
+
+	updatedProduct, err := cfg.db.UpdateProduct(r.Context(), database.UpdateProductParams{
+		ID:          productID,
+		Name:        params.Name,
+		Slug:        params.Slug,
+		Description: sql.NullString{Valid: params.Description != "", String: params.Description},
+		ImageUrl:    sql.NullString{Valid: params.ImageURL != "", String: params.ImageURL},
+		CategoryID:  params.CategoryID,
+	})
+
+	if err != nil {
+		log.Printf("Update product failed: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Failed to update product")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, updatedProduct)
 }

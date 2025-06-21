@@ -77,7 +77,7 @@ VALUES (
 )
 RETURNING *;
 
--- name: UpdateProduct :exec
+-- name: UpdateProduct :one
 UPDATE products
 SET
   name = sqlc.arg(name),
@@ -86,7 +86,9 @@ SET
   category_id = sqlc.arg(category_id),
     image_url = sqlc.arg(image_url),
     updated_at = NOW()
-WHERE id = sqlc.arg(id);
+WHERE id = sqlc.arg(id)
+RETURNING *;
+
 
 
 -- name: CreateProductVariant :one
