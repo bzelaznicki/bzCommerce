@@ -15,6 +15,7 @@ type AuthContextType = {
   loading: boolean;
   login: (token: string) => void;
   logout: () => Promise<void>;
+  refreshToken: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,31 +25,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
+  const refreshToken = async (): Promise<string | null> => {
     try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      const expired = decoded.exp * 1000 < Date.now();
+      const res = await fetch(`${API_BASE_URL}/api/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
 
-      if (expired) {
-        localStorage.removeItem('token');
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const newToken = data.token;
+      localStorage.setItem('token', newToken);
+
+      const decoded = jwtDecode<JwtPayload>(newToken);
+      setIsLoggedIn(true);
+      setIsAdmin(decoded.is_admin);
+
+      return newToken;
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      let token = localStorage.getItem('token');
+
+      if (token) {
+        try {
+          const decoded = jwtDecode<JwtPayload>(token);
+          const expired = decoded.exp * 1000 < Date.now();
+
+          if (expired) {
+            token = await refreshToken();
+          } else {
+            setIsLoggedIn(true);
+            setIsAdmin(decoded.is_admin);
+          }
+        } catch {
+          console.warn('Token decode failed. Attempting refresh.');
+          token = await refreshToken();
+        }
+      } else {
+        token = await refreshToken();
+      }
+
+      if (!token) {
         setIsLoggedIn(false);
         setIsAdmin(false);
-      } else {
-        setIsLoggedIn(true);
-        setIsAdmin(decoded.is_admin);
       }
-    } catch {
-      setIsLoggedIn(false);
-      setIsAdmin(false);
-    }
 
-    setLoading(false);
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (token: string) => {
@@ -81,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout, loading }}>
+    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout, loading, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );
