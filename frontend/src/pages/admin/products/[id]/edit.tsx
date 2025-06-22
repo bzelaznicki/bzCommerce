@@ -57,13 +57,14 @@ export default function EditProductPage() {
       } catch (err) {
         console.error('Load failed:', err);
         toast.error('Failed to load product or categories');
+        router.replace('/admin/products');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [id, router]);
 
   const renderCategoryOptions = (cats: Category[], prefix = ''): JSX.Element[] => {
     return cats.flatMap((cat) => [
