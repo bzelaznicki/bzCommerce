@@ -5,6 +5,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import { buildCategoryTree } from '@/lib/categoryTree';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: string;
@@ -26,7 +27,6 @@ export default function EditProductPage() {
     category_id: '',
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id || typeof id !== 'string') return;
@@ -38,24 +38,25 @@ export default function EditProductPage() {
           fetch(`${API_BASE_URL}/api/categories`),
         ]);
 
+        if (!productRes.ok) throw new Error('Failed to load product');
+        if (!categoryRes.ok) throw new Error('Failed to load categories');
+
         const product = await productRes.json();
         const categoriesRaw = await categoryRes.json();
         const tree = buildCategoryTree(categoriesRaw);
 
-        setForm((prev) => ({
-          ...prev,
+        setForm({
           name: product.name,
           slug: product.slug,
           description: product.description?.Valid ? product.description.String : '',
           image_url: product.image_url?.Valid ? product.image_url.String : '',
           category_id: product.category_id,
-        }));
+        });
 
         setCategories(tree);
-        setError(null);
       } catch (err) {
         console.error('Load failed:', err);
-        setError('Failed to load product details.');
+        toast.error('Failed to load product or categories');
       } finally {
         setLoading(false);
       }
@@ -83,7 +84,6 @@ export default function EditProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       const res = await authFetch(`${API_BASE_URL}/api/admin/products/${id}`, {
@@ -91,11 +91,17 @@ export default function EditProductPage() {
         body: JSON.stringify(form),
       });
 
-      if (!res.ok) throw new Error(`Error ${res.status}`);
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data?.error || `Error ${res.status}: Failed to update product`);
+        return;
+      }
+
+      toast.success('Product updated successfully!');
       router.push('/admin/products');
     } catch (err) {
       console.error('Update failed:', err);
-      setError('Failed to update product.');
+      toast.error('An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -109,8 +115,6 @@ export default function EditProductPage() {
       <AdminLayout>
         <div className="p-6 max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
-
-          {error && <p className="text-red-600 mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
