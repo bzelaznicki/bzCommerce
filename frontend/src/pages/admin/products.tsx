@@ -6,6 +6,7 @@ import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import type { PaginatedResponse } from '@/types/api';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 interface AdminProductRow {
   id: string;
@@ -30,6 +31,9 @@ export default function AdminProductsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [productToDelete, setProductToDelete] = useState<AdminProductRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -67,6 +71,30 @@ export default function AdminProductsPage() {
     } else {
       setSortBy(field);
       setSortOrder('asc');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+
+    try {
+      const res = await authFetch(`${API_BASE_URL}/api/admin/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to delete product (status ${res.status})`);
+      }
+
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      toast.success(`Deleted "${productToDelete.name}"`);
+      setProductToDelete(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failed to delete "${productToDelete.name}"`);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -139,7 +167,6 @@ export default function AdminProductsPage() {
                       Updated {sortBy === 'updated_at' && (sortOrder === 'asc' ? '▲' : '▼')}
                     </button>
                   </th>
-
                   <th className="px-4 py-2 text-left">Actions</th>
                 </tr>
               </thead>
@@ -189,7 +216,12 @@ export default function AdminProductsPage() {
                         >
                           Edit
                         </Link>
-                        <button className="text-red-600 hover:underline">Delete</button>
+                        <button
+                          onClick={() => setProductToDelete(product)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -206,11 +238,9 @@ export default function AdminProductsPage() {
             >
               Previous
             </button>
-
             <span className="text-sm text-gray-600">
               Page {page} of {totalPages}
             </span>
-
             <button
               disabled={page >= totalPages || loading}
               onClick={() => setPage((p) => p + 1)}
@@ -220,6 +250,35 @@ export default function AdminProductsPage() {
             </button>
           </div>
         </div>
+
+        {/* Confirmation Modal */}
+        {productToDelete && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-white border border-gray-300 shadow-xl rounded-md p-6 w-full max-w-md">
+              <h2 className="text-lg font-semibold mb-4">Delete Product</h2>
+              <p className="mb-6">
+                Are you sure you want to delete <strong>{productToDelete.name}</strong>? This action
+                cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setProductToDelete(null)}
+                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
+                  disabled={deleting}
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </AdminLayout>
     </>
   );
