@@ -10,5 +10,6 @@ func (cfg *apiConfig) registerApiAdminRoutes(mux *http.ServeMux) {
 	mux.Handle("GET /api/admin/products", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminGetProducts))))
 	mux.Handle("POST /api/admin/products", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiCreateProduct))))
 	mux.Handle("PUT /api/admin/products/{id}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiUpdateProduct))))
+	mux.Handle("GET /api/admin/products/{id}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminGetProductDetails))))
 	log.Printf("Shop API routes registered")
 }

@@ -183,7 +183,9 @@ export default function AdminProductsPage() {
                         >
                           Manage Variants
                         </a>
-                        <button className="text-blue-600 hover:underline">Edit</button>
+                        <Link href={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:underline">
+  Edit
+</Link>
                         <button className="text-red-600 hover:underline">Delete</button>
                       </td>
                     </tr>

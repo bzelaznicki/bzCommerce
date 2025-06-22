@@ -277,3 +277,21 @@ func (cfg *apiConfig) handleApiUpdateProduct(w http.ResponseWriter, r *http.Requ
 
 	respondWithJSON(w, http.StatusOK, updatedProduct)
 }
+
+func (cfg *apiConfig) handleApiAdminGetProductDetails(w http.ResponseWriter, r *http.Request) {
+	productId, err := uuid.Parse(r.PathValue("id"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		return
+	}
+
+	product, err := cfg.db.GetProductById(r.Context(), productId)
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Product not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, product)
+}
