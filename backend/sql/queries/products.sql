@@ -63,7 +63,7 @@ SELECT * FROM products ORDER BY name ASC;
 SELECT * FROM product_variants WHERE product_id = sqlc.arg(product_id);
 
 
--- name: DeleteProduct :exec
+-- name: DeleteProduct :execrows
 DELETE FROM products WHERE id = $1;
 
 -- name: CreateProduct :one

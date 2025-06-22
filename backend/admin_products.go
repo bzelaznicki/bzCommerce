@@ -241,7 +241,7 @@ func (cfg *apiConfig) handleAdminProductDelete(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = cfg.db.DeleteProduct(r.Context(), id)
+	_, err = cfg.db.DeleteProduct(r.Context(), id)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete product")
 		log.Printf("failed to delete product (id %s): %v", id, err)
