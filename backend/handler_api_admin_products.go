@@ -63,7 +63,7 @@ func (cfg *apiConfig) handleApiAdminGetProducts(w http.ResponseWriter, r *http.R
 	}
 	defer rows.Close()
 
-	var products []AdminProductRow
+	products := []AdminProductRow{}
 	for rows.Next() {
 		var p AdminProductRow
 		var desc, image sql.NullString
@@ -85,6 +85,10 @@ func (cfg *apiConfig) handleApiAdminGetProducts(w http.ResponseWriter, r *http.R
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Count failed")
 		return
+	}
+
+	if products == nil {
+		products = []AdminProductRow{}
 	}
 
 	resp := NewPaginatedResponse(products, page, limit, count)
