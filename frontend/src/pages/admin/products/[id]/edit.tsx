@@ -42,7 +42,7 @@ export default function EditProductPage() {
         const categoriesRaw = await categoryRes.json();
         const tree = buildCategoryTree(categoriesRaw);
 
-        setForm(prev => ({
+        setForm((prev) => ({
           ...prev,
           name: product.name,
           slug: product.slug,
@@ -65,15 +65,19 @@ export default function EditProductPage() {
   }, [id]);
 
   const renderCategoryOptions = (cats: Category[], prefix = ''): JSX.Element[] => {
-    return cats.flatMap(cat => [
-      <option key={cat.id} value={cat.id}>{prefix + cat.name}</option>,
-      ...(cat.children ? renderCategoryOptions(cat.children, prefix + '— ') : [])
+    return cats.flatMap((cat) => [
+      <option key={cat.id} value={cat.id}>
+        {prefix + cat.name}
+      </option>,
+      ...(cat.children ? renderCategoryOptions(cat.children, prefix + '— ') : []),
     ]);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,16 +113,53 @@ export default function EditProductPage() {
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input name="name" placeholder="Product Name" value={form.name} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
-            <input name="slug" placeholder="Slug" value={form.slug} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
-            <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            <input name="image_url" placeholder="Image URL" value={form.image_url} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
-            <select name="category_id" value={form.category_id} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
+            <input
+              name="name"
+              placeholder="Product Name"
+              value={form.name}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            <input
+              name="slug"
+              placeholder="Slug"
+              value={form.slug}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            <textarea
+              name="description"
+              placeholder="Description"
+              value={form.description}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+            />
+            <input
+              name="image_url"
+              placeholder="Image URL"
+              value={form.image_url}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            <select
+              name="category_id"
+              value={form.category_id}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
               <option value="">Select a category</option>
               {renderCategoryOptions(categories)}
             </select>
 
-            <button type="submit" disabled={loading} className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:opacity-50"
+            >
               {loading ? 'Updating...' : 'Update Product'}
             </button>
           </form>
