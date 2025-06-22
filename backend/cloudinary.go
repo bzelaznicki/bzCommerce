@@ -1,7 +1,8 @@
 package main
 
+// #nosec G505 -- Cloudinary requires SHA-1 for signature generation
 import (
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -56,6 +57,7 @@ func (cfg *apiConfig) handleCloudinarySignUpload(w http.ResponseWriter, r *http.
 
 	stringToSign := paramString + os.Getenv("CLOUDINARY_API_SECRET")
 
+	// #nosec G401 -- Cloudinary mandates SHA-1 for API request signing
 	h := sha1.New()
 	h.Write([]byte(stringToSign))
 	signature := hex.EncodeToString(h.Sum(nil))
