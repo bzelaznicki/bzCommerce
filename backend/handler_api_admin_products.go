@@ -339,6 +339,7 @@ func (cfg *apiConfig) handleApiAdminDeleteProduct(w http.ResponseWriter, r *http
 
 	if rows == 0 {
 		respondWithError(w, http.StatusNotFound, "Product not found")
+		return
 	}
 
 	respondWithJSON(w, http.StatusNoContent, nil)
