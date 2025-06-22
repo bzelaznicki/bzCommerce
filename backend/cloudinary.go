@@ -62,11 +62,17 @@ func (cfg *apiConfig) handleCloudinarySignUpload(w http.ResponseWriter, r *http.
 	h.Write([]byte(stringToSign))
 	signature := hex.EncodeToString(h.Sum(nil))
 
-	resp := map[string]string{
-		"timestamp":  timestamp,
-		"signature":  signature,
-		"api_key":    os.Getenv("CLOUDINARY_API_KEY"),
-		"cloud_name": os.Getenv("CLOUDINARY_CLOUD_NAME"),
+	type response struct {
+		Timestamp string `json:"timestamp"`
+		Signature string `json:"signature"`
+		ApiKey    string `json:"api_key"`
+		CloudName string `json:"cloud_name"`
+	}
+	resp := response{
+		Timestamp: timestamp,
+		Signature: signature,
+		ApiKey:    os.Getenv("CLOUDINARY_API_KEY"),
+		CloudName: os.Getenv("CLOUDINARY_CLOUD_NAME"),
 	}
 
 	respondWithJSON(w, http.StatusOK, resp)
