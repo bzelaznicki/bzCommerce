@@ -5,6 +5,7 @@ import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import { useRouter } from 'next/router';
 import { buildCategoryTree } from '@/lib/categoryTree';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: string;
@@ -31,7 +32,6 @@ export default function CreateProductPage() {
     },
   });
 
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -43,6 +43,7 @@ export default function CreateProductPage() {
         setCategories(tree);
       } catch (err) {
         console.error('Failed to load categories', err);
+        toast.error('Failed to load categories');
       }
     };
     fetchCategories();
@@ -94,7 +95,6 @@ export default function CreateProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       const res = await authFetch(`${API_BASE_URL}/api/admin/products`, {
@@ -109,11 +109,17 @@ export default function CreateProductPage() {
         }),
       });
 
-      if (!res.ok) throw new Error(`Error ${res.status}`);
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data?.error || `Error ${res.status}: Failed to create product`);
+        return;
+      }
+
+      toast.success('Product created successfully!');
       router.push('/admin/products');
     } catch (err) {
       console.error('Create failed:', err);
-      setError('Failed to create product.');
+      toast.error('An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -127,8 +133,6 @@ export default function CreateProductPage() {
       <AdminLayout>
         <div className="p-6 max-w-2xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">Create New Product</h1>
-
-          {error && <p className="text-red-600 mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input

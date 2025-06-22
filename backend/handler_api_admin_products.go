@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // handleApiAdminGetProducts handles the admin API endpoint for retrieving a paginated list of products.
@@ -177,6 +177,14 @@ func (cfg *apiConfig) handleApiCreateProduct(w http.ResponseWriter, r *http.Requ
 	})
 
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			if pqErr.Constraint == "products_slug_key" {
+				respondWithError(w, http.StatusConflict, "Product with the same slug already exists")
+			} else {
+				respondWithError(w, http.StatusConflict, "Product already exists (duplicate field)")
+			}
+			return
+		}
 		respondWithError(w, http.StatusInternalServerError, "Failed to create product")
 		return
 	}
@@ -193,7 +201,14 @@ func (cfg *apiConfig) handleApiCreateProduct(w http.ResponseWriter, r *http.Requ
 	variant, err := qtx.CreateProductVariant(r.Context(), newVariant)
 
 	if err != nil {
-
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			if pqErr.Constraint == "product_variants_sku_key" {
+				respondWithError(w, http.StatusConflict, "Variant with the same SKU already exists")
+			} else {
+				respondWithError(w, http.StatusConflict, "Product variant already exists (duplicate field)")
+			}
+			return
+		}
 		respondWithError(w, http.StatusBadRequest, "Failed to create variant")
 		return
 	}
@@ -274,8 +289,15 @@ func (cfg *apiConfig) handleApiUpdateProduct(w http.ResponseWriter, r *http.Requ
 	})
 
 	if err != nil {
-		log.Printf("Update product failed: %v", err)
-		respondWithError(w, http.StatusInternalServerError, "Failed to update product")
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			if pqErr.Constraint == "products_slug_key" {
+				respondWithError(w, http.StatusConflict, "Product with the same slug already exists")
+			} else {
+				respondWithError(w, http.StatusConflict, "Product already exists (duplicate field)")
+			}
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to create product")
 		return
 	}
 
