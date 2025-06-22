@@ -321,3 +321,25 @@ func (cfg *apiConfig) handleApiAdminGetProductDetails(w http.ResponseWriter, r *
 
 	respondWithJSON(w, http.StatusOK, product)
 }
+
+func (cfg *apiConfig) handleApiAdminDeleteProduct(w http.ResponseWriter, r *http.Request) {
+	productId, err := uuid.Parse(r.PathValue("id"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteProduct(r.Context(), productId)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete product")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "Product not found")
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}
