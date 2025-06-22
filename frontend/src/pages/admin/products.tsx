@@ -5,6 +5,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import type { PaginatedResponse } from '@/types/api';
+import Link from 'next/link';
 
 interface AdminProductRow {
   id: string;
@@ -79,16 +80,24 @@ export default function AdminProductsPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 className="text-2xl font-bold">Admin Products</h1>
 
-            <input
-              type="text"
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => {
-                setPage(1);
-                setSearch(e.target.value);
-              }}
-              className="border px-3 py-2 rounded-md w-full md:w-64 shadow-sm"
-            />
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto md:items-center">
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+                className="border px-3 py-2 rounded-md w-full md:w-64 shadow-sm"
+              />
+              <Link
+                href="/admin/products/new"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-700 text-sm text-center"
+              >
+                + Create Product
+              </Link>
+            </div>
           </div>
 
           {error && <p className="text-red-500">{error}</p>}
@@ -174,7 +183,12 @@ export default function AdminProductsPage() {
                         >
                           Manage Variants
                         </a>
-                        <button className="text-blue-600 hover:underline">Edit</button>
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </Link>
                         <button className="text-red-600 hover:underline">Delete</button>
                       </td>
                     </tr>

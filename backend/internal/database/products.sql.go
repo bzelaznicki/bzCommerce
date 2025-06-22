@@ -659,7 +659,7 @@ func (q *Queries) ListProductsWithFilters(ctx context.Context, arg ListProductsW
 	return items, nil
 }
 
-const updateProduct = `-- name: UpdateProduct :exec
+const updateProduct = `-- name: UpdateProduct :one
 UPDATE products
 SET
   name = $1,
@@ -669,6 +669,7 @@ SET
     image_url = $5,
     updated_at = NOW()
 WHERE id = $6
+RETURNING id, category_id, name, slug, image_url, description, created_at, updated_at
 `
 
 type UpdateProductParams struct {
@@ -680,8 +681,8 @@ type UpdateProductParams struct {
 	ID          uuid.UUID      `json:"id"`
 }
 
-func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
-	_, err := q.db.ExecContext(ctx, updateProduct,
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
+	row := q.db.QueryRowContext(ctx, updateProduct,
 		arg.Name,
 		arg.Slug,
 		arg.Description,
@@ -689,7 +690,18 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.ImageUrl,
 		arg.ID,
 	)
-	return err
+	var i Product
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.Name,
+		&i.Slug,
+		&i.ImageUrl,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateVariant = `-- name: UpdateVariant :exec
