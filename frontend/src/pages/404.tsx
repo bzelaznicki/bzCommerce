@@ -1,5 +1,3 @@
-// pages/404.tsx
-
 import Link from 'next/link';
 import Head from 'next/head';
 
