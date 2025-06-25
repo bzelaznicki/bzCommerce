@@ -437,7 +437,7 @@ func (cfg *apiConfig) handleAdminVariantUpdate(w http.ResponseWriter, r *http.Re
 	imageURL := r.FormValue("image_url")
 	variantName := r.FormValue("variant_name")
 
-	err = cfg.db.UpdateVariant(r.Context(), database.UpdateVariantParams{
+	_, err = cfg.db.UpdateVariant(r.Context(), database.UpdateVariantParams{
 		ID:            id,
 		Sku:           sku,
 		Price:         float64(price),

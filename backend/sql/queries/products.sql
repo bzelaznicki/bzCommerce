@@ -127,7 +127,7 @@ VALUES (
 )
 RETURNING *;
 
--- name: UpdateVariant :exec
+-- name: UpdateVariant :one
 UPDATE product_variants
 SET
   sku = sqlc.arg('sku'),
@@ -136,7 +136,8 @@ SET
   image_url = sqlc.arg('image_url'),
   variant_name = sqlc.arg('variant_name'),
   updated_at = NOW()
-WHERE id = sqlc.arg('id');
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
 -- name: DeleteVariant :exec
 DELETE FROM product_variants
