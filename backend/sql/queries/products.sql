@@ -125,7 +125,7 @@ VALUES (
   sqlc.arg('image_url'),
   sqlc.arg('variant_name')
 )
-RETURNING id;
+RETURNING *;
 
 -- name: UpdateVariant :exec
 UPDATE product_variants

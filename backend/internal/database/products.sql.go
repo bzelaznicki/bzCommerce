@@ -136,7 +136,7 @@ VALUES (
   $5,
   $6
 )
-RETURNING id
+RETURNING id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at
 `
 
 type CreateVariantParams struct {
@@ -148,7 +148,7 @@ type CreateVariantParams struct {
 	VariantName   sql.NullString `json:"variant_name"`
 }
 
-func (q *Queries) CreateVariant(ctx context.Context, arg CreateVariantParams) (uuid.UUID, error) {
+func (q *Queries) CreateVariant(ctx context.Context, arg CreateVariantParams) (ProductVariant, error) {
 	row := q.db.QueryRowContext(ctx, createVariant,
 		arg.ProductID,
 		arg.Sku,
@@ -157,9 +157,19 @@ func (q *Queries) CreateVariant(ctx context.Context, arg CreateVariantParams) (u
 		arg.ImageUrl,
 		arg.VariantName,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i ProductVariant
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.Sku,
+		&i.Price,
+		&i.StockQuantity,
+		&i.ImageUrl,
+		&i.VariantName,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const deleteProduct = `-- name: DeleteProduct :execrows
