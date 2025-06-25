@@ -7,6 +7,7 @@ import { API_BASE_URL } from '@/lib/config';
 import { useRouter } from 'next/router';
 import { buildCategoryTree } from '@/lib/categoryTree';
 import toast from 'react-hot-toast';
+import { uploadImageWithSignature } from '@/lib/cloudinary';
 
 interface Category {
   id: string;
@@ -102,54 +103,37 @@ export default function CreateProductPage() {
   };
 
   const handleFile = async (file: File, field: 'image_url' | 'product_variant.image_url') => {
-    try {
+  try {
+    const getSignature = async () => {
       const sigRes = await authFetch(`${API_BASE_URL}/api/admin/cloudinary`, {
         method: 'POST',
         body: JSON.stringify({ folder: 'products' }),
       });
+      return await sigRes.json();
+    };
 
-      const { timestamp, signature, api_key, cloud_name } = await sigRes.json();
+    const { url } = await uploadImageWithSignature(file, field, getSignature);
+    toast.success('Image uploaded!');
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('api_key', api_key);
-      formData.append('timestamp', timestamp);
-      formData.append('signature', signature);
-      formData.append('folder', 'products');
-
-      const cloudinaryRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        },
-      );
-
-      const data: CloudinaryUploadResponse & CloudinaryError = await cloudinaryRes.json();
-      if (!cloudinaryRes.ok) throw new Error(data.error?.message || 'Upload failed');
-
-      const secureUrl = data.secure_url;
-      toast.success('Image uploaded!');
-
-      setForm((prev) => {
-        if (field === 'image_url') {
-          return { ...prev, image_url: secureUrl };
-        } else {
-          return {
-            ...prev,
-            product_variant: {
-              ...prev.product_variant,
-              image_url: secureUrl,
-            },
-          };
-        }
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Image upload failed';
-      console.error('Upload error:', err);
-      toast.error(message);
-    }
-  };
+    setForm((prev) => {
+      if (field === 'image_url') {
+        return { ...prev, image_url: url };
+      } else {
+        return {
+          ...prev,
+          product_variant: {
+            ...prev.product_variant,
+            image_url: url,
+          },
+        };
+      }
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image upload failed';
+    console.error('Upload error:', err);
+    toast.error(message);
+  }
+};
 
   const handleDrop = (
     e: DragEvent<HTMLLabelElement>,
