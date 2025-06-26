@@ -30,7 +30,7 @@ func (cfg *apiConfig) handleApiAdminGetVariants(w http.ResponseWriter, r *http.R
 	product, err := cfg.db.GetProductById(r.Context(), productId)
 
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Product not foundf")
+		respondWithError(w, http.StatusNotFound, "Product not found")
 		return
 	}
 
@@ -101,7 +101,7 @@ func (cfg *apiConfig) handleApiAdminCreateVariant(w http.ResponseWriter, r *http
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			if pqErr.Constraint == "products_slug_key" {
+			if pqErr.Constraint == "variants_sku_key" {
 				respondWithError(w, http.StatusConflict, "Variant with the same SKU already exists")
 			} else {
 				respondWithError(w, http.StatusConflict, "Variant already exists (duplicate field)")
@@ -115,7 +115,7 @@ func (cfg *apiConfig) handleApiAdminCreateVariant(w http.ResponseWriter, r *http
 	respondWithJSON(w, http.StatusOK, addedVariant)
 }
 
-func (cfg *apiConfig) handlerApiAdminGetVariant(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleApiAdminGetVariant(w http.ResponseWriter, r *http.Request) {
 	variantId, err := uuid.Parse(r.PathValue("variantId"))
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid variant ID")
@@ -133,7 +133,7 @@ func (cfg *apiConfig) handlerApiAdminGetVariant(w http.ResponseWriter, r *http.R
 
 }
 
-func (cfg *apiConfig) handlerApiAdminUpdateVariant(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleApiAdminUpdateVariant(w http.ResponseWriter, r *http.Request) {
 	variantId, err := uuid.Parse(r.PathValue("variantId"))
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid variant ID")
@@ -168,9 +168,7 @@ func (cfg *apiConfig) handlerApiAdminUpdateVariant(w http.ResponseWriter, r *htt
 
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			switch pqErr.Constraint {
-			case "products_slug_key":
-				respondWithError(w, http.StatusConflict, "Variant with the same SKU already exists")
-			case "products_sku_key":
+			case "variants_sku_key":
 				respondWithError(w, http.StatusConflict, "Variant with the same SKU already exists")
 			default:
 				respondWithError(w, http.StatusConflict, "Variant already exists (duplicate field)")
@@ -183,4 +181,27 @@ func (cfg *apiConfig) handlerApiAdminUpdateVariant(w http.ResponseWriter, r *htt
 	}
 
 	respondWithJSON(w, http.StatusOK, updatedVariant)
+}
+
+func (cfg *apiConfig) handleApiAdminDeleteVariant(w http.ResponseWriter, r *http.Request) {
+	variantId, err := uuid.Parse(r.PathValue("variantId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid variant ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteVariant(r.Context(), variantId)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete product")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "Variant not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
 }
