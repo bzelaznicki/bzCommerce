@@ -184,14 +184,17 @@ func (q *Queries) DeleteProduct(ctx context.Context, id uuid.UUID) (int64, error
 	return result.RowsAffected()
 }
 
-const deleteVariant = `-- name: DeleteVariant :exec
+const deleteVariant = `-- name: DeleteVariant :execrows
 DELETE FROM product_variants
 WHERE id = $1
 `
 
-func (q *Queries) DeleteVariant(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteVariant, id)
-	return err
+func (q *Queries) DeleteVariant(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteVariant, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getProductById = `-- name: GetProductById :one

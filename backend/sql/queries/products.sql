@@ -139,7 +139,7 @@ SET
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
--- name: DeleteVariant :exec
+-- name: DeleteVariant :execrows
 DELETE FROM product_variants
 WHERE id = sqlc.arg('id');
 

@@ -470,7 +470,7 @@ func (cfg *apiConfig) handleAdminVariantDelete(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = cfg.db.DeleteVariant(r.Context(), id)
+	_, err = cfg.db.DeleteVariant(r.Context(), id)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete variant")
 		log.Printf("failed to delete variant (id %s): %v", id, err)
