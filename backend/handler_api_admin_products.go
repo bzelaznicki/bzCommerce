@@ -130,18 +130,12 @@ func (cfg *apiConfig) handleApiAdminGetProducts(w http.ResponseWriter, r *http.R
 // The ProductVariant structure includes fields: id, product_id, sku, price, stock_quantity, image_url, variant_name, created_at, updated_at.
 func (cfg *apiConfig) handleApiCreateProduct(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Name        string    `json:"name"`
-		Slug        string    `json:"slug"`
-		Description string    `json:"description"`
-		ImageURL    string    `json:"image_url"`
-		CategoryID  uuid.UUID `json:"category_id"`
-		Variant     struct {
-			Sku           string  `json:"sku"`
-			Price         float64 `json:"price"`
-			StockQuantity int32   `json:"stock_quantity"`
-			ImageUrl      string  `json:"image_url"`
-			Name          string  `json:"name"`
-		} `json:"product_variant"`
+		Name        string         `json:"name"`
+		Slug        string         `json:"slug"`
+		Description string         `json:"description"`
+		ImageURL    string         `json:"image_url"`
+		CategoryID  uuid.UUID      `json:"category_id"`
+		Variant     VariantRequest `json:"product_variant"`
 	}
 
 	decoder := json.NewDecoder(r.Body)

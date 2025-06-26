@@ -5,6 +5,7 @@ import Image from 'next/image';
 import AdminLayout from '@/components/AdminLayout';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
+import Link from 'next/link';
 
 interface Variant {
   id: string;
@@ -26,18 +27,18 @@ interface VariantResponse {
 
 export default function ProductVariantsPage() {
   const router = useRouter();
-  const { id } = router.query;
+  const { productId } = router.query;
 
   const [data, setData] = useState<VariantResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id || typeof id !== 'string') return;
+    if (!productId || typeof productId !== 'string') return;
 
     const fetchVariants = async () => {
       try {
-        const res = await authFetch(`${API_BASE_URL}/api/admin/products/${id}/variants`);
+        const res = await authFetch(`${API_BASE_URL}/api/admin/products/${productId}/variants`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const json: VariantResponse = await res.json();
         setData(json);
@@ -50,7 +51,7 @@ export default function ProductVariantsPage() {
     };
 
     fetchVariants();
-  }, [id]);
+  }, [productId]);
 
   return (
     <>
@@ -105,7 +106,12 @@ export default function ProductVariantsPage() {
                         )}
                       </td>
                       <td className="px-4 py-2 space-x-2">
-                        <button className="text-blue-600 hover:underline">Edit</button>
+                        <Link
+                          href={`/admin/products/${productId}/variants/${v.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </Link>
                         <button className="text-red-600 hover:underline">Delete</button>
                       </td>
                     </tr>
