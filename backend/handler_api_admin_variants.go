@@ -154,6 +154,7 @@ func (cfg *apiConfig) handlerApiAdminUpdateVariant(w http.ResponseWriter, r *htt
 		Sku:           params.Sku,
 		Price:         params.Price,
 		StockQuantity: params.StockQuantity,
+		VariantName:   sql.NullString{String: params.Name, Valid: params.Name != ""},
 		ImageUrl:      sql.NullString{String: params.ImageUrl, Valid: params.ImageUrl != ""},
 		ID:            variantId,
 	}
