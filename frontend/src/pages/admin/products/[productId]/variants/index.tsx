@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
-import Link from 'next/link';
 
 interface Variant {
   id: string;
@@ -32,6 +33,8 @@ export default function ProductVariantsPage() {
   const [data, setData] = useState<VariantResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [variantToDelete, setVariantToDelete] = useState<Variant | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!productId || typeof productId !== 'string') return;
@@ -53,6 +56,37 @@ export default function ProductVariantsPage() {
     fetchVariants();
   }, [productId]);
 
+  const handleConfirmDelete = async () => {
+    if (!variantToDelete || typeof productId !== 'string') return;
+
+    setDeleting(true);
+
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/api/admin/products/${productId}/variants/${variantToDelete.id}`,
+        { method: 'DELETE' },
+      );
+
+      if (!res.ok) throw new Error(`Failed to delete (status ${res.status})`);
+
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              product_variants: prev.product_variants.filter((v) => v.id !== variantToDelete.id),
+            }
+          : null,
+      );
+
+      setVariantToDelete(null);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert(`Failed to delete "${variantToDelete.sku}"`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -60,9 +94,18 @@ export default function ProductVariantsPage() {
       </Head>
       <AdminLayout>
         <div className="p-6">
-          <h1 className="text-2xl font-bold mb-4">
-            Manage Variants {data?.product_name && `– ${data.product_name}`}
-          </h1>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+            <h1 className="text-2xl font-bold">
+              Manage Variants {data?.product_name && `– ${data.product_name}`}
+            </h1>
+
+            <Link
+              href={`/admin/products/${productId}/variants/new`}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-700 text-sm text-center"
+            >
+              + Create Variant
+            </Link>
+          </div>
 
           {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -112,7 +155,12 @@ export default function ProductVariantsPage() {
                         >
                           Edit
                         </Link>
-                        <button className="text-red-600 hover:underline">Delete</button>
+                        <button
+                          onClick={() => setVariantToDelete(v)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -123,6 +171,26 @@ export default function ProductVariantsPage() {
             <p>No variants found.</p>
           )}
         </div>
+
+        {variantToDelete && (
+          <ConfirmDialog
+            title="Delete Variant"
+            message={
+              <>
+                Are you sure you want to delete variant{' '}
+                <strong>
+                  {variantToDelete.variant_name.Valid
+                    ? variantToDelete.variant_name.String
+                    : variantToDelete.sku}
+                </strong>
+                ? This action cannot be undone.
+              </>
+            }
+            onCancel={() => setVariantToDelete(null)}
+            onConfirm={handleConfirmDelete}
+            loading={deleting}
+          />
+        )}
       </AdminLayout>
     </>
   );

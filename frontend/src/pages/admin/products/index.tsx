@@ -1,11 +1,14 @@
+// pages/admin/products/index.tsx
+
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import type { PaginatedResponse } from '@/types/api';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 interface AdminProductRow {
@@ -31,7 +34,6 @@ export default function AdminProductsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [productToDelete, setProductToDelete] = useState<AdminProductRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -83,9 +85,7 @@ export default function AdminProductsPage() {
         method: 'DELETE',
       });
 
-      if (!res.ok) {
-        throw new Error(`Failed to delete product (status ${res.status})`);
-      }
+      if (!res.ok) throw new Error(`Failed to delete product (status ${res.status})`);
 
       setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
       toast.success(`Deleted "${productToDelete.name}"`);
@@ -251,33 +251,19 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Confirmation Modal */}
         {productToDelete && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-white border border-gray-300 shadow-xl rounded-md p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-4">Delete Product</h2>
-              <p className="mb-6">
+          <ConfirmDialog
+            title="Delete Product"
+            message={
+              <>
                 Are you sure you want to delete <strong>{productToDelete.name}</strong>? This action
                 cannot be undone.
-              </p>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setProductToDelete(null)}
-                  className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100"
-                  disabled={deleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                  disabled={deleting}
-                >
-                  {deleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
+              </>
+            }
+            onCancel={() => setProductToDelete(null)}
+            onConfirm={handleConfirmDelete}
+            loading={deleting}
+          />
         )}
       </AdminLayout>
     </>
