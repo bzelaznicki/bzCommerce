@@ -115,6 +115,24 @@ func (cfg *apiConfig) handleApiAdminCreateVariant(w http.ResponseWriter, r *http
 	respondWithJSON(w, http.StatusOK, addedVariant)
 }
 
+func (cfg *apiConfig) handlerApiAdminGetVariant(w http.ResponseWriter, r *http.Request) {
+	variantId, err := uuid.Parse(r.PathValue("variantId"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid variant ID")
+		return
+	}
+
+	variant, err := cfg.db.GetVariantByID(r.Context(), variantId)
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Variant not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, variant)
+
+}
+
 func (cfg *apiConfig) handlerApiAdminUpdateVariant(w http.ResponseWriter, r *http.Request) {
 	variantId, err := uuid.Parse(r.PathValue("variantId"))
 	if err != nil {
