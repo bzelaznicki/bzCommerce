@@ -3,7 +3,7 @@ type UploadField = 'image_url' | 'product_variant.image_url';
 export interface CloudinaryUploadResponse {
   secure_url: string;
   public_id: string;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }
 
 export interface CloudinaryError {
@@ -18,7 +18,7 @@ export async function uploadImageWithSignature(
     signature: string;
     api_key: string;
     cloud_name: string;
-  }>
+  }>,
 ): Promise<{ field: UploadField; url: string }> {
   const { timestamp, signature, api_key, cloud_name } = await getSignature();
 
@@ -29,13 +29,10 @@ export async function uploadImageWithSignature(
   formData.append('signature', signature);
   formData.append('folder', 'products');
 
-  const cloudinaryRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  });
 
   const data: CloudinaryUploadResponse & CloudinaryError = await cloudinaryRes.json();
   if (!cloudinaryRes.ok) throw new Error(data.error?.message || 'Upload failed');

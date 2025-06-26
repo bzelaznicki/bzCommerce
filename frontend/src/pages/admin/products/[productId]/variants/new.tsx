@@ -1,4 +1,4 @@
-import { useState, useEffect, DragEvent } from 'react';
+import { useState, DragEvent } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import AdminLayout from '@/components/AdminLayout';
@@ -24,7 +24,7 @@ export default function CreateVariantPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFile = async (file: File) => {
@@ -39,7 +39,7 @@ export default function CreateVariantPage() {
 
       const { url } = await uploadImageWithSignature(file, 'image_url', getSignature);
       toast.success('Image uploaded!');
-      setForm(prev => ({ ...prev, image_url: url }));
+      setForm((prev) => ({ ...prev, image_url: url }));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Image upload failed';
       console.error('Upload error:', err);
@@ -62,8 +62,12 @@ export default function CreateVariantPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (typeof productId !== 'string') return;
-
+    console.log('Submit triggered');
+    console.log(typeof productId);
+    if (typeof productId !== 'string') {
+      console.warn('Invalid productId:', productId);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -85,7 +89,7 @@ export default function CreateVariantPage() {
       }
 
       toast.success('Variant created successfully!');
-      router.push(`/admin/products/${productId}`);
+      router.push(`/admin/products/${productId}/variants`);
     } catch (err) {
       console.error('Create failed:', err);
       toast.error('An unexpected error occurred.');
@@ -146,11 +150,7 @@ export default function CreateVariantPage() {
                 onDragOver={(e) => e.preventDefault()}
               >
                 Click or drag a file here to upload the variant image
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
+                <input type="file" onChange={handleFileUpload} className="hidden" />
               </label>
               {form.image_url && (
                 <div className="relative w-32 h-32 mt-2 rounded border shadow">
