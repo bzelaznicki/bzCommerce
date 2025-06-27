@@ -1,5 +1,7 @@
 import type { Category } from '@/types/category';
 
+export type FlatCategory = Category & { depth: number };
+
 export type CategoryTree = Category & {
   children: CategoryTree[];
 };
@@ -21,4 +23,16 @@ export function buildCategoryTree(categories: Category[]): CategoryTree[] {
   }
 
   return roots;
+}
+
+export function flattenTree(nodes: CategoryTree[], depth = 0): FlatCategory[] {
+  let result: FlatCategory[] = [];
+  for (const node of nodes) {
+    const { children, ...cat } = node;
+    result.push({ ...cat, depth });
+    if (children.length > 0) {
+      result = result.concat(flattenTree(children, depth + 1));
+    }
+  }
+  return result;
 }
