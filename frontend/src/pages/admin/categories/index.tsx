@@ -52,14 +52,27 @@ export default function AdminCategoriesPage() {
         method: 'DELETE',
       });
 
-      if (!res.ok) throw new Error(`Failed to delete category (status ${res.status})`);
+      if (!res.ok) {
+        let errorMessage = `Failed to delete "${categoryToDelete.name}"`;
+
+        try {
+          const data = await res.json();
+          if (data && data.error) {
+            errorMessage = data.error;
+          }
+        } catch (parseErr) {
+          console.log(parseErr);
+        }
+
+        throw new Error(errorMessage);
+      }
 
       toast.success(`Deleted "${categoryToDelete.name}"`);
       setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
       setCategoryToDelete(null);
     } catch (err) {
       console.error(err);
-      toast.error(`Failed to delete "${categoryToDelete.name}"`);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete category.');
     } finally {
       setDeleting(false);
     }
