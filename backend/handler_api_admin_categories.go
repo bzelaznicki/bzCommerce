@@ -160,3 +160,30 @@ func (cfg *apiConfig) handleApiAdminUpdateCategory(w http.ResponseWriter, r *htt
 
 	respondWithJSON(w, http.StatusOK, category)
 }
+
+func (cfg *apiConfig) handleApiAdminDeleteCategory(w http.ResponseWriter, r *http.Request) {
+	categoryId, err := uuid.Parse(r.PathValue("categoryId"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid category ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteCategoryById(r.Context(), categoryId)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23503" {
+				respondWithError(w, http.StatusConflict, "Category not empty. Remove products first.")
+				return
+			}
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete category")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "Category not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}

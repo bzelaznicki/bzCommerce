@@ -234,7 +234,7 @@ func (cfg *apiConfig) handleAdminCategoryDelete(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = cfg.db.DeleteCategoryById(r.Context(), id)
+	_, err = cfg.db.DeleteCategoryById(r.Context(), id)
 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, fmt.Sprintf("Failed to delete category %s", id))
