@@ -48,7 +48,7 @@ VALUES (
 )
 RETURNING *;
 
--- name: UpdateCategoryById :exec
+-- name: UpdateCategoryById :one
 UPDATE categories
 SET 
     name = sqlc.arg(name),
@@ -56,7 +56,8 @@ SET
     description = sqlc.arg(description),
     parent_id = sqlc.arg(parent_id),
     updated_at = NOW()
-    WHERE id = sqlc.arg(id);
+    WHERE id = sqlc.arg(id)
+    RETURNING *;
 
 
 -- name: DeleteCategoryById :exec

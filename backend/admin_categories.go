@@ -199,7 +199,7 @@ func (cfg *apiConfig) handleAdminCategoryUpdate(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	err = cfg.db.UpdateCategoryById(r.Context(), database.UpdateCategoryByIdParams{
+	_, err = cfg.db.UpdateCategoryById(r.Context(), database.UpdateCategoryByIdParams{
 		ID:          id,
 		Name:        r.FormValue("name"),
 		Slug:        r.FormValue("slug"),
