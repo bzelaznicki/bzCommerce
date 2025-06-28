@@ -106,6 +106,32 @@ func (cfg *apiConfig) handleApiAdminUpdateCategory(w http.ResponseWriter, r *htt
 		respondWithError(w, http.StatusBadRequest, "A category cannot be its own parent")
 		return
 	}
+	if params.ParentID.Valid {
+		currentParentID := params.ParentID.UUID
+
+		for {
+			parent, err := cfg.db.GetCategoryById(r.Context(), currentParentID)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					respondWithError(w, http.StatusBadRequest, "Parent category does not exist")
+					return
+				}
+				respondWithError(w, http.StatusInternalServerError, "Failed to validate parent category")
+				return
+			}
+
+			if parent.ID == categoryId {
+				respondWithError(w, http.StatusBadRequest, "Cannot set parent: would create a circular relationship")
+				return
+			}
+
+			if !parent.ParentID.Valid {
+				break
+			}
+
+			currentParentID = parent.ParentID.UUID
+		}
+	}
 
 	category, err := cfg.db.UpdateCategoryById(r.Context(), database.UpdateCategoryByIdParams{
 		Name:        params.Name,
