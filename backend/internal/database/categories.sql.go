@@ -275,7 +275,7 @@ func (q *Queries) ListCategoriesWithParent(ctx context.Context) ([]ListCategorie
 	return items, nil
 }
 
-const updateCategoryById = `-- name: UpdateCategoryById :exec
+const updateCategoryById = `-- name: UpdateCategoryById :one
 UPDATE categories
 SET 
     name = $1,
@@ -284,6 +284,7 @@ SET
     parent_id = $4,
     updated_at = NOW()
     WHERE id = $5
+    RETURNING id, name, slug, description, parent_id, created_at, updated_at
 `
 
 type UpdateCategoryByIdParams struct {
@@ -294,13 +295,23 @@ type UpdateCategoryByIdParams struct {
 	ID          uuid.UUID      `json:"id"`
 }
 
-func (q *Queries) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) error {
-	_, err := q.db.ExecContext(ctx, updateCategoryById,
+func (q *Queries) UpdateCategoryById(ctx context.Context, arg UpdateCategoryByIdParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, updateCategoryById,
 		arg.Name,
 		arg.Slug,
 		arg.Description,
 		arg.ParentID,
 		arg.ID,
 	)
-	return err
+	var i Category
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.Description,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

@@ -19,5 +19,8 @@ func (cfg *apiConfig) registerApiAdminRoutes(mux *http.ServeMux) {
 	mux.Handle("PUT /api/admin/products/{productId}/variants/{variantId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminUpdateVariant))))
 	mux.Handle("DELETE /api/admin/products/{productId}/variants/{variantId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminDeleteVariant))))
 	mux.Handle("GET /api/admin/categories", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminGetCategories))))
+	mux.Handle("GET /api/admin/categories/{categoryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminGetCategory))))
+	mux.Handle("PUT /api/admin/categories/{categoryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminUpdateCategory))))
+	mux.Handle("POST /api/admin/categories", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminCreateCategory))))
 	log.Printf("Shop API routes registered")
 }
