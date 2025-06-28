@@ -102,6 +102,10 @@ func (cfg *apiConfig) handleApiAdminUpdateCategory(w http.ResponseWriter, r *htt
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Cannot parse params")
 	}
+	if params.ParentID.Valid && params.ParentID.UUID == categoryId {
+		respondWithError(w, http.StatusBadRequest, "A category cannot be its own parent")
+		return
+	}
 
 	category, err := cfg.db.UpdateCategoryById(r.Context(), database.UpdateCategoryByIdParams{
 		Name:        params.Name,
