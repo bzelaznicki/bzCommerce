@@ -60,6 +60,6 @@ SET
     RETURNING *;
 
 
--- name: DeleteCategoryById :exec
+-- name: DeleteCategoryById :execrows
 DELETE FROM categories WHERE id = sqlc.arg(id);
 
