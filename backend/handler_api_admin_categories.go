@@ -60,3 +60,21 @@ func (cfg *apiConfig) handleApiAdminCreateCategory(w http.ResponseWriter, r *htt
 
 	respondWithJSON(w, http.StatusOK, category)
 }
+
+func (cfg *apiConfig) handleApiAdminGetCategory(w http.ResponseWriter, r *http.Request) {
+	categoryId, err := uuid.Parse(r.PathValue("categoryId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid category ID")
+		return
+	}
+
+	category, err := cfg.db.GetCategoryById(r.Context(), categoryId)
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Category not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, category)
+}
