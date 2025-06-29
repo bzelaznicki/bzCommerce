@@ -120,7 +120,7 @@ func (q *Queries) SelectShippingOptionById(ctx context.Context, id uuid.UUID) (S
 	return i, err
 }
 
-const updateShippingOption = `-- name: UpdateShippingOption :exec
+const updateShippingOption = `-- name: UpdateShippingOption :one
 UPDATE shipping_options
 SET name = $1,
     description = $2,
@@ -129,6 +129,7 @@ SET name = $1,
     sort_order = $5,
     is_active = $6
 WHERE id = $7
+RETURNING id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at
 `
 
 type UpdateShippingOptionParams struct {
@@ -141,8 +142,8 @@ type UpdateShippingOptionParams struct {
 	ID            uuid.UUID      `json:"id"`
 }
 
-func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOptionParams) error {
-	_, err := q.db.ExecContext(ctx, updateShippingOption,
+func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOptionParams) (ShippingOption, error) {
+	row := q.db.QueryRowContext(ctx, updateShippingOption,
 		arg.Name,
 		arg.Description,
 		arg.Price,
@@ -151,5 +152,17 @@ func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOp
 		arg.IsActive,
 		arg.ID,
 	)
-	return err
+	var i ShippingOption
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Price,
+		&i.EstimatedDays,
+		&i.SortOrder,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

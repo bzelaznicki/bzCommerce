@@ -153,7 +153,7 @@ func (cfg *apiConfig) handleAdminShippingOptionUpdate(w http.ResponseWriter, r *
 	}
 
 	sortOrderInt32 := int32(sortOrderInt64)
-	err = cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
+	_, err = cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
 		ID:   id,
 		Name: name,
 		Description: sql.NullString{

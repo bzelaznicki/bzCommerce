@@ -10,7 +10,7 @@ ORDER BY sort_order ASC;
 -- name: SelectShippingOptionById :one
 SELECT * FROM shipping_options WHERE id = sqlc.arg(id);
 
--- name: UpdateShippingOption :exec
+-- name: UpdateShippingOption :one
 UPDATE shipping_options
 SET name = sqlc.arg(name),
     description = sqlc.arg(description),
@@ -18,7 +18,8 @@ SET name = sqlc.arg(name),
     estimated_days = sqlc.arg(estimated_days),
     sort_order = sqlc.arg(sort_order),
     is_active = sqlc.arg(is_active)
-WHERE id = sqlc.arg(id);
+WHERE id = sqlc.arg(id)
+RETURNING *;
 -- name: DeleteShippingOption :exec
 DELETE FROM shipping_options
 WHERE id = sqlc.arg(id);

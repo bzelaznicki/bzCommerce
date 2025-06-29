@@ -82,3 +82,45 @@ func (cfg *apiConfig) handleApiAdminGetShippingMethod(w http.ResponseWriter, r *
 
 	respondWithJSON(w, http.StatusOK, shippingMethod)
 }
+
+func (cfg *apiConfig) handleApiAdminUpdateShippingMethod(w http.ResponseWriter, r *http.Request) {
+	shippingMethodId, err := uuid.Parse(r.PathValue("shippingMethodId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid shipping method ID")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+
+	params := ShippingMethodRequest{}
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid JSON body")
+		return
+	}
+
+	if params.Name == "" || params.Price < 0 || params.EstimatedDays == "" {
+		respondWithError(w, http.StatusBadRequest, "Invalid parameters")
+		return
+	}
+
+	shippingMethod, err := cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
+		ID:            shippingMethodId,
+		Name:          params.Name,
+		Description:   sql.NullString{String: params.Description, Valid: params.Description != ""},
+		Price:         fmt.Sprintf("%2f", params.Price), //TODO [BZC-364]: refactor once the HTML frontend is removed to use float64 instead
+		EstimatedDays: params.EstimatedDays,
+		SortOrder:     params.SortOrder,
+		IsActive:      params.IsActive,
+	})
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to update shipping method")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, shippingMethod)
+}
