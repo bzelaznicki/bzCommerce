@@ -220,8 +220,8 @@ type ShippingOption struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Price         float64        `json:"price"`
-	EstimatedDays sql.NullString `json:"estimated_days"`
-	SortOrder     sql.NullInt32  `json:"sort_order"`
+	EstimatedDays string         `json:"estimated_days"`
+	SortOrder     int32          `json:"sort_order"`
 	IsActive      bool           `json:"is_active"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`

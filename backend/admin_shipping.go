@@ -80,16 +80,10 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 			String: description,
 			Valid:  true,
 		},
-		Price: price,
-		EstimatedDays: sql.NullString{
-			String: estimatedDays,
-			Valid:  true,
-		},
-		SortOrder: sql.NullInt32{
-			Int32: sortOrderInt32,
-			Valid: true,
-		},
-		IsActive: isActive,
+		Price:         price,
+		EstimatedDays: estimatedDays,
+		SortOrder:     sortOrderInt32,
+		IsActive:      isActive,
 	})
 
 	if err != nil {
@@ -166,16 +160,10 @@ func (cfg *apiConfig) handleAdminShippingOptionUpdate(w http.ResponseWriter, r *
 			String: description,
 			Valid:  true,
 		},
-		Price: price,
-		EstimatedDays: sql.NullString{
-			String: estimatedDays,
-			Valid:  true,
-		},
-		IsActive: isActive,
-		SortOrder: sql.NullInt32{
-			Int32: sortOrderInt32,
-			Valid: true,
-		},
+		Price:         price,
+		EstimatedDays: estimatedDays,
+		IsActive:      isActive,
+		SortOrder:     sortOrderInt32,
 	},
 	)
 
