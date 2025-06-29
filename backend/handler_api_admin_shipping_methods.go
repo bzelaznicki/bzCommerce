@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
 )
 
 type ShippingMethodRequest struct {
@@ -62,4 +63,22 @@ func (cfg *apiConfig) handleApiAdminCreateShippingMethod(w http.ResponseWriter, 
 
 	respondWithJSON(w, http.StatusOK, shippingMethod)
 
+}
+
+func (cfg *apiConfig) handleApiAdminGetShippingMethod(w http.ResponseWriter, r *http.Request) {
+	shippingMethodId, err := uuid.Parse(r.PathValue("shippingMethodId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid shipping method ID")
+		return
+	}
+
+	shippingMethod, err := cfg.db.SelectShippingOptionById(r.Context(), shippingMethodId)
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Shipping method not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, shippingMethod)
 }
