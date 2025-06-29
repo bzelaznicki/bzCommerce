@@ -165,3 +165,26 @@ func (cfg *apiConfig) handleApiAdminToggleShippingMethodStatus(w http.ResponseWr
 	})
 
 }
+
+func (cfg *apiConfig) handleApiAdminDeleteShippingMethod(w http.ResponseWriter, r *http.Request) {
+	shippingMethodId, err := uuid.Parse(r.PathValue("shippingMethodId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid shipping method ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteShippingOption(r.Context(), shippingMethodId)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete shipping method")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "Shipping method not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}

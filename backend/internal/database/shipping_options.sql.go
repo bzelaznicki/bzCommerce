@@ -49,14 +49,17 @@ func (q *Queries) CreateShippingOption(ctx context.Context, arg CreateShippingOp
 	return i, err
 }
 
-const deleteShippingOption = `-- name: DeleteShippingOption :exec
+const deleteShippingOption = `-- name: DeleteShippingOption :execrows
 DELETE FROM shipping_options
 WHERE id = $1
 `
 
-func (q *Queries) DeleteShippingOption(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteShippingOption, id)
-	return err
+func (q *Queries) DeleteShippingOption(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteShippingOption, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getShippingOptions = `-- name: GetShippingOptions :many
