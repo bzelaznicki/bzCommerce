@@ -90,6 +90,37 @@ export default function AdminShippingMethodsPage() {
       setDeleting(false);
     }
   };
+  const toggleStatus = async (method: ShippingMethod) => {
+    setShippingMethods((prev) =>
+      prev.map((m) => (m.id === method.id ? { ...m, is_active: !method.is_active } : m)),
+    );
+
+    try {
+      const res = await authFetch(
+        `${API_BASE_URL}/api/admin/shipping-methods/${method.id}/status`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: !method.is_active }),
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}`);
+      }
+
+      toast.success(
+        `Shipping method "${method.name}" ${!method.is_active ? 'enabled' : 'disabled'}.`,
+      );
+    } catch (err) {
+      console.error(err);
+
+      setShippingMethods((prev) =>
+        prev.map((m) => (m.id === method.id ? { ...m, is_active: method.is_active } : m)),
+      );
+      toast.error('Failed to update status.');
+    }
+  };
 
   const toggleSort = (field: 'name' | 'price' | 'estimated_days' | 'created_at' | 'updated_at') => {
     if (sortBy === field) {
@@ -237,7 +268,24 @@ export default function AdminShippingMethodsPage() {
                       </td>
                       <td className="px-4 py-2">{method.price.toFixed(2)}</td>
                       <td className="px-4 py-2">{method.estimated_days}</td>
-                      <td className="px-4 py-2">{method.is_active ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={method.is_active}
+                          onClick={() => toggleStatus(method)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                            method.is_active ? 'bg-indigo-600' : 'bg-gray-300'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              method.is_active ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </td>
+
                       <td className="px-4 py-2 text-sm text-gray-500">
                         {new Date(method.created_at).toLocaleDateString()}
                       </td>
