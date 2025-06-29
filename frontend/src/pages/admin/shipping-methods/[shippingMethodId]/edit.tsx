@@ -54,7 +54,9 @@ export default function EditShippingMethodPage() {
     const fetchShippingMethod = async () => {
       setLoading(true);
       try {
-        const res = await authFetch(`${API_BASE_URL}/api/admin/shipping-methods/${shippingMethodId}`);
+        const res = await authFetch(
+          `${API_BASE_URL}/api/admin/shipping-methods/${shippingMethodId}`,
+        );
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data: ShippingMethod = await res.json();
         setForm({
@@ -83,18 +85,21 @@ export default function EditShippingMethodPage() {
 
     setSubmitting(true);
     try {
-      const res = await authFetch(`${API_BASE_URL}/api/admin/shipping-methods/${shippingMethodId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          description: form.description,
-          price: parseFloat(form.price),
-          estimated_days: form.estimated_days,
-          sort_order: parseInt(form.sort_order, 10),
-          is_active: form.is_active,
-        }),
-      });
+      const res = await authFetch(
+        `${API_BASE_URL}/api/admin/shipping-methods/${shippingMethodId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            description: form.description,
+            price: parseFloat(form.price),
+            estimated_days: form.estimated_days,
+            sort_order: parseInt(form.sort_order, 10),
+            is_active: form.is_active,
+          }),
+        },
+      );
 
       if (!res.ok) {
         let errorMessage = 'Failed to update shipping method.';

@@ -17,7 +17,6 @@ export default function CreateShippingMethodPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-
   const updateFormField = (name: string, value: string | boolean) => {
     setForm((prev) => ({
       ...prev,
@@ -25,14 +24,13 @@ export default function CreateShippingMethodPage() {
     }));
   };
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  const target = e.target as HTMLInputElement | HTMLTextAreaElement;
-  const { name, value, type } = target;
-  const checked = (target as HTMLInputElement).checked; 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+    const { name, value, type } = target;
+    const checked = (target as HTMLInputElement).checked;
 
-  updateFormField(name, type === 'checkbox' ? checked : value);
-};
-
+    updateFormField(name, type === 'checkbox' ? checked : value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

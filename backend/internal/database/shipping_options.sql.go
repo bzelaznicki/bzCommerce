@@ -13,8 +13,8 @@ import (
 )
 
 const createShippingOption = `-- name: CreateShippingOption :one
-INSERT INTO shipping_options (name, description, price, estimated_days, sort_order, is_active)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO shipping_options (name, description, price, estimated_days, is_active)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at
 `
 
@@ -23,7 +23,6 @@ type CreateShippingOptionParams struct {
 	Description   sql.NullString `json:"description"`
 	Price         string         `json:"price"`
 	EstimatedDays string         `json:"estimated_days"`
-	SortOrder     int32          `json:"sort_order"`
 	IsActive      bool           `json:"is_active"`
 }
 
@@ -33,7 +32,6 @@ func (q *Queries) CreateShippingOption(ctx context.Context, arg CreateShippingOp
 		arg.Description,
 		arg.Price,
 		arg.EstimatedDays,
-		arg.SortOrder,
 		arg.IsActive,
 	)
 	var i ShippingOption

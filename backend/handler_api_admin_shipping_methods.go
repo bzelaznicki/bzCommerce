@@ -52,7 +52,6 @@ func (cfg *apiConfig) handleApiAdminCreateShippingMethod(w http.ResponseWriter, 
 		Description:   sql.NullString{String: params.Description, Valid: params.Description != ""},
 		Price:         fmt.Sprintf("%2f", params.Price), //TODO [BZC-364]: refactor once the HTML frontend is removed to use float64 instead
 		EstimatedDays: params.EstimatedDays,
-		SortOrder:     params.SortOrder,
 		IsActive:      params.IsActive,
 	})
 
