@@ -28,6 +28,10 @@ func (cfg *apiConfig) handleApiAdminGetShippingMethods(w http.ResponseWriter, r 
 		return
 	}
 
+	if shippingOptions == nil {
+		shippingOptions = []database.ShippingOption{}
+	}
+
 	respondWithJSON(w, http.StatusOK, shippingOptions)
 }
 
