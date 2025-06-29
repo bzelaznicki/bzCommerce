@@ -23,5 +23,7 @@ func (cfg *apiConfig) registerApiAdminRoutes(mux *http.ServeMux) {
 	mux.Handle("PUT /api/admin/categories/{categoryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminUpdateCategory))))
 	mux.Handle("DELETE /api/admin/categories/{categoryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminDeleteCategory))))
 	mux.Handle("POST /api/admin/categories", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminCreateCategory))))
+
+	mux.Handle("GET /api/admin/shipping-methods", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminGetShippingMethods))))
 	log.Printf("Shop API routes registered")
 }

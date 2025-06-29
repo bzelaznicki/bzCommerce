@@ -22,8 +22,8 @@ type CreateShippingOptionParams struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Price         string         `json:"price"`
-	EstimatedDays sql.NullString `json:"estimated_days"`
-	SortOrder     sql.NullInt32  `json:"sort_order"`
+	EstimatedDays string         `json:"estimated_days"`
+	SortOrder     int32          `json:"sort_order"`
 	IsActive      bool           `json:"is_active"`
 }
 
@@ -135,8 +135,8 @@ type UpdateShippingOptionParams struct {
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
 	Price         string         `json:"price"`
-	EstimatedDays sql.NullString `json:"estimated_days"`
-	SortOrder     sql.NullInt32  `json:"sort_order"`
+	EstimatedDays string         `json:"estimated_days"`
+	SortOrder     int32          `json:"sort_order"`
 	IsActive      bool           `json:"is_active"`
 	ID            uuid.UUID      `json:"id"`
 }
