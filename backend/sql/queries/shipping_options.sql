@@ -20,7 +20,7 @@ SET name = sqlc.arg(name),
     is_active = sqlc.arg(is_active)
 WHERE id = sqlc.arg(id)
 RETURNING *;
--- name: DeleteShippingOption :exec
+-- name: DeleteShippingOption :execrows
 DELETE FROM shipping_options
 WHERE id = sqlc.arg(id);
 

@@ -175,7 +175,7 @@ func (cfg *apiConfig) handleAdminShippingOptionDelete(w http.ResponseWriter, r *
 		return
 	}
 
-	err = cfg.db.DeleteShippingOption(r.Context(), id)
+	_, err = cfg.db.DeleteShippingOption(r.Context(), id)
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete shipping option")
 		log.Printf("failed to delete shipping option: %v", err)
