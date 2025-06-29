@@ -7,7 +7,7 @@ import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import toast from 'react-hot-toast';
 
-interface ShippingOption {
+interface ShippingMethod {
   id: string;
   name: string;
   description: { String: string; Valid: boolean };
@@ -19,11 +19,11 @@ interface ShippingOption {
   updated_at: string;
 }
 
-export default function AdminShippingOptionsPage() {
-  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+export default function AdminShippingMethodsPage() {
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [optionToDelete, setOptionToDelete] = useState<ShippingOption | null>(null);
+  const [methodToDelete, setMethodToDelete] = useState<ShippingMethod | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -36,39 +36,39 @@ export default function AdminShippingOptionsPage() {
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
-    const fetchOptions = async () => {
+    const fetchMethods = async () => {
       try {
         setLoading(true);
         const res = await authFetch(`${API_BASE_URL}/api/admin/shipping-methods`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data: ShippingOption[] = await res.json();
-        setShippingOptions(data);
+        const data: ShippingMethod[] = await res.json();
+        setShippingMethods(data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch shipping options:', err);
-        setError('Failed to load shipping options.');
+        console.error('Failed to fetch shipping methods:', err);
+        setError('Failed to load shipping methods.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOptions();
+    fetchMethods();
   }, []);
 
   const handleConfirmDelete = async () => {
-    if (!optionToDelete) return;
+    if (!methodToDelete) return;
     setDeleting(true);
 
     try {
       const res = await authFetch(
-        `${API_BASE_URL}/api/admin/shipping-options/${optionToDelete.id}`,
+        `${API_BASE_URL}/api/admin/shipping-methods/${methodToDelete.id}`,
         {
           method: 'DELETE',
         },
       );
 
       if (!res.ok) {
-        let errorMessage = `Failed to delete "${optionToDelete.name}"`;
+        let errorMessage = `Failed to delete "${methodToDelete.name}"`;
 
         try {
           const data = await res.json();
@@ -80,12 +80,12 @@ export default function AdminShippingOptionsPage() {
         throw new Error(errorMessage);
       }
 
-      toast.success(`Deleted "${optionToDelete.name}"`);
-      setShippingOptions((prev) => prev.filter((o) => o.id !== optionToDelete.id));
-      setOptionToDelete(null);
+      toast.success(`Deleted "${methodToDelete.name}"`);
+      setShippingMethods((prev) => prev.filter((o) => o.id !== methodToDelete.id));
+      setMethodToDelete(null);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : 'Failed to delete shipping option.');
+      toast.error(err instanceof Error ? err.message : 'Failed to delete shipping method.');
     } finally {
       setDeleting(false);
     }
@@ -100,8 +100,8 @@ export default function AdminShippingOptionsPage() {
     }
   };
 
-  const processedOptions = useMemo(() => {
-    const filtered = shippingOptions.filter((o) =>
+  const processedMethods = useMemo(() => {
+    const filtered = shippingMethods.filter((o) =>
       o.name.toLowerCase().includes(search.trim().toLowerCase()),
     );
 
@@ -126,10 +126,10 @@ export default function AdminShippingOptionsPage() {
     });
 
     return sorted;
-  }, [shippingOptions, search, sortBy, sortOrder]);
+  }, [shippingMethods, search, sortBy, sortOrder]);
 
-  const totalPages = Math.max(1, Math.ceil(processedOptions.length / ITEMS_PER_PAGE));
-  const paginatedOptions = processedOptions.slice(
+  const totalPages = Math.max(1, Math.ceil(processedMethods.length / ITEMS_PER_PAGE));
+  const paginatedMethods = processedMethods.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE,
   );
@@ -137,12 +137,12 @@ export default function AdminShippingOptionsPage() {
   return (
     <>
       <Head>
-        <title>Manage Shipping Options | bzCommerce</title>
+        <title>Manage Shipping Methods | bzCommerce</title>
       </Head>
       <AdminLayout>
         <div className="p-6 space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl font-bold">Shipping Options</h1>
+            <h1 className="text-2xl font-bold">Shipping Methods</h1>
             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto md:items-center">
               <input
                 type="text"
@@ -155,10 +155,10 @@ export default function AdminShippingOptionsPage() {
                 className="border px-3 py-2 rounded-md w-full md:w-64 shadow-sm"
               />
               <Link
-                href="/admin/shipping-options/new"
+                href="/admin/shipping-methods/new"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-700 text-sm text-center"
               >
-                + Create Shipping Option
+                + Create Shipping Method
               </Link>
             </div>
           </div>
@@ -222,37 +222,37 @@ export default function AdminShippingOptionsPage() {
                       Loading...
                     </td>
                   </tr>
-                ) : paginatedOptions.length === 0 ? (
+                ) : paginatedMethods.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-4 text-gray-500">
-                      No shipping options found.
+                      No shipping methods found.
                     </td>
                   </tr>
                 ) : (
-                  paginatedOptions.map((option) => (
-                    <tr key={option.id} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2 font-medium">{option.name}</td>
+                  paginatedMethods.map((method) => (
+                    <tr key={method.id} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{method.name}</td>
                       <td className="px-4 py-2 text-sm text-gray-700">
-                        {option.description.Valid ? option.description.String : '-'}
+                        {method.description.Valid ? method.description.String : '-'}
                       </td>
-                      <td className="px-4 py-2">{option.price.toFixed(2)}</td>
-                      <td className="px-4 py-2">{option.estimated_days}</td>
-                      <td className="px-4 py-2">{option.is_active ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2">{method.price.toFixed(2)}</td>
+                      <td className="px-4 py-2">{method.estimated_days}</td>
+                      <td className="px-4 py-2">{method.is_active ? 'Yes' : 'No'}</td>
                       <td className="px-4 py-2 text-sm text-gray-500">
-                        {new Date(option.created_at).toLocaleDateString()}
+                        {new Date(method.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-500">
-                        {new Date(option.updated_at).toLocaleDateString()}
+                        {new Date(method.updated_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 space-x-2">
                         <Link
-                          href={`/admin/shipping-options/${option.id}/edit`}
+                          href={`/admin/shipping-methods/${method.id}/edit`}
                           className="text-blue-600 hover:underline"
                         >
                           Edit
                         </Link>
                         <button
-                          onClick={() => setOptionToDelete(option)}
+                          onClick={() => setMethodToDelete(method)}
                           className="text-red-600 hover:underline"
                         >
                           Delete
@@ -286,16 +286,16 @@ export default function AdminShippingOptionsPage() {
           </div>
         </div>
 
-        {optionToDelete && (
+        {methodToDelete && (
           <ConfirmDialog
-            title="Delete Shipping Option"
+            title="Delete Shipping Method"
             message={
               <>
-                Are you sure you want to delete <strong>{optionToDelete.name}</strong>? This action
+                Are you sure you want to delete <strong>{methodToDelete.name}</strong>? This action
                 cannot be undone.
               </>
             }
-            onCancel={() => setOptionToDelete(null)}
+            onCancel={() => setMethodToDelete(null)}
             onConfirm={handleConfirmDelete}
             loading={deleting}
           />

@@ -63,18 +63,9 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 	description := r.FormValue("description")
 	price := r.FormValue("price")
 	estimatedDays := r.FormValue("estimated_days")
-	sortOrder := r.FormValue("sort_order")
 	isActive := r.FormValue("is_active") != ""
 
-	sortOrderInt64, err := strconv.ParseInt(sortOrder, 10, 32)
-	if err != nil {
-		cfg.RenderError(w, r, http.StatusBadRequest, "Invalid sort order")
-		log.Printf("invalid sort order: %v", err)
-		return
-	}
-
-	sortOrderInt32 := int32(sortOrderInt64)
-	_, err = cfg.db.CreateShippingOption(r.Context(), database.CreateShippingOptionParams{
+	_, err := cfg.db.CreateShippingOption(r.Context(), database.CreateShippingOptionParams{
 		Name: name,
 		Description: sql.NullString{
 			String: description,
@@ -82,7 +73,6 @@ func (cfg *apiConfig) handleAdminShippingOptionCreate(w http.ResponseWriter, r *
 		},
 		Price:         price,
 		EstimatedDays: estimatedDays,
-		SortOrder:     sortOrderInt32,
 		IsActive:      isActive,
 	})
 
@@ -153,7 +143,7 @@ func (cfg *apiConfig) handleAdminShippingOptionUpdate(w http.ResponseWriter, r *
 	}
 
 	sortOrderInt32 := int32(sortOrderInt64)
-	err = cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
+	_, err = cfg.db.UpdateShippingOption(r.Context(), database.UpdateShippingOptionParams{
 		ID:   id,
 		Name: name,
 		Description: sql.NullString{

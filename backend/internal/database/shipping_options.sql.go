@@ -13,8 +13,8 @@ import (
 )
 
 const createShippingOption = `-- name: CreateShippingOption :one
-INSERT INTO shipping_options (name, description, price, estimated_days, sort_order, is_active)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO shipping_options (name, description, price, estimated_days, is_active)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at
 `
 
@@ -23,7 +23,6 @@ type CreateShippingOptionParams struct {
 	Description   sql.NullString `json:"description"`
 	Price         string         `json:"price"`
 	EstimatedDays string         `json:"estimated_days"`
-	SortOrder     int32          `json:"sort_order"`
 	IsActive      bool           `json:"is_active"`
 }
 
@@ -33,7 +32,6 @@ func (q *Queries) CreateShippingOption(ctx context.Context, arg CreateShippingOp
 		arg.Description,
 		arg.Price,
 		arg.EstimatedDays,
-		arg.SortOrder,
 		arg.IsActive,
 	)
 	var i ShippingOption
@@ -120,7 +118,7 @@ func (q *Queries) SelectShippingOptionById(ctx context.Context, id uuid.UUID) (S
 	return i, err
 }
 
-const updateShippingOption = `-- name: UpdateShippingOption :exec
+const updateShippingOption = `-- name: UpdateShippingOption :one
 UPDATE shipping_options
 SET name = $1,
     description = $2,
@@ -129,6 +127,7 @@ SET name = $1,
     sort_order = $5,
     is_active = $6
 WHERE id = $7
+RETURNING id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at
 `
 
 type UpdateShippingOptionParams struct {
@@ -141,8 +140,8 @@ type UpdateShippingOptionParams struct {
 	ID            uuid.UUID      `json:"id"`
 }
 
-func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOptionParams) error {
-	_, err := q.db.ExecContext(ctx, updateShippingOption,
+func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOptionParams) (ShippingOption, error) {
+	row := q.db.QueryRowContext(ctx, updateShippingOption,
 		arg.Name,
 		arg.Description,
 		arg.Price,
@@ -151,5 +150,17 @@ func (q *Queries) UpdateShippingOption(ctx context.Context, arg UpdateShippingOp
 		arg.IsActive,
 		arg.ID,
 	)
-	return err
+	var i ShippingOption
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Price,
+		&i.EstimatedDays,
+		&i.SortOrder,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
