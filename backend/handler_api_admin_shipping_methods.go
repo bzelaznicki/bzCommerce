@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -122,4 +123,45 @@ func (cfg *apiConfig) handleApiAdminUpdateShippingMethod(w http.ResponseWriter, 
 	}
 
 	respondWithJSON(w, http.StatusOK, shippingMethod)
+}
+
+func (cfg *apiConfig) handleApiAdminToggleShippingMethodStatus(w http.ResponseWriter, r *http.Request) {
+	shippingMethodId, err := uuid.Parse(r.PathValue("shippingMethodId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid shipping method ID")
+		return
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := struct {
+		Status bool `json:"status"`
+	}{}
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	row, err := cfg.db.ToggleShippingOptionStatus(r.Context(), database.ToggleShippingOptionStatusParams{
+		IsActive: params.Status,
+		ID:       shippingMethodId,
+	})
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "Shipping method not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to update status")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"id":      row.ID,
+		"status":  row.IsActive,
+	})
+
 }
