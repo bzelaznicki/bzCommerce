@@ -118,6 +118,30 @@ func (q *Queries) SelectShippingOptionById(ctx context.Context, id uuid.UUID) (S
 	return i, err
 }
 
+const toggleShippingOptionStatus = `-- name: ToggleShippingOptionStatus :one
+UPDATE shipping_options
+SET is_active = $1
+WHERE id = $2
+RETURNING id, is_active
+`
+
+type ToggleShippingOptionStatusParams struct {
+	IsActive bool      `json:"is_active"`
+	ID       uuid.UUID `json:"id"`
+}
+
+type ToggleShippingOptionStatusRow struct {
+	ID       uuid.UUID `json:"id"`
+	IsActive bool      `json:"is_active"`
+}
+
+func (q *Queries) ToggleShippingOptionStatus(ctx context.Context, arg ToggleShippingOptionStatusParams) (ToggleShippingOptionStatusRow, error) {
+	row := q.db.QueryRowContext(ctx, toggleShippingOptionStatus, arg.IsActive, arg.ID)
+	var i ToggleShippingOptionStatusRow
+	err := row.Scan(&i.ID, &i.IsActive)
+	return i, err
+}
+
 const updateShippingOption = `-- name: UpdateShippingOption :one
 UPDATE shipping_options
 SET name = $1,

@@ -23,3 +23,9 @@ RETURNING *;
 -- name: DeleteShippingOption :exec
 DELETE FROM shipping_options
 WHERE id = sqlc.arg(id);
+
+-- name: ToggleShippingOptionStatus :one
+UPDATE shipping_options
+SET is_active = sqlc.arg(is_active)
+WHERE id = sqlc.arg(id)
+RETURNING id, is_active;
