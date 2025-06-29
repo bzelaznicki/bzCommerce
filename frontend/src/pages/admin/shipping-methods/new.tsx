@@ -17,13 +17,22 @@ export default function CreateShippingMethodPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
+
+  const updateFormField = (name: string, value: string | boolean) => {
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
+
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+  const { name, value, type } = target;
+  const checked = (target as HTMLInputElement).checked; 
+
+  updateFormField(name, type === 'checkbox' ? checked : value);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,12 +131,7 @@ export default function CreateShippingMethodPage() {
                 type="button"
                 role="switch"
                 aria-checked={form.is_active}
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    is_active: !prev.is_active,
-                  }))
-                }
+                onClick={() => updateFormField('is_active', !form.is_active)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   form.is_active ? 'bg-indigo-600' : 'bg-gray-300'
                 }`}
@@ -139,7 +143,6 @@ export default function CreateShippingMethodPage() {
                 />
               </button>
             </div>
-
             <div className="flex gap-2">
               <button
                 type="submit"
