@@ -26,6 +26,10 @@ func (cfg *apiConfig) handleApiAdminGetCategories(w http.ResponseWriter, r *http
 		return
 	}
 
+	if categories == nil {
+		categories = []database.ListCategoriesWithParentRow{}
+	}
+
 	respondWithJSON(w, http.StatusOK, categories)
 }
 

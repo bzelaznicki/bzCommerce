@@ -35,3 +35,8 @@ WHERE id = sqlc.arg(id);
 -- name: DeleteUserById :exec
 DELETE FROM users
 WHERE id = sqlc.arg(id);
+
+-- name: CountFilteredUsers :one
+SELECT COUNT(*)
+FROM users
+WHERE full_name ILIKE $1 OR email ILIKE $1;
