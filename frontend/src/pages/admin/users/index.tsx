@@ -113,12 +113,6 @@ export default function AdminUsersPage() {
                 }}
                 className="border px-3 py-2 rounded-md w-full md:w-64 shadow-sm"
               />
-              <Link
-                href="/admin/users/new"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-700 text-sm text-center"
-              >
-                + Create User
-              </Link>
             </div>
           </div>
 
