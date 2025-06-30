@@ -32,7 +32,7 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	if sortOrder == "desc" {
 		direction = "DESC"
 	}
-
+	// #nosec G201 -- sortColumn and direction are strictly whitelisted to prevent SQL injection
 	query := fmt.Sprintf(`
 	SELECT
 	id, full_name, email, created_at, updated_at, is_admin
