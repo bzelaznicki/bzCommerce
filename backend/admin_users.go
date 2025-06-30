@@ -11,12 +11,12 @@ import (
 )
 
 type AdminUserRow struct {
-	ID        uuid.UUID
-	FullName  string
-	Email     string
-	CreatedAt string
-	UpdatedAt string
-	IsAdmin   bool
+	ID        uuid.UUID `json:"id"`
+	FullName  string    `json:"full_name"`
+	Email     string    `json:"email"`
+	CreatedAt string    `json:"created_at"`
+	UpdatedAt string    `json:"updated_at"`
+	IsAdmin   bool      `json:"is_admin"`
 }
 
 type AdminUsersListPageData struct {

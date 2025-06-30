@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -9,34 +8,31 @@ import { API_BASE_URL } from '@/lib/config';
 import type { PaginatedResponse } from '@/types/api';
 import toast from 'react-hot-toast';
 
-interface AdminProductRow {
+interface AdminUserRow {
   id: string;
-  name: string;
-  slug: string;
-  description: string;
-  image_path: string;
-  category_name: string;
-  category_slug: string;
+  full_name: string;
+  email: string;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export default function AdminProductsPage() {
-  const [products, setProducts] = useState<AdminProductRow[]>([]);
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'category_name' | 'created_at' | 'updated_at'>(
-    'name',
+  const [sortBy, setSortBy] = useState<'full_name' | 'email' | 'created_at' | 'updated_at'>(
+    'full_name',
   );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [productToDelete, setProductToDelete] = useState<AdminProductRow | null>(null);
+  const [userToDelete, setUserToDelete] = useState<AdminUserRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchUsers = async () => {
       try {
         setLoading(true);
         const query = new URLSearchParams({
@@ -47,25 +43,25 @@ export default function AdminProductsPage() {
           sort_order: sortOrder,
         }).toString();
 
-        const res = await authFetch(`${API_BASE_URL}/api/admin/products?${query}`);
+        const res = await authFetch(`${API_BASE_URL}/api/admin/users?${query}`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
-        const data: PaginatedResponse<AdminProductRow> = await res.json();
+        const data: PaginatedResponse<AdminUserRow> = await res.json();
 
-        setProducts(data.data);
+        setUsers(data.data);
         setTotalPages(data.total_pages);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Failed to load products.');
+        console.error('Failed to fetch users:', err);
+        setError('Failed to load users.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchUsers();
   }, [page, search, sortBy, sortOrder]);
 
-  const toggleSort = (field: 'name' | 'category_name' | 'created_at' | 'updated_at') => {
+  const toggleSort = (field: 'full_name' | 'email' | 'created_at' | 'updated_at') => {
     if (sortBy === field) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -75,22 +71,22 @@ export default function AdminProductsPage() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
+    if (!userToDelete) return;
     setDeleting(true);
 
     try {
-      const res = await authFetch(`${API_BASE_URL}/api/admin/products/${productToDelete.id}`, {
+      const res = await authFetch(`${API_BASE_URL}/api/admin/users/${userToDelete.id}`, {
         method: 'DELETE',
       });
 
-      if (!res.ok) throw new Error(`Failed to delete product (status ${res.status})`);
+      if (!res.ok) throw new Error(`Failed to delete user (status ${res.status})`);
 
-      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-      toast.success(`Deleted "${productToDelete.name}"`);
-      setProductToDelete(null);
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      toast.success(`Deleted "${userToDelete.full_name}"`);
+      setUserToDelete(null);
     } catch (err) {
       console.error(err);
-      toast.error(`Failed to delete "${productToDelete.name}"`);
+      toast.error(`Failed to delete "${userToDelete.full_name}"`);
     } finally {
       setDeleting(false);
     }
@@ -99,17 +95,17 @@ export default function AdminProductsPage() {
   return (
     <>
       <Head>
-        <title>Manage products | bzCommerce</title>
+        <title>Manage Users | bzCommerce</title>
       </Head>
       <AdminLayout>
         <div className="p-6 space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl font-bold">Admin Products</h1>
+            <h1 className="text-2xl font-bold">Admin Users</h1>
 
             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto md:items-center">
               <input
                 type="text"
-                placeholder="Search by name..."
+                placeholder="Search by name or email..."
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -117,12 +113,6 @@ export default function AdminProductsPage() {
                 }}
                 className="border px-3 py-2 rounded-md w-full md:w-64 shadow-sm"
               />
-              <Link
-                href="/admin/products/new"
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md shadow hover:bg-indigo-700 text-sm text-center"
-              >
-                + Create Product
-              </Link>
             </div>
           </div>
 
@@ -134,21 +124,21 @@ export default function AdminProductsPage() {
                 <tr>
                   <th className="px-4 py-2 text-left">
                     <button
-                      onClick={() => toggleSort('name')}
+                      onClick={() => toggleSort('full_name')}
                       className="font-medium hover:underline"
                     >
-                      Name {sortBy === 'name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                      Name {sortBy === 'full_name' && (sortOrder === 'asc' ? '▲' : '▼')}
                     </button>
                   </th>
                   <th className="px-4 py-2 text-left">
                     <button
-                      onClick={() => toggleSort('category_name')}
+                      onClick={() => toggleSort('email')}
                       className="font-medium hover:underline"
                     >
-                      Category {sortBy === 'category_name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                      Email {sortBy === 'email' && (sortOrder === 'asc' ? '▲' : '▼')}
                     </button>
                   </th>
-                  <th className="px-4 py-2 text-left">Image</th>
+                  <th className="px-4 py-2 text-left">Role</th>
                   <th className="px-4 py-2 text-left">
                     <button
                       onClick={() => toggleSort('created_at')}
@@ -175,47 +165,39 @@ export default function AdminProductsPage() {
                       Loading...
                     </td>
                   </tr>
-                ) : products.length === 0 ? (
+                ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-center py-4 text-gray-500">
-                      No products found.
+                      No users found.
                     </td>
                   </tr>
                 ) : (
-                  products.map((product) => (
-                    <tr key={product.id} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2 font-medium">{product.name}</td>
-                      <td className="px-4 py-2">{product.category_name}</td>
+                  users.map((user) => (
+                    <tr key={user.id} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-2 font-medium">{user.full_name}</td>
+                      <td className="px-4 py-2">{user.email}</td>
                       <td className="px-4 py-2">
-                        <Image
-                          src={product.image_path}
-                          alt={product.name}
-                          width={48}
-                          height={48}
-                          className="w-12 h-12 object-cover rounded-md"
-                        />
+                        {user.is_admin ? (
+                          <span className="text-green-600 font-medium">Admin</span>
+                        ) : (
+                          <span className="text-gray-700">User</span>
+                        )}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-500">
-                        {new Date(product.created_at).toLocaleDateString()}
+                        {new Date(user.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-500">
-                        {new Date(product.updated_at).toLocaleDateString()}
+                        {new Date(user.updated_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 space-x-2">
-                        <a
-                          href={`/admin/products/${product.id}/variants`}
-                          className="text-indigo-600 hover:underline"
-                        >
-                          Manage Variants
-                        </a>
                         <Link
-                          href={`/admin/products/${product.id}/edit`}
+                          href={`/admin/users/${user.id}/edit`}
                           className="text-blue-600 hover:underline"
                         >
                           Edit
                         </Link>
                         <button
-                          onClick={() => setProductToDelete(product)}
+                          onClick={() => setUserToDelete(user)}
                           className="text-red-600 hover:underline"
                         >
                           Delete
@@ -249,16 +231,16 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {productToDelete && (
+        {userToDelete && (
           <ConfirmDialog
-            title="Delete Product"
+            title="Delete User"
             message={
               <>
-                Are you sure you want to delete <strong>{productToDelete.name}</strong>? This action
-                cannot be undone.
+                Are you sure you want to delete <strong>{userToDelete.full_name}</strong>? This
+                action cannot be undone.
               </>
             }
-            onCancel={() => setProductToDelete(null)}
+            onCancel={() => setUserToDelete(null)}
             onConfirm={handleConfirmDelete}
             loading={deleting}
           />

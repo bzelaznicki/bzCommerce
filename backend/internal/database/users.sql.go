@@ -12,6 +12,19 @@ import (
 	"github.com/google/uuid"
 )
 
+const countFilteredUsers = `-- name: CountFilteredUsers :one
+SELECT COUNT(*)
+FROM users
+WHERE full_name ILIKE $1 OR email ILIKE $1
+`
+
+func (q *Queries) CountFilteredUsers(ctx context.Context, fullName string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countFilteredUsers, fullName)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, full_name, password_hash)
 VALUES ($1, $2, $3)
