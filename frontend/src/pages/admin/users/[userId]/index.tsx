@@ -125,11 +125,7 @@ export default function AdminUserDetailsPage() {
             <div>
               <dt className="font-semibold">Last Login</dt>
               <dd>
-                {user.last_login_at
-                  ? new Date(user.last_login_at).toLocaleString()
-                  : 'Never'}
-                {' '}
-                (
+                {user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'Never'} (
                 <Link
                   href={`/admin/users/${user.id}/login-history`}
                   className="text-blue-600 hover:underline"
@@ -142,11 +138,7 @@ export default function AdminUserDetailsPage() {
             <div>
               <dt className="font-semibold">Last Order</dt>
               <dd>
-                {user.last_order_at
-                  ? new Date(user.last_order_at).toLocaleString()
-                  : 'Never'}
-                {' '}
-                (
+                {user.last_order_at ? new Date(user.last_order_at).toLocaleString() : 'Never'} (
                 <Link
                   href={`/admin/users/${user.id}/orders`}
                   className="text-blue-600 hover:underline"
@@ -170,10 +162,7 @@ export default function AdminUserDetailsPage() {
           </dl>
         </div>
 
-        <Link
-          href="/admin/users"
-          className="inline-block mt-4 text-blue-600 hover:underline"
-        >
+        <Link href="/admin/users" className="inline-block mt-4 text-blue-600 hover:underline">
           &larr; Back to Users List
         </Link>
       </div>

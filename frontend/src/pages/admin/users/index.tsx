@@ -190,12 +190,12 @@ export default function AdminUsersPage() {
                         {new Date(user.updated_at).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-2 space-x-2">
-                        <Link 
+                        <Link
                           href={`/admin/users/${user.id}`}
                           className="text-blue-600 hover:underline"
-                          >
-                            View
-                          </Link>
+                        >
+                          View
+                        </Link>
                         <Link
                           href={`/admin/users/${user.id}/edit`}
                           className="text-blue-600 hover:underline"
