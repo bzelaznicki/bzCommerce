@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Request) {
@@ -77,4 +79,21 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	resp := NewPaginatedResponse(users, page, limit, count)
 
 	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (cfg *apiConfig) handleApiAdminGetUserDetails(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := cfg.db.GetUserAccountById(r.Context(), userId)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, user)
 }
