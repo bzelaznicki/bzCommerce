@@ -191,6 +191,12 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-4 py-2 space-x-2">
                         <Link
+                          href={`/admin/users/${user.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          View
+                        </Link>
+                        <Link
                           href={`/admin/users/${user.id}/edit`}
                           className="text-blue-600 hover:underline"
                         >
