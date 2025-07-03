@@ -33,20 +33,29 @@ export default function AdminUserDetailsPage() {
       setLoading(true);
       try {
         const res = await authFetch(`${API_BASE_URL}/api/admin/users/${userId}`);
+
+        if (res.status === 404) {
+          toast.error('User not found.');
+          router.push('/admin/users');
+          return;
+        }
+
         if (!res.ok) throw new Error(`Error ${res.status}`);
+
         const json: UserDetails = await res.json();
         setUser(json);
       } catch (err) {
         console.error('Failed to load user:', err);
         setError('Failed to load user.');
         toast.error('Failed to load user.');
+        router.push('/admin/users');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUser();
-  }, [userId]);
+  }, [userId, router]);
 
   if (loading) {
     return (
