@@ -118,7 +118,7 @@ func (cfg *apiConfig) handleAdminUserUpdate(w http.ResponseWriter, r *http.Reque
 	password := r.FormValue("password")
 	confirm := r.FormValue("confirm")
 
-	err = cfg.db.UpdateUserById(r.Context(), database.UpdateUserByIdParams{
+	_, err = cfg.db.UpdateUserById(r.Context(), database.UpdateUserByIdParams{
 		ID:       id,
 		FullName: fullName,
 		Email:    email,

@@ -19,13 +19,14 @@ WHERE id = sqlc.arg(id);
 -- name: ListUsers :many
 SELECT id, full_name, email, created_at, updated_at, is_admin FROM users;
 
--- name: UpdateUserById :exec
+-- name: UpdateUserById :one
 UPDATE users
 SET full_name = sqlc.arg(full_name),
     email = sqlc.arg(email),
     is_admin = sqlc.arg(is_admin),
     updated_at = NOW()
-WHERE id = sqlc.arg(id);
+WHERE id = sqlc.arg(id)
+RETURNING id, full_name, email, created_at, updated_at, is_admin;
 
 -- name: UpdateUserPassword :exec
 UPDATE users

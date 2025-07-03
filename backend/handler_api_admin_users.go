@@ -1,11 +1,16 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Request) {
@@ -96,4 +101,57 @@ func (cfg *apiConfig) handleApiAdminGetUserDetails(w http.ResponseWriter, r *htt
 	}
 
 	respondWithJSON(w, http.StatusOK, user)
+}
+
+func (cfg *apiConfig) handleApiAdminUpdateUserDetails(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := struct {
+		FullName string `json:"full_name"`
+		Email    string `json:"email"`
+		IsAdmin  bool   `json:"is_admin"`
+	}{}
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid JSON")
+		return
+	}
+
+	if params.Email == "" || params.FullName == "" {
+		respondWithError(w, http.StatusBadRequest, "Name or email cannot be empty")
+		return
+	}
+
+	updatedUser, err := cfg.db.UpdateUserById(r.Context(), database.UpdateUserByIdParams{
+		ID:       userId,
+		FullName: params.FullName,
+		Email:    params.Email,
+		IsAdmin:  params.IsAdmin,
+	})
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+			if pqErr.Constraint == "users_email_key" {
+				respondWithError(w, http.StatusConflict, "User with this email already exists")
+			} else {
+				respondWithError(w, http.StatusConflict, "User already exists (duplicate field)")
+			}
+			return
+		}
+
+	}
+
+	respondWithJSON(w, http.StatusOK, updatedUser)
 }
