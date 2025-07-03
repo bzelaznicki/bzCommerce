@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -154,4 +155,55 @@ func (cfg *apiConfig) handleApiAdminUpdateUserDetails(w http.ResponseWriter, r *
 	}
 
 	respondWithJSON(w, http.StatusOK, updatedUser)
+}
+
+func (cfg *apiConfig) handleApiAdminUpdateUserPassword(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	params := struct {
+		NewPassword string `json:"new_password"`
+	}{}
+
+	decoder := json.NewDecoder(r.Body)
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid JSON")
+		return
+	}
+
+	if len(params.NewPassword) < MinPasswordLength {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Password too short, must be at least %v characters long", MinPasswordLength))
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(params.NewPassword)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error saving password")
+		return
+	}
+
+	rows, err := cfg.db.UpdateUserPassword(r.Context(), database.UpdateUserPasswordParams{
+		ID:       userId,
+		Password: hashedPassword,
+	})
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to update password")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
 }

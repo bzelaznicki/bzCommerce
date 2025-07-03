@@ -144,7 +144,7 @@ func (cfg *apiConfig) handleAdminUserUpdate(w http.ResponseWriter, r *http.Reque
 			return
 		}
 
-		err = cfg.db.UpdateUserPassword(r.Context(), database.UpdateUserPasswordParams{
+		_, err = cfg.db.UpdateUserPassword(r.Context(), database.UpdateUserPasswordParams{
 			ID:       id,
 			Password: hashedPassword,
 		})

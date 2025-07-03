@@ -28,7 +28,7 @@ SET full_name = sqlc.arg(full_name),
 WHERE id = sqlc.arg(id)
 RETURNING id, full_name, email, created_at, updated_at, is_admin;
 
--- name: UpdateUserPassword :exec
+-- name: UpdateUserPassword :execrows
 UPDATE users
 SET password_hash = sqlc.arg(password)
 WHERE id = sqlc.arg(id);
