@@ -174,13 +174,14 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	return items, nil
 }
 
-const updateUserById = `-- name: UpdateUserById :exec
+const updateUserById = `-- name: UpdateUserById :one
 UPDATE users
 SET full_name = $1,
     email = $2,
     is_admin = $3,
     updated_at = NOW()
 WHERE id = $4
+RETURNING id, full_name, email, created_at, updated_at, is_admin
 `
 
 type UpdateUserByIdParams struct {
@@ -190,17 +191,35 @@ type UpdateUserByIdParams struct {
 	ID       uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserById,
+type UpdateUserByIdRow struct {
+	ID        uuid.UUID `json:"id"`
+	FullName  string    `json:"full_name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsAdmin   bool      `json:"is_admin"`
+}
+
+func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) (UpdateUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, updateUserById,
 		arg.FullName,
 		arg.Email,
 		arg.IsAdmin,
 		arg.ID,
 	)
-	return err
+	var i UpdateUserByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsAdmin,
+	)
+	return i, err
 }
 
-const updateUserPassword = `-- name: UpdateUserPassword :exec
+const updateUserPassword = `-- name: UpdateUserPassword :execrows
 UPDATE users
 SET password_hash = $1
 WHERE id = $2
@@ -211,7 +230,10 @@ type UpdateUserPasswordParams struct {
 	ID       uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.Password, arg.ID)
-	return err
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updateUserPassword, arg.Password, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
