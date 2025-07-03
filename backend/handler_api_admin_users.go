@@ -179,7 +179,7 @@ func (cfg *apiConfig) handleApiAdminUpdateUserPassword(w http.ResponseWriter, r 
 	}
 
 	if len(params.NewPassword) < MinPasswordLength {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Password too short, must be at least %v characters long", MinPasswordLength))
+		respondWithError(w, http.StatusBadRequest, "Password too short")
 		return
 	}
 
