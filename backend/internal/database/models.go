@@ -130,13 +130,13 @@ type Category struct {
 }
 
 type Country struct {
-	ID        uuid.UUID     `json:"id"`
-	Name      string        `json:"name"`
-	IsoCode   string        `json:"iso_code"`
-	IsActive  bool          `json:"is_active"`
-	SortOrder sql.NullInt32 `json:"sort_order"`
-	CreatedAt sql.NullTime  `json:"created_at"`
-	UpdatedAt sql.NullTime  `json:"updated_at"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	IsoCode   string    `json:"iso_code"`
+	IsActive  bool      `json:"is_active"`
+	SortOrder int32     `json:"sort_order"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Order struct {

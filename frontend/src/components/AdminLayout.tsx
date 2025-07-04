@@ -40,6 +40,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <Link href="/admin/users" className="block text-gray-700 hover:text-blue-600">
             Users
           </Link>
+          <Link href="/admin/countries" className="block text-gray-700 hover:text-blue-600">
+            Countries
+          </Link>
         </nav>
       </aside>
 
