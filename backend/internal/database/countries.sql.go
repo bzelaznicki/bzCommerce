@@ -12,30 +12,23 @@ import (
 )
 
 const createCountry = `-- name: CreateCountry :one
-INSERT INTO countries (name, iso_code, is_active, sort_order)
+INSERT INTO countries (name, iso_code, is_active)
 VALUES (
     $1,
     $2,
-    $3,
-    $4
+    $3
     )
     RETURNING id, name, iso_code, is_active, sort_order, created_at, updated_at
 `
 
 type CreateCountryParams struct {
-	Name      string `json:"name"`
-	IsoCode   string `json:"iso_code"`
-	IsActive  bool   `json:"is_active"`
-	SortOrder int32  `json:"sort_order"`
+	Name     string `json:"name"`
+	IsoCode  string `json:"iso_code"`
+	IsActive bool   `json:"is_active"`
 }
 
 func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error) {
-	row := q.db.QueryRowContext(ctx, createCountry,
-		arg.Name,
-		arg.IsoCode,
-		arg.IsActive,
-		arg.SortOrder,
-	)
+	row := q.db.QueryRowContext(ctx, createCountry, arg.Name, arg.IsoCode, arg.IsActive)
 	var i Country
 	err := row.Scan(
 		&i.ID,

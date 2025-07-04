@@ -1,10 +1,9 @@
 -- name: CreateCountry :one
-INSERT INTO countries (name, iso_code, is_active, sort_order)
+INSERT INTO countries (name, iso_code, is_active)
 VALUES (
     sqlc.arg(name),
     sqlc.arg(iso_code),
-    sqlc.arg(is_active),
-    sqlc.arg(sort_order)
+    sqlc.arg(is_active)
     )
     RETURNING *;
 
