@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -24,10 +23,10 @@ VALUES (
 `
 
 type CreateCountryParams struct {
-	Name      string        `json:"name"`
-	IsoCode   string        `json:"iso_code"`
-	IsActive  bool          `json:"is_active"`
-	SortOrder sql.NullInt32 `json:"sort_order"`
+	Name      string `json:"name"`
+	IsoCode   string `json:"iso_code"`
+	IsActive  bool   `json:"is_active"`
+	SortOrder int32  `json:"sort_order"`
 }
 
 func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error) {
@@ -124,11 +123,11 @@ WHERE id = $5
 `
 
 type UpdateCountryByIdParams struct {
-	Name      string        `json:"name"`
-	IsoCode   string        `json:"iso_code"`
-	IsActive  bool          `json:"is_active"`
-	SortOrder sql.NullInt32 `json:"sort_order"`
-	ID        uuid.UUID     `json:"id"`
+	Name      string    `json:"name"`
+	IsoCode   string    `json:"iso_code"`
+	IsActive  bool      `json:"is_active"`
+	SortOrder int32     `json:"sort_order"`
+	ID        uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateCountryById(ctx context.Context, arg UpdateCountryByIdParams) error {
