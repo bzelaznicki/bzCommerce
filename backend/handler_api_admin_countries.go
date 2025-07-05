@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
 	"github.com/lib/pq"
@@ -33,7 +34,7 @@ func (cfg *apiConfig) handleApiAdminCreateCountry(w http.ResponseWriter, r *http
 		respondWithError(w, http.StatusBadRequest, "Invalid JSON")
 		return
 	}
-
+	params.IsoCode = strings.ToUpper(params.IsoCode)
 	createdCountry, err := cfg.db.CreateCountry(r.Context(), params)
 
 	if err != nil {
