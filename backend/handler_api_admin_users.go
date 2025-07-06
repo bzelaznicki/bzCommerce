@@ -207,3 +207,26 @@ func (cfg *apiConfig) handleApiAdminUpdateUserPassword(w http.ResponseWriter, r 
 
 	respondWithJSON(w, http.StatusNoContent, nil)
 }
+
+func (cfg *apiConfig) handleApiAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteUserById(r.Context(), userId)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete user")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}

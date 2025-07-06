@@ -33,7 +33,7 @@ UPDATE users
 SET password_hash = sqlc.arg(password)
 WHERE id = sqlc.arg(id);
 
--- name: DeleteUserById :exec
+-- name: DeleteUserById :execrows
 DELETE FROM users
 WHERE id = sqlc.arg(id);
 

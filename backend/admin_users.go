@@ -166,7 +166,7 @@ func (cfg *apiConfig) handleAdminUserDelete(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = cfg.db.DeleteUserById(r.Context(), id)
+	_, err = cfg.db.DeleteUserById(r.Context(), id)
 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete user")
