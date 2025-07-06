@@ -42,13 +42,16 @@ func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (C
 	return i, err
 }
 
-const deleteCountryById = `-- name: DeleteCountryById :exec
+const deleteCountryById = `-- name: DeleteCountryById :execrows
 DELETE FROM countries WHERE id = $1
 `
 
-func (q *Queries) DeleteCountryById(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteCountryById, id)
-	return err
+func (q *Queries) DeleteCountryById(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteCountryById, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getCountries = `-- name: GetCountries :many
@@ -105,7 +108,7 @@ func (q *Queries) GetCountryById(ctx context.Context, id uuid.UUID) (Country, er
 	return i, err
 }
 
-const updateCountryById = `-- name: UpdateCountryById :exec
+const updateCountryById = `-- name: UpdateCountryById :one
 UPDATE countries SET 
     name = $1,
     iso_code = $2,
@@ -113,6 +116,7 @@ UPDATE countries SET
     sort_order = $4
 
 WHERE id = $5
+RETURNING id, name, iso_code, is_active, sort_order, created_at, updated_at
 `
 
 type UpdateCountryByIdParams struct {
@@ -123,13 +127,23 @@ type UpdateCountryByIdParams struct {
 	ID        uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateCountryById(ctx context.Context, arg UpdateCountryByIdParams) error {
-	_, err := q.db.ExecContext(ctx, updateCountryById,
+func (q *Queries) UpdateCountryById(ctx context.Context, arg UpdateCountryByIdParams) (Country, error) {
+	row := q.db.QueryRowContext(ctx, updateCountryById,
 		arg.Name,
 		arg.IsoCode,
 		arg.IsActive,
 		arg.SortOrder,
 		arg.ID,
 	)
-	return err
+	var i Country
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.IsoCode,
+		&i.IsActive,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
