@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bzelaznicki/bzCommerce/internal/database"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -51,4 +52,22 @@ func (cfg *apiConfig) handleApiAdminCreateCountry(w http.ResponseWriter, r *http
 	}
 
 	respondWithJSON(w, http.StatusOK, createdCountry)
+}
+
+func (cfg *apiConfig) handleApiAdminGetCountry(w http.ResponseWriter, r *http.Request) {
+	countryId, err := uuid.Parse(r.PathValue("countryId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid country ID")
+		return
+	}
+
+	country, err := cfg.db.GetCountryById(r.Context(), countryId)
+
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Country not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, country)
 }
