@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,7 +29,7 @@ func (q *Queries) CountFilteredUsers(ctx context.Context, fullName string) (int6
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, full_name, password_hash)
 VALUES ($1, $2, $3)
-RETURNING id, email, full_name, password_hash, created_at, updated_at, is_admin
+RETURNING id, email, full_name, created_at, updated_at, is_admin, is_active, disabled_at
 `
 
 type CreateUserParams struct {
@@ -37,17 +38,29 @@ type CreateUserParams struct {
 	PasswordHash string `json:"password_hash"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+type CreateUserRow struct {
+	ID         uuid.UUID    `json:"id"`
+	Email      string       `json:"email"`
+	FullName   string       `json:"full_name"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+	IsAdmin    bool         `json:"is_admin"`
+	IsActive   bool         `json:"is_active"`
+	DisabledAt sql.NullTime `json:"disabled_at"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.FullName, arg.PasswordHash)
-	var i User
+	var i CreateUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.FullName,
-		&i.PasswordHash,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsAdmin,
+		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }
@@ -63,6 +76,70 @@ func (q *Queries) DeleteUserById(ctx context.Context, id uuid.UUID) (int64, erro
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const disableUser = `-- name: DisableUser :one
+UPDATE users
+SET is_active = FALSE,
+    disabled_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, full_name, email, created_at, updated_at, is_active
+`
+
+type DisableUserRow struct {
+	ID        uuid.UUID `json:"id"`
+	FullName  string    `json:"full_name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsActive  bool      `json:"is_active"`
+}
+
+func (q *Queries) DisableUser(ctx context.Context, id uuid.UUID) (DisableUserRow, error) {
+	row := q.db.QueryRowContext(ctx, disableUser, id)
+	var i DisableUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
+}
+
+const enableUser = `-- name: EnableUser :one
+UPDATE users
+SET is_active = TRUE,
+    disabled_at = NULL,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, full_name, email, created_at, updated_at, is_active
+`
+
+type EnableUserRow struct {
+	ID        uuid.UUID `json:"id"`
+	FullName  string    `json:"full_name"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	IsActive  bool      `json:"is_active"`
+}
+
+func (q *Queries) EnableUser(ctx context.Context, id uuid.UUID) (EnableUserRow, error) {
+	row := q.db.QueryRowContext(ctx, enableUser, id)
+	var i EnableUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
 }
 
 const getUserAccountById = `-- name: GetUserAccountById :one
@@ -95,7 +172,7 @@ func (q *Queries) GetUserAccountById(ctx context.Context, id uuid.UUID) (GetUser
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin FROM users
+SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin, is_active, disabled_at FROM users
 WHERE email = $1
 `
 
@@ -110,12 +187,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsAdmin,
+		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin FROM users
+SELECT id, email, full_name, password_hash, created_at, updated_at, is_admin, is_active, disabled_at FROM users
 WHERE id = $1
 `
 
@@ -130,21 +209,34 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsAdmin,
+		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, full_name, email, created_at, updated_at, is_admin FROM users
+SELECT
+  id,
+  full_name,
+  email,
+  created_at,
+  updated_at,
+  is_admin,
+  is_active,
+  disabled_at
+FROM users
 `
 
 type ListUsersRow struct {
-	ID        uuid.UUID `json:"id"`
-	FullName  string    `json:"full_name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsAdmin   bool      `json:"is_admin"`
+	ID         uuid.UUID    `json:"id"`
+	FullName   string       `json:"full_name"`
+	Email      string       `json:"email"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+	IsAdmin    bool         `json:"is_admin"`
+	IsActive   bool         `json:"is_active"`
+	DisabledAt sql.NullTime `json:"disabled_at"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
@@ -163,6 +255,8 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.IsAdmin,
+			&i.IsActive,
+			&i.DisabledAt,
 		); err != nil {
 			return nil, err
 		}
@@ -179,12 +273,21 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 
 const updateUserById = `-- name: UpdateUserById :one
 UPDATE users
-SET full_name = $1,
-    email = $2,
-    is_admin = $3,
-    updated_at = NOW()
+SET
+  full_name = $1,
+  email = $2,
+  is_admin = $3,
+  updated_at = NOW()
 WHERE id = $4
-RETURNING id, full_name, email, created_at, updated_at, is_admin
+RETURNING
+  id,
+  full_name,
+  email,
+  created_at,
+  updated_at,
+  is_admin,
+  is_active,
+  disabled_at
 `
 
 type UpdateUserByIdParams struct {
@@ -195,12 +298,14 @@ type UpdateUserByIdParams struct {
 }
 
 type UpdateUserByIdRow struct {
-	ID        uuid.UUID `json:"id"`
-	FullName  string    `json:"full_name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsAdmin   bool      `json:"is_admin"`
+	ID         uuid.UUID    `json:"id"`
+	FullName   string       `json:"full_name"`
+	Email      string       `json:"email"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+	IsAdmin    bool         `json:"is_admin"`
+	IsActive   bool         `json:"is_active"`
+	DisabledAt sql.NullTime `json:"disabled_at"`
 }
 
 func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) (UpdateUserByIdRow, error) {
@@ -218,6 +323,8 @@ func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsAdmin,
+		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }

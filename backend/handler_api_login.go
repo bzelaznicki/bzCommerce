@@ -33,9 +33,13 @@ func (cfg *apiConfig) handleApiLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := cfg.db.GetUserByEmail(r.Context(), params.Email)
-
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Invalid email or password")
+		return
+	}
+
+	if !user.IsActive {
+		respondWithError(w, http.StatusForbidden, "User account has been disabled")
 		return
 	}
 
@@ -139,6 +143,11 @@ func (cfg *apiConfig) handleApiRefreshToken(w http.ResponseWriter, r *http.Reque
 
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Invalid user")
+		return
+	}
+
+	if !user.IsActive {
+		respondWithError(w, http.StatusForbidden, "User account has been disabled")
 		return
 	}
 

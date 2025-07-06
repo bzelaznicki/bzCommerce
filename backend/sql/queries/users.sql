@@ -1,7 +1,8 @@
 -- name: CreateUser :one
 INSERT INTO users (email, full_name, password_hash)
 VALUES ($1, $2, $3)
-RETURNING *;
+RETURNING id, email, full_name, created_at, updated_at, is_admin, is_active, disabled_at;
+
 
 -- name: GetUserByEmail :one
 SELECT * FROM users
@@ -17,16 +18,35 @@ FROM users
 WHERE id = sqlc.arg(id);
 
 -- name: ListUsers :many
-SELECT id, full_name, email, created_at, updated_at, is_admin FROM users;
+SELECT
+  id,
+  full_name,
+  email,
+  created_at,
+  updated_at,
+  is_admin,
+  is_active,
+  disabled_at
+FROM users;
+
 
 -- name: UpdateUserById :one
 UPDATE users
-SET full_name = sqlc.arg(full_name),
-    email = sqlc.arg(email),
-    is_admin = sqlc.arg(is_admin),
-    updated_at = NOW()
+SET
+  full_name = sqlc.arg(full_name),
+  email = sqlc.arg(email),
+  is_admin = sqlc.arg(is_admin),
+  updated_at = NOW()
 WHERE id = sqlc.arg(id)
-RETURNING id, full_name, email, created_at, updated_at, is_admin;
+RETURNING
+  id,
+  full_name,
+  email,
+  created_at,
+  updated_at,
+  is_admin,
+  is_active,
+  disabled_at;
 
 -- name: UpdateUserPassword :execrows
 UPDATE users
@@ -41,3 +61,21 @@ WHERE id = sqlc.arg(id);
 SELECT COUNT(*)
 FROM users
 WHERE full_name ILIKE $1 OR email ILIKE $1;
+
+
+
+-- name: DisableUser :one
+UPDATE users
+SET is_active = FALSE,
+    disabled_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, full_name, email, created_at, updated_at, is_active;
+
+-- name: EnableUser :one
+UPDATE users
+SET is_active = TRUE,
+    disabled_at = NULL,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+RETURNING id, full_name, email, created_at, updated_at, is_active;
