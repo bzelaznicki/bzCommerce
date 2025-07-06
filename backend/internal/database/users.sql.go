@@ -143,18 +143,20 @@ func (q *Queries) EnableUser(ctx context.Context, id uuid.UUID) (EnableUserRow, 
 }
 
 const getUserAccountById = `-- name: GetUserAccountById :one
-SELECT id, email, full_name, created_at, updated_at, is_admin
+SELECT id, email, full_name, created_at, updated_at, is_admin, is_active, disabled_at
 FROM users
 WHERE id = $1
 `
 
 type GetUserAccountByIdRow struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	FullName  string    `json:"full_name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsAdmin   bool      `json:"is_admin"`
+	ID         uuid.UUID    `json:"id"`
+	Email      string       `json:"email"`
+	FullName   string       `json:"full_name"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+	IsAdmin    bool         `json:"is_admin"`
+	IsActive   bool         `json:"is_active"`
+	DisabledAt sql.NullTime `json:"disabled_at"`
 }
 
 func (q *Queries) GetUserAccountById(ctx context.Context, id uuid.UUID) (GetUserAccountByIdRow, error) {
@@ -167,6 +169,8 @@ func (q *Queries) GetUserAccountById(ctx context.Context, id uuid.UUID) (GetUser
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsAdmin,
+		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }

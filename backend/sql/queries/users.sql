@@ -13,7 +13,7 @@ SELECT * FROM users
 WHERE id = $1;
 
 -- name: GetUserAccountById :one
-SELECT id, email, full_name, created_at, updated_at, is_admin
+SELECT id, email, full_name, created_at, updated_at, is_admin, is_active, disabled_at
 FROM users
 WHERE id = sqlc.arg(id);
 

@@ -43,7 +43,7 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	// #nosec G201 -- sortColumn and direction are strictly whitelisted to prevent SQL injection
 	query := fmt.Sprintf(`
 	SELECT
-	id, full_name, email, created_at, updated_at, is_admin
+	id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at
 	FROM users 
 	WHERE email ILIKE $1 OR full_name ILIKE $1
 	ORDER BY %s %s
@@ -63,9 +63,10 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	for rows.Next() {
 		u := AdminUserRow{}
 		if err := rows.Scan(
-			&u.ID, &u.FullName, &u.Email, &u.CreatedAt, &u.UpdatedAt, &u.IsAdmin,
+			&u.ID, &u.FullName, &u.Email, &u.CreatedAt, &u.UpdatedAt, &u.IsAdmin, &u.IsActive, &u.DisabledAt,
 		); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Scan failed")
+			log.Printf("Error: %v", err)
 			return
 		}
 
