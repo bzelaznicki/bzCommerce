@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) withCORS(next http.Handler) http.Handler {
@@ -45,6 +46,23 @@ func (cfg *apiConfig) checkAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		userUUID, parseErr := uuid.Parse(userID)
+		if parseErr != nil {
+			respondWithError(w, http.StatusUnauthorized, "Invalid user ID")
+			return
+		}
+
+		user, dbErr := cfg.db.GetUserById(r.Context(), userUUID)
+		if dbErr != nil {
+			respondWithError(w, http.StatusUnauthorized, "User not found")
+			return
+		}
+
+		if !user.IsActive {
+			respondWithError(w, http.StatusForbidden, "Your account has been disabled")
+			return
+		}
+
 		ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
 		ctx = context.WithValue(ctx, contextKeyIsAdmin, isAdmin)
 
@@ -58,9 +76,15 @@ func (cfg *apiConfig) optionalAuth(next http.Handler) http.Handler {
 		if err == nil && bearerToken != "" {
 			userID, isAdmin, err := auth.ValidateJWT(bearerToken, cfg.jwtSecret)
 			if err == nil {
-				ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
-				ctx = context.WithValue(ctx, contextKeyIsAdmin, isAdmin)
-				r = r.WithContext(ctx)
+				userUUID, parseErr := uuid.Parse(userID)
+				if parseErr == nil {
+					user, dbErr := cfg.db.GetUserById(r.Context(), userUUID)
+					if dbErr == nil && user.IsActive {
+						ctx := context.WithValue(r.Context(), contextKeyUserID, userID)
+						ctx = context.WithValue(ctx, contextKeyIsAdmin, isAdmin)
+						r = r.WithContext(ctx)
+					}
+				}
 			}
 		}
 

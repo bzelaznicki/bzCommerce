@@ -8,3 +8,6 @@ SELECT * FROM refresh_tokens WHERE token = sqlc.arg(token);
 
 -- name: InvalidateRefreshToken :exec
 UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = sqlc.arg(token);
+
+-- name: InvalidateAllRefreshTokensForUser :exec
+UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = sqlc.arg(user_id);
