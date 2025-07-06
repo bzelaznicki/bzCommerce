@@ -161,3 +161,31 @@ func (cfg *apiConfig) handleApiAdminToggleCountryStatus(w http.ResponseWriter, r
 		"status":  row.IsActive,
 	})
 }
+
+func (cfg *apiConfig) handleApiAdminDeleteCountry(w http.ResponseWriter, r *http.Request) {
+	countryId, err := uuid.Parse(r.PathValue("countryId"))
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid country ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteCountryById(r.Context(), countryId)
+
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23503" {
+				respondWithError(w, http.StatusConflict, "Cannot delete country - in use")
+				return
+			}
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete country")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "Country not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}
