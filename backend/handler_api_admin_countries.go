@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -117,4 +119,45 @@ func (cfg *apiConfig) handleApiAdminUpdateCountry(w http.ResponseWriter, r *http
 	}
 
 	respondWithJSON(w, http.StatusOK, country)
+}
+
+func (cfg *apiConfig) handleApiAdminToggleCountryStatus(w http.ResponseWriter, r *http.Request) {
+	countryId, err := uuid.Parse(r.PathValue("countryId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid country ID")
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+
+	params := struct {
+		Status bool `json:"status"`
+	}{}
+
+	err = decoder.Decode(&params)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	row, err := cfg.db.ToggleCountryStatus(r.Context(), database.ToggleCountryStatusParams{
+		ID:       countryId,
+		IsActive: params.Status,
+	})
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "Country not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to update status")
+		return
+	}
+	respondWithJSON(w, http.StatusOK, map[string]any{
+		"success": true,
+		"id":      row.ID,
+		"status":  row.IsActive,
+	})
 }

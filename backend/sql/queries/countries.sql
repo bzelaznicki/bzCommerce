@@ -25,3 +25,9 @@ RETURNING *;
 
 -- name: DeleteCountryById :execrows
 DELETE FROM countries WHERE id = sqlc.arg(id);
+
+-- name: ToggleCountryStatus :one
+UPDATE countries
+SET is_active = sqlc.arg(is_active)
+WHERE id = sqlc.arg(id)
+RETURNING id, is_active;

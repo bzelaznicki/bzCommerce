@@ -108,6 +108,30 @@ func (q *Queries) GetCountryById(ctx context.Context, id uuid.UUID) (Country, er
 	return i, err
 }
 
+const toggleCountryStatus = `-- name: ToggleCountryStatus :one
+UPDATE countries
+SET is_active = $1
+WHERE id = $2
+RETURNING id, is_active
+`
+
+type ToggleCountryStatusParams struct {
+	IsActive bool      `json:"is_active"`
+	ID       uuid.UUID `json:"id"`
+}
+
+type ToggleCountryStatusRow struct {
+	ID       uuid.UUID `json:"id"`
+	IsActive bool      `json:"is_active"`
+}
+
+func (q *Queries) ToggleCountryStatus(ctx context.Context, arg ToggleCountryStatusParams) (ToggleCountryStatusRow, error) {
+	row := q.db.QueryRowContext(ctx, toggleCountryStatus, arg.IsActive, arg.ID)
+	var i ToggleCountryStatusRow
+	err := row.Scan(&i.ID, &i.IsActive)
+	return i, err
+}
+
 const updateCountryById = `-- name: UpdateCountryById :one
 UPDATE countries SET 
     name = $1,
