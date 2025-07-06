@@ -12,30 +12,23 @@ import (
 )
 
 const createCountry = `-- name: CreateCountry :one
-INSERT INTO countries (name, iso_code, is_active, sort_order)
+INSERT INTO countries (name, iso_code, is_active)
 VALUES (
     $1,
     $2,
-    $3,
-    $4
+    $3
     )
     RETURNING id, name, iso_code, is_active, sort_order, created_at, updated_at
 `
 
 type CreateCountryParams struct {
-	Name      string `json:"name"`
-	IsoCode   string `json:"iso_code"`
-	IsActive  bool   `json:"is_active"`
-	SortOrder int32  `json:"sort_order"`
+	Name     string `json:"name"`
+	IsoCode  string `json:"iso_code"`
+	IsActive bool   `json:"is_active"`
 }
 
 func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error) {
-	row := q.db.QueryRowContext(ctx, createCountry,
-		arg.Name,
-		arg.IsoCode,
-		arg.IsActive,
-		arg.SortOrder,
-	)
+	row := q.db.QueryRowContext(ctx, createCountry, arg.Name, arg.IsoCode, arg.IsActive)
 	var i Country
 	err := row.Scan(
 		&i.ID,
@@ -49,13 +42,16 @@ func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (C
 	return i, err
 }
 
-const deleteCountryById = `-- name: DeleteCountryById :exec
+const deleteCountryById = `-- name: DeleteCountryById :execrows
 DELETE FROM countries WHERE id = $1
 `
 
-func (q *Queries) DeleteCountryById(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteCountryById, id)
-	return err
+func (q *Queries) DeleteCountryById(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteCountryById, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getCountries = `-- name: GetCountries :many
@@ -112,7 +108,31 @@ func (q *Queries) GetCountryById(ctx context.Context, id uuid.UUID) (Country, er
 	return i, err
 }
 
-const updateCountryById = `-- name: UpdateCountryById :exec
+const toggleCountryStatus = `-- name: ToggleCountryStatus :one
+UPDATE countries
+SET is_active = $1
+WHERE id = $2
+RETURNING id, is_active
+`
+
+type ToggleCountryStatusParams struct {
+	IsActive bool      `json:"is_active"`
+	ID       uuid.UUID `json:"id"`
+}
+
+type ToggleCountryStatusRow struct {
+	ID       uuid.UUID `json:"id"`
+	IsActive bool      `json:"is_active"`
+}
+
+func (q *Queries) ToggleCountryStatus(ctx context.Context, arg ToggleCountryStatusParams) (ToggleCountryStatusRow, error) {
+	row := q.db.QueryRowContext(ctx, toggleCountryStatus, arg.IsActive, arg.ID)
+	var i ToggleCountryStatusRow
+	err := row.Scan(&i.ID, &i.IsActive)
+	return i, err
+}
+
+const updateCountryById = `-- name: UpdateCountryById :one
 UPDATE countries SET 
     name = $1,
     iso_code = $2,
@@ -120,6 +140,7 @@ UPDATE countries SET
     sort_order = $4
 
 WHERE id = $5
+RETURNING id, name, iso_code, is_active, sort_order, created_at, updated_at
 `
 
 type UpdateCountryByIdParams struct {
@@ -130,13 +151,23 @@ type UpdateCountryByIdParams struct {
 	ID        uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateCountryById(ctx context.Context, arg UpdateCountryByIdParams) error {
-	_, err := q.db.ExecContext(ctx, updateCountryById,
+func (q *Queries) UpdateCountryById(ctx context.Context, arg UpdateCountryByIdParams) (Country, error) {
+	row := q.db.QueryRowContext(ctx, updateCountryById,
 		arg.Name,
 		arg.IsoCode,
 		arg.IsActive,
 		arg.SortOrder,
 		arg.ID,
 	)
-	return err
+	var i Country
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.IsoCode,
+		&i.IsActive,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
