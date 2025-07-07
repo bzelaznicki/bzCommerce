@@ -102,8 +102,23 @@ func (cfg *apiConfig) handleApiAdminGetUserDetails(w http.ResponseWriter, r *htt
 		respondWithError(w, http.StatusNotFound, "User not found")
 		return
 	}
+	var disabledAt *string
+	if user.DisabledAt.Valid {
+		s := user.DisabledAt.Time.Format(time.RFC3339)
+		disabledAt = &s
+	}
 
-	respondWithJSON(w, http.StatusOK, user)
+	resp := AdminUserRow{
+		ID:         user.ID,
+		FullName:   user.FullName,
+		Email:      user.Email,
+		CreatedAt:  user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:    user.IsAdmin,
+		IsActive:   user.IsActive,
+		DisabledAt: disabledAt,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (cfg *apiConfig) handleApiAdminUpdateUserDetails(w http.ResponseWriter, r *http.Request) {

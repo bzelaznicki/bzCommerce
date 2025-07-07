@@ -13,8 +13,10 @@ interface AdminUserRow {
   full_name: string;
   email: string;
   is_admin: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  disabled_at: string | null;
 }
 
 export default function AdminUsersPage() {
@@ -139,6 +141,7 @@ export default function AdminUsersPage() {
                     </button>
                   </th>
                   <th className="px-4 py-2 text-left">Role</th>
+                  <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">
                     <button
                       onClick={() => toggleSort('created_at')}
@@ -161,13 +164,13 @@ export default function AdminUsersPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-4">
+                    <td colSpan={7} className="text-center py-4">
                       Loading...
                     </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-4 text-gray-500">
+                    <td colSpan={7} className="text-center py-4 text-gray-500">
                       No users found.
                     </td>
                   </tr>
@@ -181,6 +184,20 @@ export default function AdminUsersPage() {
                           <span className="text-green-600 font-medium">Admin</span>
                         ) : (
                           <span className="text-gray-700">User</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2">
+                        {user.is_active ? (
+                          <span className="text-green-600 font-medium">Active</span>
+                        ) : (
+                          <span className="text-red-600 font-medium">
+                            Disabled
+                            {user.disabled_at && (
+                              <span className="block text-xs text-gray-500">
+                                {new Date(user.disabled_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-2 text-sm text-gray-500">
