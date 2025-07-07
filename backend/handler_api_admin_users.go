@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
@@ -17,16 +18,15 @@ import (
 
 func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
-
 	offset := (page - 1) * limit
 
 	q := r.URL.Query()
 	search := q.Get("search")
 	sortBy := q.Get("sort_by")
 	sortOrder := q.Get("sort_order")
+	status := q.Get("status")
 
 	sortColumn := "created_at"
-
 	switch sortBy {
 	case "name":
 		sortColumn = "full_name"
@@ -37,26 +37,41 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	}
 
 	direction := "ASC"
-
 	if sortOrder == "desc" {
 		direction = "DESC"
 	}
-	// #nosec G201 -- sortColumn and direction are strictly whitelisted to prevent SQL injection
+
+	whereClauses := []string{
+		"(email ILIKE $1 OR full_name ILIKE $1)",
+	}
+
+	if status == "active" {
+		whereClauses = append(whereClauses, "is_active = TRUE")
+	} else if status == "disabled" {
+		whereClauses = append(whereClauses, "is_active = FALSE")
+	}
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// #nosec G201
 	query := fmt.Sprintf(`
 	SELECT
-	id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at
-	FROM users 
-	WHERE email ILIKE $1 OR full_name ILIKE $1
+		id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at
+	FROM users
+	%s
 	ORDER BY %s %s
 	LIMIT $2 OFFSET $3
-	`, sortColumn, direction)
+	`, whereSQL, sortColumn, direction)
+
 	rows, err := cfg.sqlDB.QueryContext(r.Context(), query, "%"+search+"%", limit, offset)
 	if err != nil {
 		log.Print(err)
 		respondWithError(w, http.StatusInternalServerError, "Query failed")
 		return
 	}
-
 	defer rows.Close()
 
 	users := []AdminUserRow{}
@@ -70,11 +85,13 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 			log.Printf("Error: %v", err)
 			return
 		}
-
 		users = append(users, u)
 	}
 
-	count, err := cfg.db.CountFilteredUsers(r.Context(), "%"+search+"%")
+	count, err := cfg.db.CountFilteredUsersWithStatus(r.Context(), database.CountFilteredUsersWithStatusParams{
+		Email:  "%" + search + "%",
+		Status: sql.NullString{String: status, Valid: status != ""},
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Count failed")
 		return

@@ -26,6 +26,35 @@ func (q *Queries) CountFilteredUsers(ctx context.Context, fullName string) (int6
 	return count, err
 }
 
+const countFilteredUsersWithStatus = `-- name: CountFilteredUsersWithStatus :one
+SELECT COUNT(*)
+FROM users
+WHERE
+  (
+    email ILIKE $1
+    OR full_name ILIKE $1
+  )
+  AND (
+    CASE
+      WHEN $2 = 'active' THEN is_active = TRUE
+      WHEN $2 = 'disabled' THEN is_active = FALSE
+      ELSE TRUE
+    END
+  )
+`
+
+type CountFilteredUsersWithStatusParams struct {
+	Email  string         `json:"email"`
+	Status sql.NullString `json:"status"`
+}
+
+func (q *Queries) CountFilteredUsersWithStatus(ctx context.Context, arg CountFilteredUsersWithStatusParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countFilteredUsersWithStatus, arg.Email, arg.Status)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, full_name, password_hash)
 VALUES ($1, $2, $3)

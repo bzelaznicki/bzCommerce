@@ -84,3 +84,20 @@ SET is_active = TRUE,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING id, full_name, email, created_at, is_admin, updated_at, is_active;
+
+
+-- name: CountFilteredUsersWithStatus :one
+SELECT COUNT(*)
+FROM users
+WHERE
+  (
+    email ILIKE $1
+    OR full_name ILIKE $1
+  )
+  AND (
+    CASE
+      WHEN sqlc.arg(status) = 'active' THEN is_active = TRUE
+      WHEN sqlc.arg(status) = 'disabled' THEN is_active = FALSE
+      ELSE TRUE
+    END
+  );
