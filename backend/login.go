@@ -33,6 +33,12 @@ func (cfg *apiConfig) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error getting user %s: %v", email, err)
 		return
 	}
+
+	if !user.IsActive {
+		cfg.RenderError(w, r, http.StatusForbidden, "Your account has been disabled")
+		return
+	}
+
 	if err := auth.CheckPassword(user.PasswordHash, password); err != nil {
 		cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid email or password")
 		log.Printf("error authenticating user %s: %v", email, err)

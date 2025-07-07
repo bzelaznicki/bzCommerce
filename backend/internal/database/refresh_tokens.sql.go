@@ -56,6 +56,15 @@ func (q *Queries) GetRefreshToken(ctx context.Context, token string) (RefreshTok
 	return i, err
 }
 
+const invalidateAllRefreshTokensForUser = `-- name: InvalidateAllRefreshTokensForUser :exec
+UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1
+`
+
+func (q *Queries) InvalidateAllRefreshTokensForUser(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, invalidateAllRefreshTokensForUser, userID)
+	return err
+}
+
 const invalidateRefreshToken = `-- name: InvalidateRefreshToken :exec
 UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1
 `

@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -292,19 +293,23 @@ export default function AdminShippingMethodsPage() {
                       <td className="px-4 py-2 text-sm text-gray-500">
                         {new Date(method.updated_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <Link
-                          href={`/admin/shipping-methods/${method.id}/edit`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setMethodToDelete(method)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/shipping-methods/${method.id}/edit`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => setMethodToDelete(method)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

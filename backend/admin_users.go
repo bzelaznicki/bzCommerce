@@ -11,12 +11,14 @@ import (
 )
 
 type AdminUserRow struct {
-	ID        uuid.UUID `json:"id"`
-	FullName  string    `json:"full_name"`
-	Email     string    `json:"email"`
-	CreatedAt string    `json:"created_at"`
-	UpdatedAt string    `json:"updated_at"`
-	IsAdmin   bool      `json:"is_admin"`
+	ID         uuid.UUID `json:"id"`
+	FullName   string    `json:"full_name"`
+	Email      string    `json:"email"`
+	CreatedAt  string    `json:"created_at"`
+	UpdatedAt  string    `json:"updated_at"`
+	IsAdmin    bool      `json:"is_admin"`
+	IsActive   bool      `json:"is_active"`
+	DisabledAt *string   `json:"disabled_at"`
 }
 
 type AdminUsersListPageData struct {
@@ -166,7 +168,7 @@ func (cfg *apiConfig) handleAdminUserDelete(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = cfg.db.DeleteUserById(r.Context(), id)
+	_, err = cfg.db.DeleteUserById(r.Context(), id)
 
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Failed to delete user")

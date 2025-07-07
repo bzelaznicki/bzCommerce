@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import toast from 'react-hot-toast';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Country {
   id: string;
@@ -64,12 +65,10 @@ export default function AdminCountriesPage() {
 
       if (!res.ok) {
         let errorMessage = `Failed to delete "${countryToDelete.name}"`;
-
         try {
           const data = await res.json();
           if (data?.error) errorMessage = data.error;
         } catch {}
-
         throw new Error(errorMessage);
       }
 
@@ -101,7 +100,6 @@ export default function AdminCountriesPage() {
       toast.success(`Country "${country.name}" ${!country.is_active ? 'enabled' : 'disabled'}.`);
     } catch (err) {
       console.error(err);
-      // Rollback UI
       setCountries((prev) =>
         prev.map((c) => (c.id === country.id ? { ...c, is_active: country.is_active } : c)),
       );
@@ -259,19 +257,23 @@ export default function AdminCountriesPage() {
                       <td className="px-4 py-2 text-sm text-gray-500">
                         {new Date(country.updated_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <Link
-                          href={`/admin/countries/${country.id}/edit`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setCountryToDelete(country)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/countries/${country.id}/edit`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => setCountryToDelete(country)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

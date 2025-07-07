@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -16,16 +18,15 @@ import (
 
 func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
-
 	offset := (page - 1) * limit
 
 	q := r.URL.Query()
 	search := q.Get("search")
 	sortBy := q.Get("sort_by")
 	sortOrder := q.Get("sort_order")
+	status := q.Get("status")
 
 	sortColumn := "created_at"
-
 	switch sortBy {
 	case "name":
 		sortColumn = "full_name"
@@ -36,26 +37,41 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	}
 
 	direction := "ASC"
-
 	if sortOrder == "desc" {
 		direction = "DESC"
 	}
-	// #nosec G201 -- sortColumn and direction are strictly whitelisted to prevent SQL injection
+
+	whereClauses := []string{
+		"(email ILIKE $1 OR full_name ILIKE $1)",
+	}
+
+	if status == "active" {
+		whereClauses = append(whereClauses, "is_active = TRUE")
+	} else if status == "disabled" {
+		whereClauses = append(whereClauses, "is_active = FALSE")
+	}
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	// #nosec G201
 	query := fmt.Sprintf(`
 	SELECT
-	id, full_name, email, created_at, updated_at, is_admin
-	FROM users 
-	WHERE email ILIKE $1 OR full_name ILIKE $1
+		id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at
+	FROM users
+	%s
 	ORDER BY %s %s
 	LIMIT $2 OFFSET $3
-	`, sortColumn, direction)
+	`, whereSQL, sortColumn, direction)
+
 	rows, err := cfg.sqlDB.QueryContext(r.Context(), query, "%"+search+"%", limit, offset)
 	if err != nil {
 		log.Print(err)
 		respondWithError(w, http.StatusInternalServerError, "Query failed")
 		return
 	}
-
 	defer rows.Close()
 
 	users := []AdminUserRow{}
@@ -63,16 +79,19 @@ func (cfg *apiConfig) handleApiAdminGetUsers(w http.ResponseWriter, r *http.Requ
 	for rows.Next() {
 		u := AdminUserRow{}
 		if err := rows.Scan(
-			&u.ID, &u.FullName, &u.Email, &u.CreatedAt, &u.UpdatedAt, &u.IsAdmin,
+			&u.ID, &u.FullName, &u.Email, &u.CreatedAt, &u.UpdatedAt, &u.IsAdmin, &u.IsActive, &u.DisabledAt,
 		); err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Scan failed")
+			log.Printf("Error: %v", err)
 			return
 		}
-
 		users = append(users, u)
 	}
 
-	count, err := cfg.db.CountFilteredUsers(r.Context(), "%"+search+"%")
+	count, err := cfg.db.CountFilteredUsersWithStatus(r.Context(), database.CountFilteredUsersWithStatusParams{
+		Email:  "%" + search + "%",
+		Status: sql.NullString{String: status, Valid: status != ""},
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Count failed")
 		return
@@ -100,8 +119,23 @@ func (cfg *apiConfig) handleApiAdminGetUserDetails(w http.ResponseWriter, r *htt
 		respondWithError(w, http.StatusNotFound, "User not found")
 		return
 	}
+	var disabledAt *string
+	if user.DisabledAt.Valid {
+		s := user.DisabledAt.Time.Format(time.RFC3339)
+		disabledAt = &s
+	}
 
-	respondWithJSON(w, http.StatusOK, user)
+	resp := AdminUserRow{
+		ID:         user.ID,
+		FullName:   user.FullName,
+		Email:      user.Email,
+		CreatedAt:  user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:    user.IsAdmin,
+		IsActive:   user.IsActive,
+		DisabledAt: disabledAt,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (cfg *apiConfig) handleApiAdminUpdateUserDetails(w http.ResponseWriter, r *http.Request) {
@@ -206,4 +240,94 @@ func (cfg *apiConfig) handleApiAdminUpdateUserPassword(w http.ResponseWriter, r 
 	}
 
 	respondWithJSON(w, http.StatusNoContent, nil)
+}
+
+func (cfg *apiConfig) handleApiAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	rows, err := cfg.db.DeleteUserById(r.Context(), userId)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to delete user")
+		return
+	}
+
+	if rows == 0 {
+		respondWithError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}
+
+func (cfg *apiConfig) handleApiAdminDisableUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := cfg.db.DisableUser(r.Context(), userId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to disable user")
+		return
+	}
+
+	var disabledAt *string
+	if user.DisabledAt.Valid {
+		s := user.DisabledAt.Time.Format(time.RFC3339)
+		disabledAt = &s
+	}
+
+	resp := AdminUserRow{
+		ID:         user.ID,
+		FullName:   user.FullName,
+		Email:      user.Email,
+		CreatedAt:  user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:    user.IsAdmin,
+		IsActive:   user.IsActive,
+		DisabledAt: disabledAt,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (cfg *apiConfig) handleApiAdminEnableUser(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.PathValue("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := cfg.db.EnableUser(r.Context(), userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to enable user")
+		return
+	}
+
+	resp := AdminUserRow{
+		ID:        user.ID,
+		FullName:  user.FullName,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:   user.IsAdmin,
+		IsActive:  user.IsActive,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 }

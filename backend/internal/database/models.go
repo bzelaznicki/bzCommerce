@@ -228,13 +228,15 @@ type ShippingOption struct {
 }
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Email        string    `json:"email"`
-	FullName     string    `json:"full_name"`
-	PasswordHash string    `json:"password_hash"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	IsAdmin      bool      `json:"is_admin"`
+	ID           uuid.UUID    `json:"id"`
+	Email        string       `json:"email"`
+	FullName     string       `json:"full_name"`
+	PasswordHash string       `json:"password_hash"`
+	CreatedAt    time.Time    `json:"created_at"`
+	UpdatedAt    time.Time    `json:"updated_at"`
+	IsAdmin      bool         `json:"is_admin"`
+	IsActive     bool         `json:"is_active"`
+	DisabledAt   sql.NullTime `json:"disabled_at"`
 }
 
 type UsersAddress struct {
