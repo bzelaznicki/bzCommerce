@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"golang.org/x/net/context"
 )
 
@@ -41,14 +42,26 @@ func (cfg *apiConfig) withAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, ok := claims["user_id"].(string)
+		userIDStr, ok := claims["user_id"].(string)
 		if !ok {
 			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid user ID")
 			log.Printf("invalid user ID: %v", err)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDContextKey, userID)
+		userID, parseErr := uuid.Parse(userIDStr)
+		if parseErr != nil {
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid user ID")
+			return
+		}
+
+		user, dbErr := cfg.db.GetUserById(r.Context(), userID)
+		if dbErr != nil || !user.IsActive {
+			cfg.RenderError(w, r, http.StatusForbidden, "Your account has been disabled")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userIDContextKey, userIDStr)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -66,9 +79,15 @@ func (cfg *apiConfig) maybeWithAuth(next http.Handler) http.Handler {
 
 			if err == nil && token.Valid {
 				if claims, ok := token.Claims.(jwt.MapClaims); ok {
-					if userID, ok := claims["user_id"].(string); ok {
-						ctx := context.WithValue(r.Context(), userIDContextKey, userID)
-						r = r.WithContext(ctx)
+					if userIDStr, ok := claims["user_id"].(string); ok {
+						userID, parseErr := uuid.Parse(userIDStr)
+						if parseErr == nil {
+							user, dbErr := cfg.db.GetUserById(r.Context(), userID)
+							if dbErr == nil && user.IsActive {
+								ctx := context.WithValue(r.Context(), userIDContextKey, userIDStr)
+								r = r.WithContext(ctx)
+							}
+						}
 					}
 				}
 			}
@@ -124,10 +143,26 @@ func (cfg *apiConfig) requireAdmin(next http.Handler) http.Handler {
 			return
 		}
 
-		if userID, ok := claims["user_id"].(string); ok {
-			ctx := context.WithValue(r.Context(), userIDContextKey, userID)
-			r = r.WithContext(ctx)
+		userIDStr, ok := claims["user_id"].(string)
+		if !ok {
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid user ID")
+			return
 		}
+
+		userID, parseErr := uuid.Parse(userIDStr)
+		if parseErr != nil {
+			cfg.RenderError(w, r, http.StatusUnauthorized, "Invalid user ID")
+			return
+		}
+
+		user, dbErr := cfg.db.GetUserById(r.Context(), userID)
+		if dbErr != nil || !user.IsActive {
+			cfg.RenderError(w, r, http.StatusForbidden, "Your account has been disabled")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userIDContextKey, userIDStr)
+		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})

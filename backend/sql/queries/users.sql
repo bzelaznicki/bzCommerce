@@ -74,7 +74,7 @@ SET
   END,
   updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, full_name, email, created_at, updated_at, is_active, disabled_at;
+RETURNING id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at;
 
 
 -- name: EnableUser :one
@@ -83,4 +83,4 @@ SET is_active = TRUE,
     disabled_at = NULL,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, full_name, email, created_at, updated_at, is_active;
+RETURNING id, full_name, email, created_at, is_admin, updated_at, is_active;

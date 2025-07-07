@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -250,7 +251,23 @@ func (cfg *apiConfig) handleApiAdminDisableUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, user)
+	var disabledAt *string
+	if user.DisabledAt.Valid {
+		s := user.DisabledAt.Time.Format(time.RFC3339)
+		disabledAt = &s
+	}
+
+	resp := AdminUserRow{
+		ID:         user.ID,
+		FullName:   user.FullName,
+		Email:      user.Email,
+		CreatedAt:  user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:    user.IsAdmin,
+		IsActive:   user.IsActive,
+		DisabledAt: disabledAt,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (cfg *apiConfig) handleApiAdminEnableUser(w http.ResponseWriter, r *http.Request) {
@@ -271,5 +288,14 @@ func (cfg *apiConfig) handleApiAdminEnableUser(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, user)
+	resp := AdminUserRow{
+		ID:        user.ID,
+		FullName:  user.FullName,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
+		IsAdmin:   user.IsAdmin,
+		IsActive:  user.IsActive,
+	}
+	respondWithJSON(w, http.StatusOK, resp)
 }

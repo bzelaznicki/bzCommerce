@@ -88,7 +88,7 @@ SET
   END,
   updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, full_name, email, created_at, updated_at, is_active, disabled_at
+RETURNING id, full_name, email, created_at, updated_at, is_admin, is_active, disabled_at
 `
 
 type DisableUserRow struct {
@@ -97,6 +97,7 @@ type DisableUserRow struct {
 	Email      string       `json:"email"`
 	CreatedAt  time.Time    `json:"created_at"`
 	UpdatedAt  time.Time    `json:"updated_at"`
+	IsAdmin    bool         `json:"is_admin"`
 	IsActive   bool         `json:"is_active"`
 	DisabledAt sql.NullTime `json:"disabled_at"`
 }
@@ -110,6 +111,7 @@ func (q *Queries) DisableUser(ctx context.Context, id uuid.UUID) (DisableUserRow
 		&i.Email,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsAdmin,
 		&i.IsActive,
 		&i.DisabledAt,
 	)
@@ -122,7 +124,7 @@ SET is_active = TRUE,
     disabled_at = NULL,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, full_name, email, created_at, updated_at, is_active
+RETURNING id, full_name, email, created_at, is_admin, updated_at, is_active
 `
 
 type EnableUserRow struct {
@@ -130,6 +132,7 @@ type EnableUserRow struct {
 	FullName  string    `json:"full_name"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
+	IsAdmin   bool      `json:"is_admin"`
 	UpdatedAt time.Time `json:"updated_at"`
 	IsActive  bool      `json:"is_active"`
 }
@@ -142,6 +145,7 @@ func (q *Queries) EnableUser(ctx context.Context, id uuid.UUID) (EnableUserRow, 
 		&i.FullName,
 		&i.Email,
 		&i.CreatedAt,
+		&i.IsAdmin,
 		&i.UpdatedAt,
 		&i.IsActive,
 	)
