@@ -231,3 +231,45 @@ func (cfg *apiConfig) handleApiAdminDeleteUser(w http.ResponseWriter, r *http.Re
 
 	respondWithJSON(w, http.StatusNoContent, nil)
 }
+
+func (cfg *apiConfig) handleApiAdminDisableUser(w http.ResponseWriter, r *http.Request) {
+	userId, err := uuid.Parse(r.PathValue("userId"))
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := cfg.db.DisableUser(r.Context(), userId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to disable user")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, user)
+}
+
+func (cfg *apiConfig) handleApiAdminEnableUser(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.PathValue("userId")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	user, err := cfg.db.EnableUser(r.Context(), userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Failed to enable user")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, user)
+}

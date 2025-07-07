@@ -80,20 +80,25 @@ func (q *Queries) DeleteUserById(ctx context.Context, id uuid.UUID) (int64, erro
 
 const disableUser = `-- name: DisableUser :one
 UPDATE users
-SET is_active = FALSE,
-    disabled_at = CURRENT_TIMESTAMP,
-    updated_at = CURRENT_TIMESTAMP
+SET
+  is_active = FALSE,
+  disabled_at = CASE
+    WHEN disabled_at IS NULL THEN CURRENT_TIMESTAMP
+    ELSE disabled_at
+  END,
+  updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, full_name, email, created_at, updated_at, is_active
+RETURNING id, full_name, email, created_at, updated_at, is_active, disabled_at
 `
 
 type DisableUserRow struct {
-	ID        uuid.UUID `json:"id"`
-	FullName  string    `json:"full_name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	IsActive  bool      `json:"is_active"`
+	ID         uuid.UUID    `json:"id"`
+	FullName   string       `json:"full_name"`
+	Email      string       `json:"email"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
+	IsActive   bool         `json:"is_active"`
+	DisabledAt sql.NullTime `json:"disabled_at"`
 }
 
 func (q *Queries) DisableUser(ctx context.Context, id uuid.UUID) (DisableUserRow, error) {
@@ -106,6 +111,7 @@ func (q *Queries) DisableUser(ctx context.Context, id uuid.UUID) (DisableUserRow
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,
+		&i.DisabledAt,
 	)
 	return i, err
 }
