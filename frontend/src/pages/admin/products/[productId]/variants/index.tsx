@@ -7,6 +7,7 @@ import AdminLayout from '@/components/AdminLayout';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Variant {
   id: string;
@@ -148,19 +149,23 @@ export default function ProductVariantsPage() {
                           '—'
                         )}
                       </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <Link
-                          href={`/admin/products/${productId}/variants/${v.id}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setVariantToDelete(v)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/products/${productId}/variants/${v.id}`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => setVariantToDelete(v)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

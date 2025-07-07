@@ -31,7 +31,7 @@ export default function AdminUsersPage() {
   );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(true);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null); // NEW
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [userToDelete, setUserToDelete] = useState<AdminUserRow | null>(null);
   const [deleting, setDeleting] = useState(false);

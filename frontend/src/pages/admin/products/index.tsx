@@ -8,6 +8,7 @@ import { authFetch } from '@/lib/authFetch';
 import { API_BASE_URL } from '@/lib/config';
 import type { PaginatedResponse } from '@/types/api';
 import toast from 'react-hot-toast';
+import { Boxes, Pencil, Trash2 } from 'lucide-react';
 
 interface AdminProductRow {
   id: string;
@@ -99,7 +100,7 @@ export default function AdminProductsPage() {
   return (
     <>
       <Head>
-        <title>Manage products | bzCommerce</title>
+        <title>Manage Products | bzCommerce</title>
       </Head>
       <AdminLayout>
         <div className="p-6 space-y-6">
@@ -201,25 +202,30 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-2 text-sm text-gray-500">
                         {new Date(product.updated_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <a
-                          href={`/admin/products/${product.id}/variants`}
-                          className="text-indigo-600 hover:underline"
-                        >
-                          Manage Variants
-                        </a>
-                        <Link
-                          href={`/admin/products/${product.id}/edit`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setProductToDelete(product)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/products/${product.id}/variants`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:underline"
+                          >
+                            <Boxes className="w-4 h-4" />
+                            Variants
+                          </Link>
+                          <Link
+                            href={`/admin/products/${product.id}/edit`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => setProductToDelete(product)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

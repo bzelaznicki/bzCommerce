@@ -8,6 +8,7 @@ import { API_BASE_URL } from '@/lib/config';
 import toast from 'react-hot-toast';
 import type { Category } from '@/types/category';
 import { buildCategoryTree, CategoryTree, flattenTree } from '@/lib/categoryTree';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,7 +55,6 @@ export default function AdminCategoriesPage() {
 
       if (!res.ok) {
         let errorMessage = `Failed to delete "${categoryToDelete.name}"`;
-
         try {
           const data = await res.json();
           if (data && data.error) {
@@ -63,7 +63,6 @@ export default function AdminCategoriesPage() {
         } catch (parseErr) {
           console.log(parseErr);
         }
-
         throw new Error(errorMessage);
       }
 
@@ -226,7 +225,7 @@ export default function AdminCategoriesPage() {
                   paginatedCategories.map((category) => (
                     <tr key={category.id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2 font-medium">
-                        <span className="pl-[calc(1rem*${category.depth})]">
+                        <span className={`pl-[${category.depth * 1.5}rem]`}>
                           {category.depth > 0 && '↳ '}
                           {category.name}
                         </span>
@@ -243,19 +242,23 @@ export default function AdminCategoriesPage() {
                       <td className="px-4 py-2 text-sm text-gray-500">
                         {new Date(category.updated_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 space-x-2">
-                        <Link
-                          href={`/admin/categories/${category.id}/edit`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => setCategoryToDelete(category)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/categories/${category.id}/edit`}
+                            className="flex items-center gap-1 px-2 py-1 text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => setCategoryToDelete(category)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-sm font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
