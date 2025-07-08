@@ -151,16 +151,16 @@ type Order struct {
 	ShippingAddress    sql.NullString `json:"shipping_address"`
 	ShippingCity       sql.NullString `json:"shipping_city"`
 	ShippingPostalCode sql.NullString `json:"shipping_postal_code"`
-	ShippingCountry    sql.NullString `json:"shipping_country"`
 	ShippingPhone      string         `json:"shipping_phone"`
 	BillingName        sql.NullString `json:"billing_name"`
 	BillingAddress     sql.NullString `json:"billing_address"`
 	BillingCity        sql.NullString `json:"billing_city"`
 	BillingPostalCode  sql.NullString `json:"billing_postal_code"`
-	BillingCountry     sql.NullString `json:"billing_country"`
 	ShippingOptionID   uuid.NullUUID  `json:"shipping_option_id"`
 	ShippingPrice      float64        `json:"shipping_price"`
 	PaymentOptionID    uuid.NullUUID  `json:"payment_option_id"`
+	ShippingCountryID  uuid.UUID      `json:"shipping_country_id"`
+	BillingCountryID   uuid.UUID      `json:"billing_country_id"`
 }
 
 type OrdersVariant struct {

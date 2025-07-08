@@ -15,5 +15,6 @@ func (cfg *apiConfig) registerApiShopRoutes(mux *http.ServeMux) {
 	mux.Handle("PUT /api/carts/variants", cfg.optionalAuth(http.HandlerFunc(cfg.handleApiUpdateCartVariant)))
 	mux.Handle("GET /api/carts", cfg.optionalAuth(http.HandlerFunc(cfg.handleApiGetCart)))
 	mux.Handle("DELETE /api/carts/variants/{id}", cfg.optionalAuth(http.HandlerFunc(cfg.handleApiDeleteFromCart)))
+	mux.Handle("GET /api/countries", http.HandlerFunc(cfg.handleApiGetCountries))
 	log.Printf("Shop API routes registered")
 }

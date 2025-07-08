@@ -76,7 +76,6 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	shippingAddress := r.FormValue("shipping_address")
 	shippingCity := r.FormValue("shipping_city")
 	shippingPostalCode := r.FormValue("shipping_postal_code")
-	shippingCountry := r.FormValue("shipping_country")
 	shippingPhone := r.FormValue("shipping_phone")
 	shippingOptionID := r.FormValue("shipping_method_id")
 	paymentOptionID := r.FormValue("payment_method_id")
@@ -87,14 +86,13 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	billingAddress := r.PostFormValue("billing_address")
 	billingCity := r.PostFormValue("billing_city")
 	billingPostalCode := r.PostFormValue("billing_postal_code")
-	billingCountry := r.PostFormValue("billing_country")
 
 	if sameAsShipping {
 		billingName = r.PostFormValue("shipping_name")
 		billingAddress = r.PostFormValue("shipping_address")
 		billingCity = r.PostFormValue("shipping_city")
 		billingPostalCode = r.PostFormValue("shipping_postal_code")
-		billingCountry = r.PostFormValue("shipping_country")
+
 	}
 
 	cart, err := cfg.db.GetCartById(r.Context(), cartId)
@@ -158,11 +156,8 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 			Valid:  shippingPostalCode != "",
 		},
 
-		ShippingCountry: sql.NullString{
-			String: shippingCountry,
-			Valid:  shippingCountry != "",
-		},
-		ShippingPhone: shippingPhone,
+		ShippingCountryID: uuid.UUID{},
+		ShippingPhone:     shippingPhone,
 		ShippingOptionID: uuid.NullUUID{
 			UUID:  uuid.MustParse(shippingOptionID),
 			Valid: shippingOptionID != "",
@@ -188,10 +183,7 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 			String: billingPostalCode,
 			Valid:  billingPostalCode != "",
 		},
-		BillingCountry: sql.NullString{
-			String: billingCountry,
-			Valid:  billingCountry != "",
-		},
+		BillingCountryID: uuid.UUID{},
 	},
 	)
 	if err != nil {
