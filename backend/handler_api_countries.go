@@ -7,7 +7,7 @@ import (
 )
 
 func (cfg *apiConfig) handleApiGetCountries(w http.ResponseWriter, r *http.Request) {
-	countries, err := cfg.db.GetCountries(r.Context())
+	countries, err := cfg.db.GetActiveCountries(r.Context())
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error getting countries")

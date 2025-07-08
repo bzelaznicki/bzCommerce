@@ -54,6 +54,41 @@ func (q *Queries) DeleteCountryById(ctx context.Context, id uuid.UUID) (int64, e
 	return result.RowsAffected()
 }
 
+const getActiveCountries = `-- name: GetActiveCountries :many
+SELECT id, name, iso_code, is_active, sort_order, created_at, updated_at FROM countries WHERE is_active = true ORDER BY sort_order ASC
+`
+
+func (q *Queries) GetActiveCountries(ctx context.Context) ([]Country, error) {
+	rows, err := q.db.QueryContext(ctx, getActiveCountries)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Country
+	for rows.Next() {
+		var i Country
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.IsoCode,
+			&i.IsActive,
+			&i.SortOrder,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCountries = `-- name: GetCountries :many
 SELECT id, name, iso_code, is_active, sort_order, created_at, updated_at FROM countries ORDER BY sort_order ASC
 `

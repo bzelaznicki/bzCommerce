@@ -10,6 +10,9 @@ VALUES (
 -- name: GetCountries :many
 SELECT * FROM countries ORDER BY sort_order ASC;
 
+-- name: GetActiveCountries :many
+SELECT * FROM countries WHERE is_active = true ORDER BY sort_order ASC;
+
 -- name: GetCountryById :one
 SELECT * FROM countries WHERE id = sqlc.arg(id);
 
