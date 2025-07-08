@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -104,23 +103,23 @@ RETURNING id, user_id, status, total_price, created_at, updated_at, customer_ema
 `
 
 type CreateOrderParams struct {
-	UserID             uuid.NullUUID  `json:"user_id"`
-	TotalPrice         float64        `json:"total_price"`
-	CustomerEmail      string         `json:"customer_email"`
-	ShippingName       sql.NullString `json:"shipping_name"`
-	ShippingAddress    sql.NullString `json:"shipping_address"`
-	ShippingCity       sql.NullString `json:"shipping_city"`
-	ShippingPostalCode sql.NullString `json:"shipping_postal_code"`
-	ShippingCountryID  uuid.UUID      `json:"shipping_country_id"`
-	ShippingPhone      string         `json:"shipping_phone"`
-	BillingName        sql.NullString `json:"billing_name"`
-	BillingAddress     sql.NullString `json:"billing_address"`
-	BillingCity        sql.NullString `json:"billing_city"`
-	BillingPostalCode  sql.NullString `json:"billing_postal_code"`
-	BillingCountryID   uuid.UUID      `json:"billing_country_id"`
-	ShippingOptionID   uuid.NullUUID  `json:"shipping_option_id"`
-	ShippingPrice      float64        `json:"shipping_price"`
-	PaymentOptionID    uuid.NullUUID  `json:"payment_option_id"`
+	UserID             uuid.NullUUID `json:"user_id"`
+	TotalPrice         float64       `json:"total_price"`
+	CustomerEmail      string        `json:"customer_email"`
+	ShippingName       string        `json:"shipping_name"`
+	ShippingAddress    string        `json:"shipping_address"`
+	ShippingCity       string        `json:"shipping_city"`
+	ShippingPostalCode string        `json:"shipping_postal_code"`
+	ShippingCountryID  uuid.UUID     `json:"shipping_country_id"`
+	ShippingPhone      string        `json:"shipping_phone"`
+	BillingName        string        `json:"billing_name"`
+	BillingAddress     string        `json:"billing_address"`
+	BillingCity        string        `json:"billing_city"`
+	BillingPostalCode  string        `json:"billing_postal_code"`
+	BillingCountryID   uuid.UUID     `json:"billing_country_id"`
+	ShippingOptionID   uuid.UUID     `json:"shipping_option_id"`
+	ShippingPrice      float64       `json:"shipping_price"`
+	PaymentOptionID    uuid.UUID     `json:"payment_option_id"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
@@ -135,57 +134,24 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	totalPrice := subtotal + shippingPrice
 
 	_, err = cfg.db.CreateOrder(r.Context(), database.CreateOrderParams{
-		UserID:        cart.UserID,
-		CustomerEmail: customerEmail,
-		TotalPrice:    totalPrice,
-		ShippingPrice: shippingPrice,
-		ShippingName: sql.NullString{
-			String: shippingName,
-			Valid:  shippingName != "",
-		},
-		ShippingAddress: sql.NullString{
-			String: shippingAddress,
-			Valid:  shippingAddress != "",
-		},
-		ShippingCity: sql.NullString{
-			String: shippingCity,
-			Valid:  shippingCity != "",
-		},
-		ShippingPostalCode: sql.NullString{
-			String: shippingPostalCode,
-			Valid:  shippingPostalCode != "",
-		},
-
-		ShippingCountryID: uuid.UUID{},
-		ShippingPhone:     shippingPhone,
-		ShippingOptionID: uuid.NullUUID{
-			UUID:  uuid.MustParse(shippingOptionID),
-			Valid: shippingOptionID != "",
-		},
-
-		PaymentOptionID: uuid.NullUUID{
-			UUID:  uuid.MustParse(paymentOptionID),
-			Valid: paymentOptionID != "",
-		},
-		BillingName: sql.NullString{
-			String: billingName,
-			Valid:  billingName != "",
-		},
-		BillingAddress: sql.NullString{
-			String: billingAddress,
-			Valid:  billingAddress != "",
-		},
-		BillingCity: sql.NullString{
-			String: billingCity,
-			Valid:  billingCity != "",
-		},
-		BillingPostalCode: sql.NullString{
-			String: billingPostalCode,
-			Valid:  billingPostalCode != "",
-		},
-		BillingCountryID: uuid.UUID{},
-	},
-	)
+		UserID:             cart.UserID,
+		CustomerEmail:      customerEmail,
+		TotalPrice:         totalPrice,
+		ShippingPrice:      shippingPrice,
+		ShippingName:       shippingName,
+		ShippingAddress:    shippingAddress,
+		ShippingCity:       shippingCity,
+		ShippingPostalCode: shippingPostalCode,
+		ShippingCountryID:  uuid.UUID{},
+		ShippingPhone:      shippingPhone,
+		ShippingOptionID:   uuid.MustParse(shippingOptionID),
+		PaymentOptionID:    uuid.MustParse(paymentOptionID),
+		BillingName:        billingName,
+		BillingAddress:     billingAddress,
+		BillingCity:        billingCity,
+		BillingPostalCode:  billingPostalCode,
+		BillingCountryID:   uuid.UUID{},
+	})
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not create order")
 		log.Printf("Error creating order: %v", err)
