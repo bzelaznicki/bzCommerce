@@ -13,6 +13,7 @@ type AuthContextType = {
   isLoggedIn: boolean;
   isAdmin: boolean;
   loading: boolean;
+  user: JwtPayload | null;
   login: (token: string) => void;
   logout: () => Promise<void>;
   refreshToken: () => Promise<string | null>;
@@ -24,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<JwtPayload | null>(null);
 
   const refreshToken = async (): Promise<string | null> => {
     try {
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const decoded = jwtDecode<JwtPayload>(newToken);
       setIsLoggedIn(true);
       setIsAdmin(decoded.is_admin);
+      setUser(decoded);
 
       return newToken;
     } catch (err) {
@@ -63,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             setIsLoggedIn(true);
             setIsAdmin(decoded.is_admin);
+            setUser(decoded);
           }
         } catch {
           console.warn('Token decode failed. Attempting refresh.');
@@ -75,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) {
         setIsLoggedIn(false);
         setIsAdmin(false);
+        setUser(null);
       }
 
       setLoading(false);
@@ -89,17 +94,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const decoded = jwtDecode<JwtPayload>(token);
       setIsLoggedIn(true);
       setIsAdmin(decoded.is_admin);
+      setUser(decoded);
     } catch {
       setIsLoggedIn(false);
       setIsAdmin(false);
+      setUser(null);
     }
   };
 
   const logout = async () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setIsLoggedIn(false);
     setIsAdmin(false);
+    setUser(null);
 
     try {
       await fetch(`${API_BASE_URL}/api/logout`, {
@@ -113,7 +120,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isAdmin, login, logout, loading, refreshToken }}>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        isAdmin,
+        user,
+        login,
+        logout,
+        loading,
+        refreshToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
