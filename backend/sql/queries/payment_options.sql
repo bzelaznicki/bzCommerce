@@ -2,6 +2,11 @@
 SELECT * FROM payment_options
 ORDER BY sort_order ASC;
 
+-- name: GetActivePaymentOptions :many
+SELECT * FROM payment_options
+WHERE is_active = true
+ORDER BY sort_order ASC;
+
 -- name: CreatePaymentOption :one
 INSERT INTO payment_options (name, description, is_active, sort_order)
 VALUES(

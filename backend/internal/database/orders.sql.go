@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -70,13 +69,13 @@ INSERT INTO orders (
     shipping_address, 
     shipping_city, 
     shipping_postal_code, 
-    shipping_country, 
+    shipping_country_id, 
     shipping_phone, 
     billing_name, 
     billing_address, 
     billing_city, 
     billing_postal_code, 
-    billing_country,
+    billing_country_id,
     shipping_option_id,
     shipping_price,
     payment_option_id
@@ -100,27 +99,27 @@ VALUES (
     $16,
     $17
 )
-RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id
+RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id
 `
 
 type CreateOrderParams struct {
-	UserID             uuid.NullUUID  `json:"user_id"`
-	TotalPrice         float64        `json:"total_price"`
-	CustomerEmail      string         `json:"customer_email"`
-	ShippingName       sql.NullString `json:"shipping_name"`
-	ShippingAddress    sql.NullString `json:"shipping_address"`
-	ShippingCity       sql.NullString `json:"shipping_city"`
-	ShippingPostalCode sql.NullString `json:"shipping_postal_code"`
-	ShippingCountry    sql.NullString `json:"shipping_country"`
-	ShippingPhone      string         `json:"shipping_phone"`
-	BillingName        sql.NullString `json:"billing_name"`
-	BillingAddress     sql.NullString `json:"billing_address"`
-	BillingCity        sql.NullString `json:"billing_city"`
-	BillingPostalCode  sql.NullString `json:"billing_postal_code"`
-	BillingCountry     sql.NullString `json:"billing_country"`
-	ShippingOptionID   uuid.NullUUID  `json:"shipping_option_id"`
-	ShippingPrice      float64        `json:"shipping_price"`
-	PaymentOptionID    uuid.NullUUID  `json:"payment_option_id"`
+	UserID             uuid.NullUUID `json:"user_id"`
+	TotalPrice         float64       `json:"total_price"`
+	CustomerEmail      string        `json:"customer_email"`
+	ShippingName       string        `json:"shipping_name"`
+	ShippingAddress    string        `json:"shipping_address"`
+	ShippingCity       string        `json:"shipping_city"`
+	ShippingPostalCode string        `json:"shipping_postal_code"`
+	ShippingCountryID  uuid.UUID     `json:"shipping_country_id"`
+	ShippingPhone      string        `json:"shipping_phone"`
+	BillingName        string        `json:"billing_name"`
+	BillingAddress     string        `json:"billing_address"`
+	BillingCity        string        `json:"billing_city"`
+	BillingPostalCode  string        `json:"billing_postal_code"`
+	BillingCountryID   uuid.UUID     `json:"billing_country_id"`
+	ShippingOptionID   uuid.UUID     `json:"shipping_option_id"`
+	ShippingPrice      float64       `json:"shipping_price"`
+	PaymentOptionID    uuid.UUID     `json:"payment_option_id"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
@@ -132,13 +131,13 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		arg.ShippingAddress,
 		arg.ShippingCity,
 		arg.ShippingPostalCode,
-		arg.ShippingCountry,
+		arg.ShippingCountryID,
 		arg.ShippingPhone,
 		arg.BillingName,
 		arg.BillingAddress,
 		arg.BillingCity,
 		arg.BillingPostalCode,
-		arg.BillingCountry,
+		arg.BillingCountryID,
 		arg.ShippingOptionID,
 		arg.ShippingPrice,
 		arg.PaymentOptionID,
@@ -156,22 +155,22 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		&i.ShippingAddress,
 		&i.ShippingCity,
 		&i.ShippingPostalCode,
-		&i.ShippingCountry,
 		&i.ShippingPhone,
 		&i.BillingName,
 		&i.BillingAddress,
 		&i.BillingCity,
 		&i.BillingPostalCode,
-		&i.BillingCountry,
 		&i.ShippingOptionID,
 		&i.ShippingPrice,
 		&i.PaymentOptionID,
+		&i.ShippingCountryID,
+		&i.BillingCountryID,
 	)
 	return i, err
 }
 
 const getOrderById = `-- name: GetOrderById :one
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
 WHERE id = $1
 `
 
@@ -190,16 +189,16 @@ func (q *Queries) GetOrderById(ctx context.Context, id uuid.UUID) (Order, error)
 		&i.ShippingAddress,
 		&i.ShippingCity,
 		&i.ShippingPostalCode,
-		&i.ShippingCountry,
 		&i.ShippingPhone,
 		&i.BillingName,
 		&i.BillingAddress,
 		&i.BillingCity,
 		&i.BillingPostalCode,
-		&i.BillingCountry,
 		&i.ShippingOptionID,
 		&i.ShippingPrice,
 		&i.PaymentOptionID,
+		&i.ShippingCountryID,
+		&i.BillingCountryID,
 	)
 	return i, err
 }
@@ -241,7 +240,7 @@ func (q *Queries) GetOrderItemsByOrderId(ctx context.Context, orderID uuid.UUID)
 }
 
 const getOrders = `-- name: GetOrders :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
 ORDER BY created_at DESC
 `
 
@@ -266,16 +265,16 @@ func (q *Queries) GetOrders(ctx context.Context) ([]Order, error) {
 			&i.ShippingAddress,
 			&i.ShippingCity,
 			&i.ShippingPostalCode,
-			&i.ShippingCountry,
 			&i.ShippingPhone,
 			&i.BillingName,
 			&i.BillingAddress,
 			&i.BillingCity,
 			&i.BillingPostalCode,
-			&i.BillingCountry,
 			&i.ShippingOptionID,
 			&i.ShippingPrice,
 			&i.PaymentOptionID,
+			&i.ShippingCountryID,
+			&i.BillingCountryID,
 		); err != nil {
 			return nil, err
 		}
@@ -291,7 +290,7 @@ func (q *Queries) GetOrders(ctx context.Context) ([]Order, error) {
 }
 
 const getOrdersByOwnerUserId = `-- name: GetOrdersByOwnerUserId :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -317,16 +316,16 @@ func (q *Queries) GetOrdersByOwnerUserId(ctx context.Context, userID uuid.NullUU
 			&i.ShippingAddress,
 			&i.ShippingCity,
 			&i.ShippingPostalCode,
-			&i.ShippingCountry,
 			&i.ShippingPhone,
 			&i.BillingName,
 			&i.BillingAddress,
 			&i.BillingCity,
 			&i.BillingPostalCode,
-			&i.BillingCountry,
 			&i.ShippingOptionID,
 			&i.ShippingPrice,
 			&i.PaymentOptionID,
+			&i.ShippingCountryID,
+			&i.BillingCountryID,
 		); err != nil {
 			return nil, err
 		}
@@ -342,7 +341,7 @@ func (q *Queries) GetOrdersByOwnerUserId(ctx context.Context, userID uuid.NullUU
 }
 
 const getOrdersByStatus = `-- name: GetOrdersByStatus :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
 WHERE status IN ($1)
 ORDER BY created_at DESC
 `
@@ -368,16 +367,16 @@ func (q *Queries) GetOrdersByStatus(ctx context.Context, status OrderStatus) ([]
 			&i.ShippingAddress,
 			&i.ShippingCity,
 			&i.ShippingPostalCode,
-			&i.ShippingCountry,
 			&i.ShippingPhone,
 			&i.BillingName,
 			&i.BillingAddress,
 			&i.BillingCity,
 			&i.BillingPostalCode,
-			&i.BillingCountry,
 			&i.ShippingOptionID,
 			&i.ShippingPrice,
 			&i.PaymentOptionID,
+			&i.ShippingCountryID,
+			&i.BillingCountryID,
 		); err != nil {
 			return nil, err
 		}
@@ -396,7 +395,7 @@ const updateOrderStatus = `-- name: UpdateOrderStatus :one
 UPDATE orders
 SET status = $1
 WHERE id = $2
-RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_country, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, billing_country, shipping_option_id, shipping_price, payment_option_id
+RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id
 `
 
 type UpdateOrderStatusParams struct {
@@ -419,16 +418,16 @@ func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusPa
 		&i.ShippingAddress,
 		&i.ShippingCity,
 		&i.ShippingPostalCode,
-		&i.ShippingCountry,
 		&i.ShippingPhone,
 		&i.BillingName,
 		&i.BillingAddress,
 		&i.BillingCity,
 		&i.BillingPostalCode,
-		&i.BillingCountry,
 		&i.ShippingOptionID,
 		&i.ShippingPrice,
 		&i.PaymentOptionID,
+		&i.ShippingCountryID,
+		&i.BillingCountryID,
 	)
 	return i, err
 }

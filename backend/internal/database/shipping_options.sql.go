@@ -62,6 +62,45 @@ func (q *Queries) DeleteShippingOption(ctx context.Context, id uuid.UUID) (int64
 	return result.RowsAffected()
 }
 
+const getActiveShippingOptions = `-- name: GetActiveShippingOptions :many
+SELECT id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at FROM shipping_options
+WHERE is_active = true
+ORDER BY sort_order ASC
+`
+
+func (q *Queries) GetActiveShippingOptions(ctx context.Context) ([]ShippingOption, error) {
+	rows, err := q.db.QueryContext(ctx, getActiveShippingOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ShippingOption
+	for rows.Next() {
+		var i ShippingOption
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Price,
+			&i.EstimatedDays,
+			&i.SortOrder,
+			&i.IsActive,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getShippingOptions = `-- name: GetShippingOptions :many
 SELECT id, name, description, price, estimated_days, sort_order, is_active, created_at, updated_at FROM shipping_options
 ORDER BY sort_order ASC

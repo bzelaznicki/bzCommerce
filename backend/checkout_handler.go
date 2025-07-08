@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
@@ -76,7 +75,6 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	shippingAddress := r.FormValue("shipping_address")
 	shippingCity := r.FormValue("shipping_city")
 	shippingPostalCode := r.FormValue("shipping_postal_code")
-	shippingCountry := r.FormValue("shipping_country")
 	shippingPhone := r.FormValue("shipping_phone")
 	shippingOptionID := r.FormValue("shipping_method_id")
 	paymentOptionID := r.FormValue("payment_method_id")
@@ -87,14 +85,13 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	billingAddress := r.PostFormValue("billing_address")
 	billingCity := r.PostFormValue("billing_city")
 	billingPostalCode := r.PostFormValue("billing_postal_code")
-	billingCountry := r.PostFormValue("billing_country")
 
 	if sameAsShipping {
 		billingName = r.PostFormValue("shipping_name")
 		billingAddress = r.PostFormValue("shipping_address")
 		billingCity = r.PostFormValue("shipping_city")
 		billingPostalCode = r.PostFormValue("shipping_postal_code")
-		billingCountry = r.PostFormValue("shipping_country")
+
 	}
 
 	cart, err := cfg.db.GetCartById(r.Context(), cartId)
@@ -137,63 +134,24 @@ func (cfg *apiConfig) handleCheckout(w http.ResponseWriter, r *http.Request) {
 	totalPrice := subtotal + shippingPrice
 
 	_, err = cfg.db.CreateOrder(r.Context(), database.CreateOrderParams{
-		UserID:        cart.UserID,
-		CustomerEmail: customerEmail,
-		TotalPrice:    totalPrice,
-		ShippingPrice: shippingPrice,
-		ShippingName: sql.NullString{
-			String: shippingName,
-			Valid:  shippingName != "",
-		},
-		ShippingAddress: sql.NullString{
-			String: shippingAddress,
-			Valid:  shippingAddress != "",
-		},
-		ShippingCity: sql.NullString{
-			String: shippingCity,
-			Valid:  shippingCity != "",
-		},
-		ShippingPostalCode: sql.NullString{
-			String: shippingPostalCode,
-			Valid:  shippingPostalCode != "",
-		},
-
-		ShippingCountry: sql.NullString{
-			String: shippingCountry,
-			Valid:  shippingCountry != "",
-		},
-		ShippingPhone: shippingPhone,
-		ShippingOptionID: uuid.NullUUID{
-			UUID:  uuid.MustParse(shippingOptionID),
-			Valid: shippingOptionID != "",
-		},
-
-		PaymentOptionID: uuid.NullUUID{
-			UUID:  uuid.MustParse(paymentOptionID),
-			Valid: paymentOptionID != "",
-		},
-		BillingName: sql.NullString{
-			String: billingName,
-			Valid:  billingName != "",
-		},
-		BillingAddress: sql.NullString{
-			String: billingAddress,
-			Valid:  billingAddress != "",
-		},
-		BillingCity: sql.NullString{
-			String: billingCity,
-			Valid:  billingCity != "",
-		},
-		BillingPostalCode: sql.NullString{
-			String: billingPostalCode,
-			Valid:  billingPostalCode != "",
-		},
-		BillingCountry: sql.NullString{
-			String: billingCountry,
-			Valid:  billingCountry != "",
-		},
-	},
-	)
+		UserID:             cart.UserID,
+		CustomerEmail:      customerEmail,
+		TotalPrice:         totalPrice,
+		ShippingPrice:      shippingPrice,
+		ShippingName:       shippingName,
+		ShippingAddress:    shippingAddress,
+		ShippingCity:       shippingCity,
+		ShippingPostalCode: shippingPostalCode,
+		ShippingCountryID:  uuid.UUID{},
+		ShippingPhone:      shippingPhone,
+		ShippingOptionID:   uuid.MustParse(shippingOptionID),
+		PaymentOptionID:    uuid.MustParse(paymentOptionID),
+		BillingName:        billingName,
+		BillingAddress:     billingAddress,
+		BillingCity:        billingCity,
+		BillingPostalCode:  billingPostalCode,
+		BillingCountryID:   uuid.UUID{},
+	})
 	if err != nil {
 		cfg.RenderError(w, r, http.StatusInternalServerError, "Could not create order")
 		log.Printf("Error creating order: %v", err)

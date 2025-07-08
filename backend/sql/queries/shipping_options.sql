@@ -7,6 +7,11 @@ RETURNING *;
 SELECT * FROM shipping_options
 ORDER BY sort_order ASC;
 
+-- name: GetActiveShippingOptions :many
+SELECT * FROM shipping_options
+WHERE is_active = true
+ORDER BY sort_order ASC;
+
 -- name: SelectShippingOptionById :one
 SELECT * FROM shipping_options WHERE id = sqlc.arg(id);
 

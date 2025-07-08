@@ -60,6 +60,43 @@ func (q *Queries) DeletePaymentOption(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getActivePaymentOptions = `-- name: GetActivePaymentOptions :many
+SELECT id, name, description, is_active, sort_order, created_at, updated_at FROM payment_options
+WHERE is_active = true
+ORDER BY sort_order ASC
+`
+
+func (q *Queries) GetActivePaymentOptions(ctx context.Context) ([]PaymentOption, error) {
+	rows, err := q.db.QueryContext(ctx, getActivePaymentOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []PaymentOption
+	for rows.Next() {
+		var i PaymentOption
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.IsActive,
+			&i.SortOrder,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPaymentOptionById = `-- name: GetPaymentOptionById :one
 SELECT id, name, description, is_active, sort_order, created_at, updated_at FROM payment_options WHERE id = $1
 `
