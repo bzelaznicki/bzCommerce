@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -43,9 +45,9 @@ type OrderResponse struct {
 	BillingAddress     string                   `json:"billing_address"`
 	BillingCity        string                   `json:"billing_city"`
 	BillingPostalCode  string                   `json:"billing_postal_code"`
-	ShippingOptionID   uuid.UUID                `json:"shipping_option_id"`
+	ShippingMethodID   uuid.UUID                `json:"shipping_method_id"`
 	ShippingPrice      float64                  `json:"shipping_price"`
-	PaymentOptionID    uuid.UUID                `json:"payment_option_id"`
+	PaymentMethodID    uuid.UUID                `json:"payment_method_id"`
 	ShippingCountryID  uuid.UUID                `json:"shipping_country_id"`
 	BillingCountryID   uuid.UUID                `json:"billing_country_id"`
 	CartItems          []database.OrdersVariant `json:"cart_items"`
@@ -55,12 +57,15 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 
 	decoder := json.NewDecoder(r.Body)
 
+	decoder.DisallowUnknownFields()
+
 	params := CheckoutParams{}
 
 	err := decoder.Decode(&params)
 
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid JSON")
+		return
 	}
 	cartId, err := cfg.getOrCreateCartID(w, r)
 	if err != nil {
@@ -79,6 +84,34 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 		}
 
 		email = user.Email
+	} else {
+
+		if !isValidEmail(email) {
+			respondWithError(w, http.StatusBadRequest, "Invalid email")
+			return
+		}
+	}
+
+	if params.ShippingName == "" || params.ShippingAddress == "" ||
+		params.ShippingCity == "" || params.ShippingPostalCode == "" ||
+		params.ShippingCountryID == uuid.Nil || params.ShippingPhone == "" ||
+		params.ShippingMethodID == uuid.Nil || params.PaymentMethodID == uuid.Nil ||
+		params.BillingName == "" || params.BillingAddress == "" ||
+		params.BillingCity == "" || params.BillingPostalCode == "" ||
+		params.BillingCountryID == uuid.Nil {
+		respondWithError(w, http.StatusBadRequest, "Missing required fields")
+		return
+	}
+
+	shippingCountry, err := cfg.db.GetCountryById(r.Context(), params.ShippingCountryID)
+	if err != nil || !shippingCountry.IsActive {
+		respondWithError(w, http.StatusBadRequest, "Invalid shipping country")
+		return
+	}
+	billingCountry, err := cfg.db.GetCountryById(r.Context(), params.BillingCountryID)
+	if err != nil || !billingCountry.IsActive {
+		respondWithError(w, http.StatusBadRequest, "Invalid billing country")
+		return
 	}
 
 	items, err := cfg.db.GetCartDetailsWithSnapshotPrice(r.Context(), cartId)
@@ -99,8 +132,14 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 
 	shippingMethod, err := cfg.db.SelectShippingOptionById(r.Context(), params.ShippingMethodID)
 
-	if err != nil {
+	if err != nil || !shippingMethod.IsActive {
 		respondWithError(w, http.StatusNotFound, "Shipping method not found")
+		return
+	}
+
+	paymentMethod, err := cfg.db.GetPaymentOptionById(r.Context(), params.PaymentMethodID)
+	if err != nil || !paymentMethod.IsActive {
+		respondWithError(w, http.StatusNotFound, "Payment method not found")
 		return
 	}
 
@@ -114,9 +153,28 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	defer tx.Rollback()
+	defer func() {
+		if tx != nil {
+			_ = tx.Rollback()
+		}
+	}()
 
 	qtx := cfg.db.WithTx(tx)
+
+	for _, item := range items {
+		_, err := qtx.DecreaseVariantStock(r.Context(), database.DecreaseVariantStockParams{
+			Quantity:  item.Quantity,
+			VariantID: item.ProductVariantID,
+		})
+		if err != nil {
+			if err == sql.ErrNoRows {
+				respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Insufficient stock for SKU %s", item.Sku))
+				return
+			}
+			respondWithError(w, http.StatusInternalServerError, "Failed to reserve stock")
+			return
+		}
+	}
 
 	order, err := qtx.CreateOrder(r.Context(), database.CreateOrderParams{
 		UserID:             uuid.NullUUID{UUID: userId, Valid: userId != uuid.Nil},
@@ -149,10 +207,20 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Cannot create order")
+	if _, err := qtx.UpdateCartStatus(r.Context(), database.UpdateCartStatusParams{
+		Status: "completed",
+		CartID: cartId,
+	}); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to update cart")
 		return
 	}
+
+	if err := tx.Commit(); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Cannot finalize order")
+		return
+	}
+
+	tx = nil
 
 	var userIDPtr *uuid.UUID
 	if order.UserID.Valid {
@@ -190,9 +258,9 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 		BillingAddress:     order.BillingAddress,
 		BillingCity:        order.BillingCity,
 		BillingPostalCode:  order.BillingPostalCode,
-		ShippingOptionID:   order.ShippingOptionID,
+		ShippingMethodID:   order.ShippingOptionID,
 		ShippingPrice:      order.ShippingPrice,
-		PaymentOptionID:    order.PaymentOptionID,
+		PaymentMethodID:    order.PaymentOptionID,
 		ShippingCountryID:  order.ShippingCountryID,
 		BillingCountryID:   order.BillingCountryID,
 		CartItems:          cartItems,

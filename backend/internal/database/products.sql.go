@@ -172,6 +172,26 @@ func (q *Queries) CreateVariant(ctx context.Context, arg CreateVariantParams) (P
 	return i, err
 }
 
+const decreaseVariantStock = `-- name: DecreaseVariantStock :one
+UPDATE product_variants
+SET stock_quantity = stock_quantity - $1
+WHERE id = $2
+AND stock_quantity >= $1
+RETURNING stock_quantity
+`
+
+type DecreaseVariantStockParams struct {
+	Quantity  int32     `json:"quantity"`
+	VariantID uuid.UUID `json:"variant_id"`
+}
+
+func (q *Queries) DecreaseVariantStock(ctx context.Context, arg DecreaseVariantStockParams) (int32, error) {
+	row := q.db.QueryRowContext(ctx, decreaseVariantStock, arg.Quantity, arg.VariantID)
+	var stock_quantity int32
+	err := row.Scan(&stock_quantity)
+	return stock_quantity, err
+}
+
 const deleteProduct = `-- name: DeleteProduct :execrows
 DELETE FROM products WHERE id = $1
 `

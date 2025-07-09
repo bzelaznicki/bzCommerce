@@ -475,6 +475,31 @@ func (q *Queries) UpdateCartOwner(ctx context.Context, arg UpdateCartOwnerParams
 	return i, err
 }
 
+const updateCartStatus = `-- name: UpdateCartStatus :one
+UPDATE carts
+SET status = $1, updated_at = NOW()
+WHERE id = $2
+RETURNING id, user_id, status, created_at, updated_at
+`
+
+type UpdateCartStatusParams struct {
+	Status CartStatus `json:"status"`
+	CartID uuid.UUID  `json:"cart_id"`
+}
+
+func (q *Queries) UpdateCartStatus(ctx context.Context, arg UpdateCartStatusParams) (Cart, error) {
+	row := q.db.QueryRowContext(ctx, updateCartStatus, arg.Status, arg.CartID)
+	var i Cart
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateCartVariant = `-- name: UpdateCartVariant :one
 INSERT INTO carts_variants (cart_id, product_variant_id, quantity, price_per_item)
 VALUES ($1, $2, $3, $4)

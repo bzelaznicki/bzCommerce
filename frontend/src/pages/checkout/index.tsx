@@ -109,13 +109,28 @@ export default function CheckoutPage() {
     }
   }, [isLoggedIn, user]);
 
+  useEffect(() => {
+    if (form.shipping_method_id && shippingMethods.length > 0) {
+      const method = shippingMethods.find((m) => m.id === form.shipping_method_id);
+      setSelectedShippingPrice(method ? method.price : 0);
+    }
+  }, [form.shipping_method_id, shippingMethods]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    const fieldsToMirror = [
+      'shipping_name',
+      'shipping_address',
+      'shipping_city',
+      'shipping_postal_code',
+      'shipping_country_id',
+    ];
 
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
 
-      if (billingSameAsShipping && name.startsWith('shipping_')) {
+      if (billingSameAsShipping && fieldsToMirror.includes(name)) {
         const billingField = name.replace('shipping_', 'billing_');
         return { ...updated, [billingField]: value };
       }
@@ -148,6 +163,17 @@ export default function CheckoutPage() {
     e.preventDefault();
     setSubmitting(true);
 
+    if (
+      !form.shipping_country_id ||
+      !form.billing_country_id ||
+      !form.shipping_method_id ||
+      !form.payment_method_id
+    ) {
+      toast.error('Please select shipping, payment, and country fields.');
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const res = await authFetch(
         `${API_BASE_URL}/api/orders`,
@@ -164,7 +190,25 @@ export default function CheckoutPage() {
       }
 
       toast.success('Order placed successfully!');
+
+      setForm({
+        customer_email: '',
+        shipping_name: '',
+        shipping_address: '',
+        shipping_city: '',
+        shipping_postal_code: '',
+        shipping_country_id: '',
+        shipping_phone: '',
+        billing_name: '',
+        billing_address: '',
+        billing_city: '',
+        billing_postal_code: '',
+        billing_country_id: '',
+        shipping_method_id: '',
+        payment_method_id: '',
+      });
       router.push('/order-success');
+      window.scrollTo({ top: 0 });
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -207,7 +251,6 @@ export default function CheckoutPage() {
               />
             </div>
           )}
-
           <h2 className="text-lg font-semibold">Shipping Information</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -379,8 +422,8 @@ export default function CheckoutPage() {
 
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700"
+            disabled={submitting || !cart || cart.items.length === 0}
+            className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50"
           >
             {submitting ? 'Placing Order...' : 'Place Order'}
           </button>

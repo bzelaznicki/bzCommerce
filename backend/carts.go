@@ -110,7 +110,7 @@ func (cfg *apiConfig) getOrCreateCartID(w http.ResponseWriter, r *http.Request) 
 	cartID, ok := getCartIDFromCookie(r, cfg.cartCookieKey)
 	if ok && cartID != uuid.Nil {
 		cart, err := cfg.db.GetCartById(ctx, cartID)
-		if err == nil && cart.UserID.UUID == userID {
+		if err == nil && cart.UserID.UUID == userID && cart.Status != "completed" {
 			return cart.ID, nil
 		}
 
