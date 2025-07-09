@@ -168,3 +168,11 @@ LIMIT $2 OFFSET $3;
 SELECT COUNT(*)
 FROM products
 WHERE name ILIKE $1;
+
+
+-- name: DecreaseVariantStock :one
+UPDATE product_variants
+SET stock_quantity = stock_quantity - sqlc.arg(quantity)
+WHERE id = sqlc.arg(variant_id)
+AND stock_quantity >= sqlc.arg(quantity)
+RETURNING stock_quantity;

@@ -43,6 +43,11 @@ UPDATE carts
 SET status = 'abandoned', updated_at = NOW()
 WHERE status = 'new' AND updated_at < sqlc.arg(threshold);
 
+-- name: UpdateCartStatus :one
+UPDATE carts
+SET status = sqlc.arg(status), updated_at = NOW()
+WHERE id = sqlc.arg(cart_id)
+RETURNING *;
 
 -- name: DeleteCartVariant :exec
 DELETE FROM carts_variants
