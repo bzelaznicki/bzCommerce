@@ -79,3 +79,88 @@ UPDATE orders
 SET status = sqlc.arg(status)
 WHERE id = sqlc.arg(id)
 RETURNING *;
+-- name: ListOrders :many
+SELECT
+  o.id,
+  o.user_id,
+  o.status,
+  o.payment_status,
+  o.total_price,
+  o.created_at,
+  o.updated_at,
+  o.customer_email,
+  o.shipping_name,
+  o.shipping_address,
+  o.shipping_city,
+  o.shipping_postal_code,
+  o.shipping_phone,
+  o.billing_name,
+  o.billing_address,
+  o.billing_city,
+  o.billing_postal_code,
+  o.shipping_option_id,
+  o.shipping_price,
+  o.payment_option_id,
+  o.shipping_country_id,
+  o.billing_country_id,
+  s.name AS shipping_method_name,
+  p.name AS payment_method_name
+FROM
+  orders o
+LEFT JOIN shipping_options s ON s.id = o.shipping_option_id
+LEFT JOIN payment_options p ON p.id = o.payment_option_id
+WHERE
+  (
+    sqlc.arg(search)::text IS NULL
+    OR o.customer_email ILIKE '%' || sqlc.arg(search) || '%'
+    OR o.shipping_name ILIKE '%' || sqlc.arg(search) || '%'
+    OR o.billing_name ILIKE '%' || sqlc.arg(search) || '%'
+  )
+  AND (
+    sqlc.arg(status)::order_status IS NULL
+    OR o.status = sqlc.arg(status)
+  )
+  AND (
+    sqlc.arg(payment_status)::payment_status IS NULL
+    OR o.payment_status = sqlc.arg(payment_status)
+  )
+  AND (
+    sqlc.arg(date_from)::timestamp IS NULL
+    OR o.created_at >= sqlc.arg(date_from)
+  )
+  AND (
+    sqlc.arg(date_to)::timestamp IS NULL
+    OR o.created_at <= sqlc.arg(date_to)
+  )
+ORDER BY o.created_at DESC
+LIMIT $1
+OFFSET $2;
+
+
+-- name: CountOrders :one
+SELECT COUNT(*)
+FROM orders o
+WHERE
+  (
+    sqlc.arg(search)::text IS NULL
+    OR o.customer_email ILIKE '%' || sqlc.arg(search) || '%'
+    OR o.shipping_name ILIKE '%' || sqlc.arg(search) || '%'
+    OR o.billing_name ILIKE '%' || sqlc.arg(search) || '%'
+  )
+  AND (
+    sqlc.arg(status)::order_status IS NULL
+    OR o.status = sqlc.arg(status)
+  )
+  AND (
+    sqlc.arg(payment_status)::payment_status IS NULL
+    OR o.payment_status = sqlc.arg(payment_status)
+  )
+  AND (
+    sqlc.arg(date_from)::timestamp IS NULL
+    OR o.created_at >= sqlc.arg(date_from)
+  )
+  AND (
+    sqlc.arg(date_to)::timestamp IS NULL
+    OR o.created_at <= sqlc.arg(date_to)
+  );
+
