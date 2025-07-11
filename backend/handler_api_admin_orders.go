@@ -76,6 +76,10 @@ func (cfg *apiConfig) handleApiAdminListOrders(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	if orders == nil {
+		orders = []database.ListOrdersRow{}
+	}
+
 	response := NewPaginatedResponse(orders, page, limit, count)
 	respondWithJSON(w, http.StatusOK, response)
 }

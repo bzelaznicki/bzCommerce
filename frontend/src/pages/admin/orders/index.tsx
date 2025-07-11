@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { API_BASE_URL } from '@/lib/config';
 import { authFetch } from '@/lib/authFetch';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 
 interface NullableString {
   String: string;
@@ -46,7 +48,7 @@ export default function AdminOrdersPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -72,11 +74,11 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, status, paymentStatus, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchOrders();
-  }, [page, search, status, paymentStatus, dateFrom, dateTo]);
+  }, [fetchOrders]);
 
   return (
     <>
@@ -151,7 +153,10 @@ export default function AdminOrdersPage() {
                   {orders.map((o) => (
                     <tr key={o.id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-2">
-                        <Link href={`/admin/orders/${o.id}`} className="text-blue-600 hover:underline">
+                        <Link
+                          href={`/admin/orders/${o.id}`}
+                          className="text-blue-600 hover:underline"
+                        >
                           {o.id.slice(0, 8)}
                         </Link>
                       </td>
@@ -170,7 +175,13 @@ export default function AdminOrdersPage() {
                       <td className="px-4 py-2 capitalize">{o.status}</td>
                       <td className="px-4 py-2 capitalize">{o.payment_status}</td>
                       <td className="px-4 py-2">{o.total_price.toFixed(2)} PLN</td>
-                      <td className="px-4 py-2">{new Date(o.created_at).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">
+                        {dayjs(o.created_at).format('YYYY-MM-DD HH:mm')}
+                        <br />
+                        <span className="text-gray-500 text-sm">
+                          ({dayjs(o.created_at).fromNow()})
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
