@@ -65,12 +65,14 @@ func (q *Queries) CopyCartDataIntoOrder(ctx context.Context, arg CopyCartDataInt
 const countOrders = `-- name: CountOrders :one
 SELECT COUNT(*)
 FROM orders o
+LEFT JOIN users u ON u.id = o.user_id
 WHERE
   (
     $1::text IS NULL
     OR o.customer_email ILIKE '%' || $1 || '%'
     OR o.shipping_name ILIKE '%' || $1 || '%'
     OR o.billing_name ILIKE '%' || $1 || '%'
+    OR u.email ILIKE '%' || $1 || '%'
   )
   AND (
     $2::order_status IS NULL
@@ -91,11 +93,11 @@ WHERE
 `
 
 type CountOrdersParams struct {
-	Search        string        `json:"search"`
-	Status        OrderStatus   `json:"status"`
-	PaymentStatus PaymentStatus `json:"payment_status"`
-	DateFrom      time.Time     `json:"date_from"`
-	DateTo        time.Time     `json:"date_to"`
+	Search        sql.NullString    `json:"search"`
+	Status        NullOrderStatus   `json:"status"`
+	PaymentStatus NullPaymentStatus `json:"payment_status"`
+	DateFrom      sql.NullTime      `json:"date_from"`
+	DateTo        sql.NullTime      `json:"date_to"`
 }
 
 func (q *Queries) CountOrders(ctx context.Context, arg CountOrdersParams) (int64, error) {
@@ -472,17 +474,21 @@ SELECT
   o.shipping_country_id,
   o.billing_country_id,
   s.name AS shipping_method_name,
-  p.name AS payment_method_name
+  p.name AS payment_method_name,
+  u.email AS user_email,
+  u.created_at AS user_created_at
 FROM
   orders o
 LEFT JOIN shipping_options s ON s.id = o.shipping_option_id
 LEFT JOIN payment_options p ON p.id = o.payment_option_id
+LEFT JOIN users u ON u.id = o.user_id
 WHERE
   (
     $3::text IS NULL
     OR o.customer_email ILIKE '%' || $3 || '%'
     OR o.shipping_name ILIKE '%' || $3 || '%'
     OR o.billing_name ILIKE '%' || $3 || '%'
+    OR u.email ILIKE '%' || $3 || '%'
   )
   AND (
     $4::order_status IS NULL
@@ -506,13 +512,13 @@ OFFSET $2
 `
 
 type ListOrdersParams struct {
-	Limit         int64         `json:"limit"`
-	Offset        int64         `json:"offset"`
-	Search        string        `json:"search"`
-	Status        OrderStatus   `json:"status"`
-	PaymentStatus PaymentStatus `json:"payment_status"`
-	DateFrom      time.Time     `json:"date_from"`
-	DateTo        time.Time     `json:"date_to"`
+	Limit         int64             `json:"limit"`
+	Offset        int64             `json:"offset"`
+	Search        sql.NullString    `json:"search"`
+	Status        NullOrderStatus   `json:"status"`
+	PaymentStatus NullPaymentStatus `json:"payment_status"`
+	DateFrom      sql.NullTime      `json:"date_from"`
+	DateTo        sql.NullTime      `json:"date_to"`
 }
 
 type ListOrdersRow struct {
@@ -540,6 +546,8 @@ type ListOrdersRow struct {
 	BillingCountryID   uuid.UUID      `json:"billing_country_id"`
 	ShippingMethodName sql.NullString `json:"shipping_method_name"`
 	PaymentMethodName  sql.NullString `json:"payment_method_name"`
+	UserEmail          sql.NullString `json:"user_email"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
 }
 
 func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error) {
@@ -584,6 +592,8 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListO
 			&i.BillingCountryID,
 			&i.ShippingMethodName,
 			&i.PaymentMethodName,
+			&i.UserEmail,
+			&i.UserCreatedAt,
 		); err != nil {
 			return nil, err
 		}

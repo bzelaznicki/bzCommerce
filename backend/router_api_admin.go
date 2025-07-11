@@ -43,5 +43,6 @@ func (cfg *apiConfig) registerApiAdminRoutes(mux *http.ServeMux) {
 	mux.Handle("PUT /api/admin/countries/{countryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminUpdateCountry))))
 	mux.Handle("PATCH /api/admin/countries/{countryId}/status", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminToggleCountryStatus))))
 	mux.Handle("DELETE /api/admin/countries/{countryId}", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminDeleteCountry))))
+	mux.Handle("GET /api/admin/orders", cfg.checkAuth(cfg.checkAdmin(http.HandlerFunc(cfg.handleApiAdminListOrders))))
 	log.Printf("Shop API routes registered")
 }
