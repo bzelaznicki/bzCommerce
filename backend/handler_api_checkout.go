@@ -33,8 +33,8 @@ type OrderResponse struct {
 	UserID             *uuid.UUID               `json:"user_id"`
 	Status             string                   `json:"status"`
 	TotalPrice         float64                  `json:"total_price"`
-	CreatedAt          *time.Time               `json:"created_at"`
-	UpdatedAt          *time.Time               `json:"updated_at"`
+	CreatedAt          time.Time                `json:"created_at"`
+	UpdatedAt          time.Time                `json:"updated_at"`
 	CustomerEmail      string                   `json:"customer_email"`
 	ShippingName       string                   `json:"shipping_name"`
 	ShippingAddress    string                   `json:"shipping_address"`
@@ -229,25 +229,13 @@ func (cfg *apiConfig) handleApiCheckout(w http.ResponseWriter, r *http.Request) 
 		userIDPtr = nil
 	}
 
-	var createdAtPtr, updatedAtPtr *time.Time
-	if order.CreatedAt.Valid {
-		createdAtPtr = &order.CreatedAt.Time
-	} else {
-		createdAtPtr = nil
-	}
-	if order.UpdatedAt.Valid {
-		updatedAtPtr = &order.UpdatedAt.Time
-	} else {
-		updatedAtPtr = nil
-	}
-
 	resp := OrderResponse{
 		ID:                 order.ID,
 		UserID:             userIDPtr,
 		Status:             string(order.Status),
 		TotalPrice:         order.TotalPrice,
-		CreatedAt:          createdAtPtr,
-		UpdatedAt:          updatedAtPtr,
+		CreatedAt:          order.CreatedAt,
+		UpdatedAt:          order.UpdatedAt,
 		CustomerEmail:      order.CustomerEmail,
 		ShippingName:       order.ShippingName,
 		ShippingAddress:    order.ShippingAddress,

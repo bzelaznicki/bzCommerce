@@ -102,6 +102,50 @@ func (ns NullOrderStatus) Value() (driver.Value, error) {
 	return string(ns.OrderStatus), nil
 }
 
+type PaymentStatus string
+
+const (
+	PaymentStatusPending  PaymentStatus = "pending"
+	PaymentStatusPaid     PaymentStatus = "paid"
+	PaymentStatusFailed   PaymentStatus = "failed"
+	PaymentStatusRefunded PaymentStatus = "refunded"
+)
+
+func (e *PaymentStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PaymentStatus(s)
+	case string:
+		*e = PaymentStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PaymentStatus: %T", src)
+	}
+	return nil
+}
+
+type NullPaymentStatus struct {
+	PaymentStatus PaymentStatus `json:"payment_status"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPaymentStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.PaymentStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PaymentStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPaymentStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PaymentStatus), nil
+}
+
 type Cart struct {
 	ID        uuid.UUID     `json:"id"`
 	UserID    uuid.NullUUID `json:"user_id"`
@@ -144,8 +188,8 @@ type Order struct {
 	UserID             uuid.NullUUID `json:"user_id"`
 	Status             OrderStatus   `json:"status"`
 	TotalPrice         float64       `json:"total_price"`
-	CreatedAt          sql.NullTime  `json:"created_at"`
-	UpdatedAt          sql.NullTime  `json:"updated_at"`
+	CreatedAt          time.Time     `json:"created_at"`
+	UpdatedAt          time.Time     `json:"updated_at"`
 	CustomerEmail      string        `json:"customer_email"`
 	ShippingName       string        `json:"shipping_name"`
 	ShippingAddress    string        `json:"shipping_address"`
@@ -161,6 +205,7 @@ type Order struct {
 	PaymentOptionID    uuid.UUID     `json:"payment_option_id"`
 	ShippingCountryID  uuid.UUID     `json:"shipping_country_id"`
 	BillingCountryID   uuid.UUID     `json:"billing_country_id"`
+	PaymentStatus      PaymentStatus `json:"payment_status"`
 }
 
 type OrdersVariant struct {

@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -60,6 +62,57 @@ func (q *Queries) CopyCartDataIntoOrder(ctx context.Context, arg CopyCartDataInt
 	return items, nil
 }
 
+const countOrders = `-- name: CountOrders :one
+SELECT COUNT(*)
+FROM orders o
+LEFT JOIN users u ON u.id = o.user_id
+WHERE
+  (
+    $1::text IS NULL
+    OR o.customer_email ILIKE '%' || $1 || '%'
+    OR o.shipping_name ILIKE '%' || $1 || '%'
+    OR o.billing_name ILIKE '%' || $1 || '%'
+    OR u.email ILIKE '%' || $1 || '%'
+  )
+  AND (
+    $2::order_status IS NULL
+    OR o.status = $2
+  )
+  AND (
+    $3::payment_status IS NULL
+    OR o.payment_status = $3
+  )
+  AND (
+    $4::timestamp IS NULL
+    OR o.created_at >= $4
+  )
+  AND (
+    $5::timestamp IS NULL
+    OR o.created_at <= $5
+  )
+`
+
+type CountOrdersParams struct {
+	Search        sql.NullString    `json:"search"`
+	Status        NullOrderStatus   `json:"status"`
+	PaymentStatus NullPaymentStatus `json:"payment_status"`
+	DateFrom      sql.NullTime      `json:"date_from"`
+	DateTo        sql.NullTime      `json:"date_to"`
+}
+
+func (q *Queries) CountOrders(ctx context.Context, arg CountOrdersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countOrders,
+		arg.Search,
+		arg.Status,
+		arg.PaymentStatus,
+		arg.DateFrom,
+		arg.DateTo,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createOrder = `-- name: CreateOrder :one
 INSERT INTO orders (
     user_id, 
@@ -99,7 +152,7 @@ VALUES (
     $16,
     $17
 )
-RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id
+RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status
 `
 
 type CreateOrderParams struct {
@@ -165,12 +218,13 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 		&i.PaymentOptionID,
 		&i.ShippingCountryID,
 		&i.BillingCountryID,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
 
 const getOrderById = `-- name: GetOrderById :one
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status FROM orders
 WHERE id = $1
 `
 
@@ -199,6 +253,7 @@ func (q *Queries) GetOrderById(ctx context.Context, id uuid.UUID) (Order, error)
 		&i.PaymentOptionID,
 		&i.ShippingCountryID,
 		&i.BillingCountryID,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
@@ -240,7 +295,7 @@ func (q *Queries) GetOrderItemsByOrderId(ctx context.Context, orderID uuid.UUID)
 }
 
 const getOrders = `-- name: GetOrders :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status FROM orders
 ORDER BY created_at DESC
 `
 
@@ -275,6 +330,7 @@ func (q *Queries) GetOrders(ctx context.Context) ([]Order, error) {
 			&i.PaymentOptionID,
 			&i.ShippingCountryID,
 			&i.BillingCountryID,
+			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -290,7 +346,7 @@ func (q *Queries) GetOrders(ctx context.Context) ([]Order, error) {
 }
 
 const getOrdersByOwnerUserId = `-- name: GetOrdersByOwnerUserId :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status FROM orders
 WHERE user_id = $1
 ORDER BY created_at DESC
 `
@@ -326,6 +382,7 @@ func (q *Queries) GetOrdersByOwnerUserId(ctx context.Context, userID uuid.NullUU
 			&i.PaymentOptionID,
 			&i.ShippingCountryID,
 			&i.BillingCountryID,
+			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -341,7 +398,7 @@ func (q *Queries) GetOrdersByOwnerUserId(ctx context.Context, userID uuid.NullUU
 }
 
 const getOrdersByStatus = `-- name: GetOrdersByStatus :many
-SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id FROM orders
+SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status FROM orders
 WHERE status IN ($1)
 ORDER BY created_at DESC
 `
@@ -377,6 +434,166 @@ func (q *Queries) GetOrdersByStatus(ctx context.Context, status OrderStatus) ([]
 			&i.PaymentOptionID,
 			&i.ShippingCountryID,
 			&i.BillingCountryID,
+			&i.PaymentStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrders = `-- name: ListOrders :many
+SELECT
+  o.id,
+  o.user_id,
+  o.status,
+  o.payment_status,
+  o.total_price,
+  o.created_at,
+  o.updated_at,
+  o.customer_email,
+  o.shipping_name,
+  o.shipping_address,
+  o.shipping_city,
+  o.shipping_postal_code,
+  o.shipping_phone,
+  o.billing_name,
+  o.billing_address,
+  o.billing_city,
+  o.billing_postal_code,
+  o.shipping_option_id,
+  o.shipping_price,
+  o.payment_option_id,
+  o.shipping_country_id,
+  o.billing_country_id,
+  s.name AS shipping_method_name,
+  p.name AS payment_method_name,
+  u.email AS user_email,
+  u.created_at AS user_created_at
+FROM
+  orders o
+LEFT JOIN shipping_options s ON s.id = o.shipping_option_id
+LEFT JOIN payment_options p ON p.id = o.payment_option_id
+LEFT JOIN users u ON u.id = o.user_id
+WHERE
+  (
+    $3::text IS NULL
+    OR o.customer_email ILIKE '%' || $3 || '%'
+    OR o.shipping_name ILIKE '%' || $3 || '%'
+    OR o.billing_name ILIKE '%' || $3 || '%'
+    OR u.email ILIKE '%' || $3 || '%'
+  )
+  AND (
+    $4::order_status IS NULL
+    OR o.status = $4
+  )
+  AND (
+    $5::payment_status IS NULL
+    OR o.payment_status = $5
+  )
+  AND (
+    $6::timestamp IS NULL
+    OR o.created_at >= $6
+  )
+  AND (
+    $7::timestamp IS NULL
+    OR o.created_at <= $7
+  )
+ORDER BY o.created_at DESC
+LIMIT $1
+OFFSET $2
+`
+
+type ListOrdersParams struct {
+	Limit         int64             `json:"limit"`
+	Offset        int64             `json:"offset"`
+	Search        sql.NullString    `json:"search"`
+	Status        NullOrderStatus   `json:"status"`
+	PaymentStatus NullPaymentStatus `json:"payment_status"`
+	DateFrom      sql.NullTime      `json:"date_from"`
+	DateTo        sql.NullTime      `json:"date_to"`
+}
+
+type ListOrdersRow struct {
+	ID                 uuid.UUID      `json:"id"`
+	UserID             uuid.NullUUID  `json:"user_id"`
+	Status             OrderStatus    `json:"status"`
+	PaymentStatus      PaymentStatus  `json:"payment_status"`
+	TotalPrice         float64        `json:"total_price"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	CustomerEmail      string         `json:"customer_email"`
+	ShippingName       string         `json:"shipping_name"`
+	ShippingAddress    string         `json:"shipping_address"`
+	ShippingCity       string         `json:"shipping_city"`
+	ShippingPostalCode string         `json:"shipping_postal_code"`
+	ShippingPhone      string         `json:"shipping_phone"`
+	BillingName        string         `json:"billing_name"`
+	BillingAddress     string         `json:"billing_address"`
+	BillingCity        string         `json:"billing_city"`
+	BillingPostalCode  string         `json:"billing_postal_code"`
+	ShippingOptionID   uuid.UUID      `json:"shipping_option_id"`
+	ShippingPrice      float64        `json:"shipping_price"`
+	PaymentOptionID    uuid.UUID      `json:"payment_option_id"`
+	ShippingCountryID  uuid.UUID      `json:"shipping_country_id"`
+	BillingCountryID   uuid.UUID      `json:"billing_country_id"`
+	ShippingMethodName sql.NullString `json:"shipping_method_name"`
+	PaymentMethodName  sql.NullString `json:"payment_method_name"`
+	UserEmail          sql.NullString `json:"user_email"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
+}
+
+func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listOrders,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+		arg.Status,
+		arg.PaymentStatus,
+		arg.DateFrom,
+		arg.DateTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrdersRow
+	for rows.Next() {
+		var i ListOrdersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Status,
+			&i.PaymentStatus,
+			&i.TotalPrice,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CustomerEmail,
+			&i.ShippingName,
+			&i.ShippingAddress,
+			&i.ShippingCity,
+			&i.ShippingPostalCode,
+			&i.ShippingPhone,
+			&i.BillingName,
+			&i.BillingAddress,
+			&i.BillingCity,
+			&i.BillingPostalCode,
+			&i.ShippingOptionID,
+			&i.ShippingPrice,
+			&i.PaymentOptionID,
+			&i.ShippingCountryID,
+			&i.BillingCountryID,
+			&i.ShippingMethodName,
+			&i.PaymentMethodName,
+			&i.UserEmail,
+			&i.UserCreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -395,7 +612,7 @@ const updateOrderStatus = `-- name: UpdateOrderStatus :one
 UPDATE orders
 SET status = $1
 WHERE id = $2
-RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id
+RETURNING id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status
 `
 
 type UpdateOrderStatusParams struct {
@@ -428,6 +645,7 @@ func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusPa
 		&i.PaymentOptionID,
 		&i.ShippingCountryID,
 		&i.BillingCountryID,
+		&i.PaymentStatus,
 	)
 	return i, err
 }
