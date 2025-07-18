@@ -43,6 +43,42 @@ RETURNING *;
 SELECT * FROM orders
 WHERE id = sqlc.arg(id);
 
+-- name: GetOrderWithUserById :one
+SELECT 
+  o.id,
+  o.user_id,
+  o.status,
+  o.payment_status,
+  o.total_price,
+  o.created_at,
+  o.updated_at,
+  o.customer_email,
+  o.shipping_name,
+  o.shipping_address,
+  o.shipping_city,
+  o.shipping_postal_code,
+  o.shipping_phone,
+  o.billing_name,
+  o.billing_address,
+  o.billing_city,
+  o.billing_postal_code,
+  o.shipping_option_id,
+  o.shipping_price,
+  o.payment_option_id,
+  o.shipping_country_id,
+  o.billing_country_id,
+  s.name AS shipping_method_name,
+  p.name AS payment_method_name,
+  u.email AS user_email,
+  u.full_name AS user_name,
+  u.created_at AS user_created_at
+FROM
+  orders o
+LEFT JOIN shipping_options s ON s.id = o.shipping_option_id
+LEFT JOIN payment_options p ON p.id = o.payment_option_id
+LEFT JOIN users u ON u.id = o.user_id
+WHERE o.id = sqlc.arg(id);
+
 -- name: GetOrders :many
 SELECT * FROM orders
 ORDER BY created_at DESC;
@@ -73,6 +109,22 @@ RETURNING *;
 -- name: GetOrderItemsByOrderId :many
 SELECT * FROM orders_variants
 WHERE order_id = sqlc.arg(order_id);
+
+-- name: GetOrderItemsByOrderIdWithVariants :many
+SELECT
+  ov.order_id,
+  ov.product_variant_id,
+  ov.quantity,
+  ov.price_per_item,
+  pv.sku,
+  pv.variant_name AS variant_name,
+  pv.price,
+  pv.image_url,
+  p.name AS product_name
+  FROM orders_variants ov
+  JOIN product_variants pv ON pv.id = ov.product_variant_id
+  JOIN products p ON p.id = pv.product_id
+  WHERE ov.order_id = sqlc.arg(order_id);
 
 -- name: UpdateOrderStatus :one
 UPDATE orders

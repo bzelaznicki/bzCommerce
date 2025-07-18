@@ -294,6 +294,170 @@ func (q *Queries) GetOrderItemsByOrderId(ctx context.Context, orderID uuid.UUID)
 	return items, nil
 }
 
+const getOrderItemsByOrderIdWithVariants = `-- name: GetOrderItemsByOrderIdWithVariants :many
+SELECT
+  ov.order_id,
+  ov.product_variant_id,
+  ov.quantity,
+  ov.price_per_item,
+  pv.sku,
+  pv.variant_name AS variant_name,
+  pv.price,
+  pv.image_url,
+  p.name AS product_name
+  FROM orders_variants ov
+  JOIN product_variants pv ON pv.id = ov.product_variant_id
+  JOIN products p ON p.id = pv.product_id
+  WHERE ov.order_id = $1
+`
+
+type GetOrderItemsByOrderIdWithVariantsRow struct {
+	OrderID          uuid.UUID      `json:"order_id"`
+	ProductVariantID uuid.UUID      `json:"product_variant_id"`
+	Quantity         int32          `json:"quantity"`
+	PricePerItem     float64        `json:"price_per_item"`
+	Sku              string         `json:"sku"`
+	VariantName      sql.NullString `json:"variant_name"`
+	Price            float64        `json:"price"`
+	ImageUrl         sql.NullString `json:"image_url"`
+	ProductName      string         `json:"product_name"`
+}
+
+func (q *Queries) GetOrderItemsByOrderIdWithVariants(ctx context.Context, orderID uuid.UUID) ([]GetOrderItemsByOrderIdWithVariantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOrderItemsByOrderIdWithVariants, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOrderItemsByOrderIdWithVariantsRow
+	for rows.Next() {
+		var i GetOrderItemsByOrderIdWithVariantsRow
+		if err := rows.Scan(
+			&i.OrderID,
+			&i.ProductVariantID,
+			&i.Quantity,
+			&i.PricePerItem,
+			&i.Sku,
+			&i.VariantName,
+			&i.Price,
+			&i.ImageUrl,
+			&i.ProductName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getOrderWithUserById = `-- name: GetOrderWithUserById :one
+SELECT 
+  o.id,
+  o.user_id,
+  o.status,
+  o.payment_status,
+  o.total_price,
+  o.created_at,
+  o.updated_at,
+  o.customer_email,
+  o.shipping_name,
+  o.shipping_address,
+  o.shipping_city,
+  o.shipping_postal_code,
+  o.shipping_phone,
+  o.billing_name,
+  o.billing_address,
+  o.billing_city,
+  o.billing_postal_code,
+  o.shipping_option_id,
+  o.shipping_price,
+  o.payment_option_id,
+  o.shipping_country_id,
+  o.billing_country_id,
+  s.name AS shipping_method_name,
+  p.name AS payment_method_name,
+  u.email AS user_email,
+  u.full_name AS user_name,
+  u.created_at AS user_created_at
+FROM
+  orders o
+LEFT JOIN shipping_options s ON s.id = o.shipping_option_id
+LEFT JOIN payment_options p ON p.id = o.payment_option_id
+LEFT JOIN users u ON u.id = o.user_id
+WHERE o.id = $1
+`
+
+type GetOrderWithUserByIdRow struct {
+	ID                 uuid.UUID      `json:"id"`
+	UserID             uuid.NullUUID  `json:"user_id"`
+	Status             OrderStatus    `json:"status"`
+	PaymentStatus      PaymentStatus  `json:"payment_status"`
+	TotalPrice         float64        `json:"total_price"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	CustomerEmail      string         `json:"customer_email"`
+	ShippingName       string         `json:"shipping_name"`
+	ShippingAddress    string         `json:"shipping_address"`
+	ShippingCity       string         `json:"shipping_city"`
+	ShippingPostalCode string         `json:"shipping_postal_code"`
+	ShippingPhone      string         `json:"shipping_phone"`
+	BillingName        string         `json:"billing_name"`
+	BillingAddress     string         `json:"billing_address"`
+	BillingCity        string         `json:"billing_city"`
+	BillingPostalCode  string         `json:"billing_postal_code"`
+	ShippingOptionID   uuid.UUID      `json:"shipping_option_id"`
+	ShippingPrice      float64        `json:"shipping_price"`
+	PaymentOptionID    uuid.UUID      `json:"payment_option_id"`
+	ShippingCountryID  uuid.UUID      `json:"shipping_country_id"`
+	BillingCountryID   uuid.UUID      `json:"billing_country_id"`
+	ShippingMethodName sql.NullString `json:"shipping_method_name"`
+	PaymentMethodName  sql.NullString `json:"payment_method_name"`
+	UserEmail          sql.NullString `json:"user_email"`
+	UserName           sql.NullString `json:"user_name"`
+	UserCreatedAt      sql.NullTime   `json:"user_created_at"`
+}
+
+func (q *Queries) GetOrderWithUserById(ctx context.Context, id uuid.UUID) (GetOrderWithUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getOrderWithUserById, id)
+	var i GetOrderWithUserByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Status,
+		&i.PaymentStatus,
+		&i.TotalPrice,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CustomerEmail,
+		&i.ShippingName,
+		&i.ShippingAddress,
+		&i.ShippingCity,
+		&i.ShippingPostalCode,
+		&i.ShippingPhone,
+		&i.BillingName,
+		&i.BillingAddress,
+		&i.BillingCity,
+		&i.BillingPostalCode,
+		&i.ShippingOptionID,
+		&i.ShippingPrice,
+		&i.PaymentOptionID,
+		&i.ShippingCountryID,
+		&i.BillingCountryID,
+		&i.ShippingMethodName,
+		&i.PaymentMethodName,
+		&i.UserEmail,
+		&i.UserName,
+		&i.UserCreatedAt,
+	)
+	return i, err
+}
+
 const getOrders = `-- name: GetOrders :many
 SELECT id, user_id, status, total_price, created_at, updated_at, customer_email, shipping_name, shipping_address, shipping_city, shipping_postal_code, shipping_phone, billing_name, billing_address, billing_city, billing_postal_code, shipping_option_id, shipping_price, payment_option_id, shipping_country_id, billing_country_id, payment_status FROM orders
 ORDER BY created_at DESC
