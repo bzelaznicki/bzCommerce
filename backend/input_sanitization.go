@@ -20,7 +20,8 @@ func sanitizeInput(input string) string {
 
 // sanitizeName sanitizes full name input
 func sanitizeName(name string) string {
-	name = sanitizeInput(name)
+	// Trim whitespace first
+	name = strings.TrimSpace(name)
 	
 	// Allow only letters, spaces, hyphens, and apostrophes
 	reg := regexp.MustCompile(`[^a-zA-Z\s\-']+`)
