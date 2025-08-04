@@ -27,6 +27,7 @@ type apiConfig struct {
 	cartTimeoutMinutes int
 	cartCookieKey      []byte
 	maxCartQuantity    int
+	authRateLimiter    *RateLimiter
 }
 
 func main() {
@@ -95,6 +96,9 @@ func main() {
 		"templates/base.html",
 	))
 
+	// Initialize rate limiter for auth endpoints: 5 requests per minute per IP
+	authRateLimiter := NewRateLimiter(12*time.Second, 5)
+
 	cfg := apiConfig{
 		db:                 dbQueries,
 		sqlDB:              db,
@@ -106,12 +110,13 @@ func main() {
 		cartTimeoutMinutes: timeoutMinutes,
 		cartCookieKey:      []byte(cartCookieKey),
 		maxCartQuantity:    maxCart,
+		authRateLimiter:    authRateLimiter,
 	}
 
 	mux := http.NewServeMux()
 	cfg.registerRoutes(mux)
 	srv := &http.Server{
-		Handler:           cfg.withCORS(mux),
+		Handler:           cfg.withSecurityHeaders(cfg.withCORS(mux)),
 		Addr:              ":" + port,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,

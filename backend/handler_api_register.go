@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/bzelaznicki/bzCommerce/internal/auth"
 	"github.com/bzelaznicki/bzCommerce/internal/database"
@@ -25,13 +27,28 @@ func (cfg *apiConfig) handlerApiRegister(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusInternalServerError, "Error decoding parameters")
 		return
 	}
+
+	// Sanitize inputs
+	params.FullName = sanitizeName(params.FullName)
+	params.Email = strings.ToLower(strings.TrimSpace(params.Email))
+
 	if params.FullName == "" {
 		respondWithError(w, http.StatusBadRequest, "Name cannot be empty")
 		return
 	}
 
-	if params.Email == "" || len(params.Password) < MinPasswordLength {
-		respondWithError(w, http.StatusBadRequest, "Invalid email or password")
+	if params.Email == "" || !isValidEmail(params.Email) {
+		respondWithError(w, http.StatusBadRequest, "Invalid email address")
+		return
+	}
+
+	if len(params.Password) < MinPasswordLength {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Password must be at least %d characters long", MinPasswordLength))
+		return
+	}
+
+	if !validatePasswordStrength(params.Password) {
+		respondWithError(w, http.StatusBadRequest, "Password must contain at least 3 of the following: uppercase letter, lowercase letter, number, special character")
 		return
 	}
 
